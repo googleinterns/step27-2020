@@ -1,0 +1,11 @@
+.login-button {
+  height: 40px;
+  text-transform: none !important;
+}
+
+.login-button-text {
+  color: #757575;
+  font: bold 14px "Roboto", sans-serif;
+  letter-spacing: 0;
+  margin-top: 10px;
+}
