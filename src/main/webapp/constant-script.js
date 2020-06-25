@@ -11,3 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+// This file contains all the constant scripts to be loaded on each page.
+
+// Initialize mobile sidenav when DOM content is fully loaded
+document.addEventListener("DOMContentLoaded", () => {
+  const elems = document.querySelectorAll(".sidenav");
+  const instances = M.Sidenav.init(elems, undefined);
+});
