@@ -16,3 +16,8 @@
   padding-top: 1em;
   text-shadow: black 0 0 10px;
 }
+
+.info-container {
+  background: whitesmoke;
+  min-height: 50vh;
+}

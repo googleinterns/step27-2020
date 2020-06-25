@@ -5,8 +5,7 @@
 
 .login-button-text {
   color: #757575;
-  font-family: "Roboto", sans-serif;
-  font-size: 14px;
-  font-weight: bold;
+  font: bold 14px "Roboto", sans-serif;
   letter-spacing: 0;
+  margin-top: 10px;
 }
