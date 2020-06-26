@@ -1,3 +1,7 @@
+.block-desc-text {
+  font-size: 18px;
+}
+
 .google-logo {
   margin: 9px 24px 0 0;
   width: 18px;
@@ -15,6 +19,9 @@
   margin-top: 0;
   padding-top: 1em;
   text-shadow: black 0 0 10px;
+}
+
+.icon-display {
 }
 
 .info-container {
