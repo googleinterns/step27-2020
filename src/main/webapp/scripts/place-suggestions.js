@@ -12,7 +12,6 @@ function findNearbyPlaces() {
     let request = {
         location: MTV,
         radius: '5000',
-        rankBy: google.maps.places.RankBy.PROMINENCE,
         type: ['restaurant']
     };
 
