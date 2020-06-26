@@ -29,16 +29,16 @@ function openTripEditor() {
               </div>
               <div class="row">
                 <div class="input-field col s6">
-                  <input id="location-1" type="text" />
-                  <label for="location-1">Location 1</label>
+                  <input id="location-2" type="text" />
+                  <label for="location-2">Location 2</label>
                 </div>
                 <div class="col s6">
                   <p class="range-field weight-slider">
-                    <label for="location-1-weight">Weight</label>
+                    <label for="location-2-weight">Weight</label>
                     <input
                       type="range"
-                      name="location-1-weight"
-                      id="location-1-weight"
+                      name="location-2-weight"
+                      id="location-2-weight"
                       min="1"
                       max="5"
                     />
@@ -81,4 +81,40 @@ function openTripEditor() {
       </div>
     </div>
   `;
+}
+
+/**
+ * Saves the current trip the user is editing to My Trips
+ */
+function saveTrip() {
+  document.getElementById("planned-trips-container").innerHTML += `
+     <div class="row">
+      <div class="col m8">
+        <div class="card">
+          <div class="card-content">
+            <span class="card-title">Trip</span>
+            <form>
+              <div class="row">
+                <div class="col s6">
+                  <span>${document.getElementById("location-1").value}</span>
+                </div>
+                <div class="col s6">
+                  <span>${document.getElementById("location-1-weight").value}</span>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col s6">
+                  <span>${document.getElementById("location-2").value}</span>
+                </div>
+                <div class="col s6">
+                  <span>${document.getElementById("location-2-weight").value}</span>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById("trip-editor-container").innerHTML = "";
 }
