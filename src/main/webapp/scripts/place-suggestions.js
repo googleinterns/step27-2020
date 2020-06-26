@@ -16,12 +16,12 @@ function findNearbyPlaces() {
         type: ['restaurant']
     };
 
-    service = new google.maps.places.PlaceServices(map);
+    service = new google.maps.places.PlacesService(map);
     service.nearbySearch(request, callback);
 }
 
 function callback(results, status) {
-    if(status == google.maps.places.PlaceServices.OK) {
+    if(status == google.maps.places.PlacesService.OK) {
         for(let i = 0; i < 5; i++) {
             console.log(results[i].name);
         }
