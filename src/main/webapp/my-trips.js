@@ -2,6 +2,14 @@
  * Adds a trip editor interface to the DOM, which the user can use to add a trip.
  */
 function openTripEditor() {
+  document.getElementById("open-close-button-area").innerHTML = `
+    <button
+      onclick="cancelTripCreation()"
+      class="btn-large add-trip-button waves-effect red darken-1"
+    >
+      CANCEL
+    </button>
+  `;
   document.getElementById("trip-editor-container").innerHTML = `
     <div class="row">
       <div class="col m8">
@@ -48,7 +56,7 @@ function openTripEditor() {
               <div class="row">
                 <div class="col s12">
                   <button
-                    onclick="saveTrip()"
+                    onclick="saveTrip(); cancelTripCreation()"
                     class="btn-large waves-effect indigo darken-2"
                   >
                     Save
@@ -84,6 +92,22 @@ function openTripEditor() {
 }
 
 /**
+ * Cancels the opening of the trip editor, reverting the page to the default
+ * view.
+ */
+function cancelTripCreation() {
+  document.getElementById("trip-editor-container").innerHTML = "";
+  document.getElementById("open-close-button-area").innerHTML = `
+    <button
+      onclick="openTripEditor()"
+      class="btn-large add-trip-button waves-effect green darken-1"
+    >
+      ADD TRIP
+    </button>
+  `;
+}
+
+/**
  * Saves the current trip the user is editing to My Trips
  */
 function saveTrip() {
@@ -99,7 +123,9 @@ function saveTrip() {
                   <span>${document.getElementById("location-1").value}</span>
                 </div>
                 <div class="col s6">
-                  <span>${document.getElementById("location-1-weight").value}</span>
+                  <span>${
+                    document.getElementById("location-1-weight").value
+                  }</span>
                 </div>
               </div>
               <div class="row">
@@ -107,7 +133,9 @@ function saveTrip() {
                   <span>${document.getElementById("location-2").value}</span>
                 </div>
                 <div class="col s6">
-                  <span>${document.getElementById("location-2-weight").value}</span>
+                  <span>${
+                    document.getElementById("location-2-weight").value
+                  }</span>
                 </div>
               </div>
             </form>
@@ -116,5 +144,4 @@ function saveTrip() {
       </div>
     </div>
   `;
-  document.getElementById("trip-editor-container").innerHTML = "";
 }
