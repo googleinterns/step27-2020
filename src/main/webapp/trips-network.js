@@ -20,16 +20,19 @@ const SAMPLE_POSTS_DATA = [
     title: "Very Very Good Trip",
     destinations: [
       {
-        name: "Golden Gate Bridge",
+        name: "Empire State Building",
       },
       {
-        name: "Fisherman's Wharf",
+        name: "SoHo",
+      },
+      {
+        name: "High Line",
       },
     ],
     owner: "HappyGuy",
     description: "Great trip. Not much else to say.",
     timestamp: 1583466733528,
-    hotel: "Hotel Inn San Fransisco",
+    hotel: "Luxury Hotel New York",
     rating: 5,
   },
   {
@@ -76,11 +79,10 @@ function loadSharedTripsData() {
     </div>
   `;
 
-  document.getElementById("shared-trips-section").innerHTML = "";
-
-  SAMPLE_POSTS_DATA.forEach(
-    ({ title, destinations, owner, description, timestamp, hotel, rating }) => {
-      document.getElementById("shared-trips-section").innerHTML += `
+  document.getElementById(
+    "shared-trips-section"
+  ).innerHTML = SAMPLE_POSTS_DATA.map(
+    ({ title, destinations, owner, description, timestamp, hotel, rating }) => `
         <div class="col m12 shared-trip-card">
           <div class="card">
             <div class="card-content">
@@ -92,10 +94,26 @@ function loadSharedTripsData() {
                 <h6>${new Date(timestamp).toLocaleDateString()}</h6>
               </div>
               <p>${description}</p>
+              <ul class="collection with-header">
+                <li class="collection-header"><h5>Hotel: ${hotel}</h5></li>
+                ${destinations
+                  .map(
+                    ({ name }, index) => `
+                      <li class="collection-item">
+                        <div>
+                          ${index + 1}. ${name}
+                          <a href="#" class="secondary-content">
+                          <i class="material-icons indigo-text">place</i>
+                          </a>
+                        </div>
+                      </li>
+                    `
+                  )
+                  .join(" ")}
+                </ul>
             </div>
           </div>
         </div>
-      `;
-    }
+      `
   );
 }
