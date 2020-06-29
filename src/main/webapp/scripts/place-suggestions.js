@@ -1,5 +1,5 @@
-var map;
-var service;
+let map;
+let service;
 
 const MTV = new google.maps.LatLng(37.3861,122.0839);
 
