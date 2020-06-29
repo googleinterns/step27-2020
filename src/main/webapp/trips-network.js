@@ -115,5 +115,5 @@ function loadSharedTripsData() {
           </div>
         </div>
       `
-  );
+  ).join(" ");
 }
