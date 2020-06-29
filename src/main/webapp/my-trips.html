@@ -38,6 +38,34 @@
       <li><a href="trips-network.html">Trips Network</a></li>
     </ul>
 
+    <div class="container page-container">
+      <div class="row">
+        <div class="col m10">
+          <h2>My Trips</h2>
+        </div>
+        <div class="col m2" id="open-close-button-area">
+          <button
+            onclick="openTripEditor()"
+            class="btn-large add-trip-button waves-effect green darken-1"
+          >
+            ADD TRIP
+          </button>
+        </div>
+      </div>
+      <div id="trip-editor-container"></div>
+      <div id="planned-trips-container"></div>
+
+      <div class="row">
+        <div class="col s12">
+          <h2>Past Trips</h2>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col s12">
+          <p class="placeholder-text">No past trips to show.</p>
+        </div>
+      </div>
+    </div>
     <footer class="page-footer blue lighten-1">
       <div class="footer-copyright">
         <div class="container">
@@ -48,5 +76,6 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <script src="constant-script.js"></script>
+    <script src="my-trips.js"></script>
   </body>
 </html>
