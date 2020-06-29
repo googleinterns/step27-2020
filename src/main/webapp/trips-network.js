@@ -79,6 +79,7 @@ function loadSharedTripsData() {
     </div>
   `;
 
+  // Once data is loaded, render them into cards that display the data readably
   document.getElementById(
     "shared-trips-section"
   ).innerHTML = SAMPLE_POSTS_DATA.map(
