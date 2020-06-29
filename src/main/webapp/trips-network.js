@@ -55,10 +55,13 @@ const SAMPLE_POSTS_DATA = [
 
 /**
  * Fetches shared trips data from constant object data and renders it to the page
- * in card format.
+ * in card format. Currently using static data; currently data-driven but not
+ * based on backend
  */
 function loadSharedTripsData() {
-  // Render loading animation while awaiting the backend fetch
+  // Render loading animation while awaiting the backend fetch. Since the
+  // function is not yet async, this part of the code is not visible since
+  // the loading is negligible with constant preloaded data
   document.getElementById("shared-trips-section").innerHTML = `
     <div class="preloader-wrapper big active loading-animation">
       <div class="spinner-layer spinner-blue-only">
@@ -74,7 +77,7 @@ function loadSharedTripsData() {
   `;
 
   document.getElementById("shared-trips-section").innerHTML = "";
-  // Currently using static data; currently data-driven but not based on backend
+
   SAMPLE_POSTS_DATA.forEach(
     ({ title, destinations, owner, description, timestamp, hotel, rating }) => {
       document.getElementById("shared-trips-section").innerHTML += `
@@ -88,7 +91,7 @@ function loadSharedTripsData() {
               <div class="right-align">
                 <h6>${new Date(timestamp).toLocaleDateString()}</h6>
               </div>
-              ${description}
+              <p>${description}</p>
             </div>
           </div>
         </div>
