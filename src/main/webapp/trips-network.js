@@ -79,6 +79,9 @@ function loadSharedTripsData() {
     </div>
   `;
 
+  // Sort posts with newest first
+  SAMPLE_POSTS_DATA.sort((a, b) => b.timestamp - a.timestamp);
+
   // Once data is loaded, render them into cards that display the data readably
   document.getElementById(
     "shared-trips-section"
