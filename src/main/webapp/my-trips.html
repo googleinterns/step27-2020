@@ -11,14 +11,16 @@
       href="https://fonts.googleapis.com/icon?family=Material+Icons"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="constant-style.css" />
-    <link rel="stylesheet" href="my-trips.css" />
+    <link rel="stylesheet" href="styles/constant-style.css" />
+    <link rel="stylesheet" href="styles/my-trips.css" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
     />
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBNsFRB5UFiW3Atam7bg32K_Dn47t4if0k&libraries=places"></script>
+    <script src="scripts/place-suggestions.js"></script>
   </head>
-  <body>
+  <body onload="findNearbyPlaces();">
     <nav class="blue darken-2" role="navigation">
       <div class="nav-wrapper container">
         <a href="index.html" class="brand-logo">Overnightly</a>
@@ -37,7 +39,7 @@
       <li class="active"><a href="#">My Trips</a></li>
       <li><a href="trips-network.html">Trips Network</a></li>
     </ul>
-
+    <div id="map"></div>
     <div class="container page-container">
       <div class="row">
         <div class="col m10">
@@ -73,9 +75,8 @@
         </div>
       </div>
     </footer>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-    <script src="constant-script.js"></script>
-    <script src="my-trips.js"></script>
+    <script src="scripts/constant-script.js"></script>
+    <script src="scripts/my-trips.js"></script>
   </body>
 </html>
