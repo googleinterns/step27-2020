@@ -12,14 +12,13 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles/constant-style.css" />
-    <link rel="stylesheet" href="styles/style.css" />
     <link rel="stylesheet" href="styles/trips-network.css" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
     />
   </head>
-  <body>
+  <body onload="loadSharedTripsData()">
     <nav class="blue darken-2" role="navigation">
       <div class="nav-wrapper container">
         <a href="index.html" class="brand-logo">Overnightly</a>
@@ -38,7 +37,27 @@
       <li><a href="my-trips.html">My Trips</a></li>
       <li class="active"><a href="#">Trips Network</a></li>
     </ul>
+
+    <div class="page-container container">
+      <h2>Trips Network</h2>
+      <span class="grey-text">
+        Need some inspiration? See where other Overnightly users have been and
+        hear about their stories!
+      </span>
+
+      <div id="shared-trips-section"></div>
+    </div>
+
+    <footer class="page-footer blue lighten-1">
+      <div class="footer-copyright">
+        <div class="container">
+          Created by Peter Wu, Joshua Lewis, and Miguel Fabrigas
+        </div>
+      </div>
+    </footer>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <script src="scripts/constant-script.js"></script>
+    <script src="scripts/trips-network.js"></script>
   </body>
 </html>
