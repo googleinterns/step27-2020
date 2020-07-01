@@ -48,12 +48,6 @@
                 <goal>bdd</goal>
               </goals>
           </execution>
-          <execution>
-           <id>jasmine-test</id>
-            <goals>
-              <goal>test</goal>
-            </goals>
-          </execution>
         </executions>
         <configuration>
           <jsSrcDir>${project.basedir}/src/main/webapp/scripts</jsSrcDir>
