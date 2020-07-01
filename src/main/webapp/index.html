@@ -26,17 +26,22 @@
         <a href="#" data-target="mobile-demo" class="sidenav-trigger">
           <i class="material-icons">menu</i>
         </a>
-        <ul class="right hide-on-med-and-down">
+
+        <ul id="menu-links" class="right hide-on-med-and-down">
           <li class="active"><a href="#">Home</a></li>
-          <li><a href="my-trips.html">My Trips</a></li>
-          <li><a href="trips-network.html">Trips Network</a></li>
+          <li><a class="auth-required" href="my-trips.html">My Trips</a></li>
+          <li>
+            <a class="auth-required" href="trips-network.html">Trips Network</a>
+          </li>
         </ul>
       </div>
     </nav>
     <ul class="sidenav" id="mobile-demo">
       <li class="active"><a href="#">Home</a></li>
-      <li><a href="my-trips.html">My Trips</a></li>
-      <li><a href="trips-network.html">Trips Network</a></li>
+      <li><a class="auth-required" href="my-trips.html">My Trips</a></li>
+      <li>
+        <a class="auth-required" href="trips-network.html">Trips Network</a>
+      </li>
     </ul>
 
     <div class="hero-container">
@@ -45,7 +50,11 @@
           Let's make overnight trip planning easier.
         </h3>
         <div class="center-align">
-          <a id="google-login-button" class="btn white black-text login-button waves-effect" href="#">
+          <a
+            id="google-login-button"
+            class="btn white black-text login-button waves-effect"
+            href="#"
+          >
             <div class="left">
               <img
                 class="google-logo"
