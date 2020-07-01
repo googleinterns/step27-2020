@@ -10,7 +10,7 @@ function authUser() {
 
         if(userAuthInfo.isLoggedIn) {
           loginButton.setAttribute('href', userAuthInfo.logoutUrl);
-          loginButtonText.innerText('Sign out with Google');
+          loginButtonText.innerText = 'Sign out with Google';
         } else {
           loginButton.setAttribute('href', userAuthInfo.loginUrl);
           loginButtonText.innerText = 'Sign in with Google';
