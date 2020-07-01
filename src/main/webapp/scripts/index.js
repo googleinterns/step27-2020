@@ -13,11 +13,10 @@ function authUser() {
       const menu = document.getElementById("menu-links");
 
       if (isLoggedIn) {
-        loginButton.setAttribute("href", logoutUrl);
-        loginButtonText.innerText = "Sign out with Google";
+        loginButton.style.display = "none";
         menu.innerHTML += `
           <li>
-            <a class="waves-effect waves-light btn white black-text">Logout</a>
+            <a class="waves-effect btn white black-text" href="${logoutUrl}">Logout</a>
           </li>
         `;
       } else {
@@ -25,7 +24,7 @@ function authUser() {
         const authRequiredLinks = document.getElementsByClassName(
           "auth-required"
         );
-        authRequiredLinks.forEach((tag) => (tag.href = loginUrl));
+        Array.from(authRequiredLinks).forEach((element) => (element.href = loginUrl));
       }
     });
 }

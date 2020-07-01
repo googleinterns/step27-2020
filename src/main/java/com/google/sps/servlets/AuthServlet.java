@@ -29,7 +29,7 @@ public class AuthServlet extends HttpServlet {
                                   .build();
       response.getWriter().println(gson.toJson(userLoginStatus));
     } else {
-      String redirectAfterLogin = "/";
+      String redirectAfterLogin = "/my-trips.html";
       String loginURL = userService.createLoginURL(redirectAfterLogin);
 
       AuthInfo userLoginStatus = AuthInfo.builder()
