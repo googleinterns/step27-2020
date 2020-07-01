@@ -36,6 +36,29 @@
           <deploy.version>1</deploy.version>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>com.github.searls</groupId>
+        <artifactId>jasmine-maven-plugin</artifactId>
+        <version>1.3.1.3</version>
+        <executions>
+          <execution>
+            <id>jasmine-bdd</id>
+              <goals>
+                <goal>bdd</goal>
+              </goals>
+          </execution>
+          <execution>
+           <id>jasmine-test</id>
+            <goals>
+              <goal>test</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <jsSrcDir>${project.basedir}/src/main/webapp/scripts</jsSrcDir>
+          <jsTestSrcDir>${project.basedir}/src/test/jasmine/tests</jsTestSrcDir>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 </project>
