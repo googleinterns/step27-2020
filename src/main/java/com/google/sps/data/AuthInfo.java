@@ -7,19 +7,18 @@ import com.google.auto.value.AutoValue;
  * repesenting login status, email, and login url or logout url. If one of these
  * are not avaiable, the empty string is used.
  */
-
 @AutoValue
-abstract class AuthInfo {
+public abstract class AuthInfo {
 
-  abstract boolean isLoggedIn();
+  public abstract boolean isLoggedIn();
 
-  abstract String email();
+  public abstract String email();
 
-  abstract String loginUrl();
+  public abstract String loginUrl();
 
-  abstract String logoutUrl();
+  public abstract String logoutUrl();
 
-  static Builder builder() {
+  public static Builder builder() {
     return new AutoValue_AuthInfo.Builder()
                 .setEmail("")
                 .setLoginUrl("")
@@ -27,15 +26,15 @@ abstract class AuthInfo {
   }
 
   @AutoValue.Builder
-  abstract static class Builder {
-    abstract Builder setIsLoggedIn(boolean value);
+  public abstract static class Builder {
+    public abstract Builder setIsLoggedIn(boolean value);
 
-    abstract Builder setEmail(String value);
+    public abstract Builder setEmail(String value);
 
-    abstract Builder setLoginUrl(String value);
+    public abstract Builder setLoginUrl(String value);
 
-    abstract Builder setLogoutUrl(String value);
+    public abstract Builder setLogoutUrl(String value);
 
-    abstract AuthInfo build();
+    public abstract AuthInfo build();
   }
 }
