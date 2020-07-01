@@ -18,21 +18,21 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
     />
   </head>
-  <body onload="loadSharedTripsData()">
+  <body onload="init();">
     <nav class="blue darken-2" role="navigation">
       <div class="nav-wrapper container">
         <a href="index.html" class="brand-logo">Overnightly</a>
         <a href="#" data-target="mobile-demo" class="sidenav-trigger">
           <i class="material-icons">menu</i>
         </a>
-        <ul class="right hide-on-med-and-down">
+        <ul class="right hide-on-med-and-down" id="menu-links">
           <li><a href="index.html">Home</a></li>
           <li><a href="my-trips.html">My Trips</a></li>
           <li class="active"><a href="#">Trips Network</a></li>
         </ul>
       </div>
     </nav>
-    <ul class="sidenav" id="mobile-demo">
+    <ul class="sidenav" id="menu-links">
       <li><a href="index.html">Home</a></li>
       <li><a href="my-trips.html">My Trips</a></li>
       <li class="active"><a href="#">Trips Network</a></li>

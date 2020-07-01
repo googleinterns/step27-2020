@@ -19,3 +19,24 @@ document.addEventListener("DOMContentLoaded", () => {
   const elems = document.querySelectorAll(".sidenav");
   const instances = M.Sidenav.init(elems, undefined);
 });
+
+/**
+ * Checks auth status of user and redirects to auth page if
+ * they are not logged in. For use on auth-walled pages.
+ */
+function authReload() {
+  fetch("/login")
+    .then((response) => response.json())
+    .then(({isLoggedIn, loginUrl, logoutUrl}) => {
+      if(isLoggedIn) {
+        const menu = document.getElementById("menu-links");
+        menu.innerHTML += `
+          <li>
+            <a class="waves-effect btn white black-text" href="${logoutUrl}">Logout</a>
+          </li>
+        `;
+      } else {        
+        window.location.replace(loginUrl);
+      }
+    });
+}
