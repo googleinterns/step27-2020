@@ -95,7 +95,7 @@ function loadSharedTripsData() {
                 <h6>Rating: ${rating}</h6>
               </div>
               <div class="right-align">
-                <h6>${new Date(timestamp).toLocaleDateString()}</h6>
+                <h6>${unixTimestampToString(timestamp)}</h6>
               </div>
               <p>${description}</p>
               <ul class="collection with-header">
@@ -120,4 +120,14 @@ function loadSharedTripsData() {
         </div>
       `
   ).join(" ");
+}
+
+/**
+ * Converts Unix epoch time number to a string of the form MM/DD/YYYY.
+ * Uses the client timezone to calculate the string; behavior can differ
+ * on different devices.
+ * @param {number} timestamp
+ */
+function unixTimestampToString(timestamp) {
+  return new Date(timestamp).toLocaleDateString();
 }
