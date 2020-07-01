@@ -5,8 +5,8 @@ function authUser() {
     fetch('/login')
       .then(response => response.json())
       .then(userAuthInfo => {
-        let loginButton = document.getElementById('google-login-button');
-        let loginButtonText = document.getElementById('google-login-button-text');
+        const loginButton = document.getElementById('google-login-button');
+        const loginButtonText = document.getElementById('google-login-button-text');
 
         if(userAuthInfo.isLoggedIn) {
           loginButton.setAttribute('href', userAuthInfo.logoutUrl);
