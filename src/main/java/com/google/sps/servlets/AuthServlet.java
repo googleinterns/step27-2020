@@ -23,13 +23,19 @@ public class AuthServlet extends HttpServlet {
       String redirectAfterLogout = "/";
       String logoutURL = userService.createLogoutURL(redirectAfterLogout);
 
-      AuthInfo userLoginStatus = AuthInfo.createLoggedInInfo(logoutURL);
+      AuthInfo userLoginStatus = AuthInfo.builder()
+                                  .setIsLoggedIn(true)
+                                  .setLogoutUrl(logoutURL)
+                                  .build();
       response.getWriter().println(gson.toJson(userLoginStatus));
     } else {
-      String redirectAfterLogin = "/";
+      String redirectAfterLogin = "/my-trips.html";
       String loginURL = userService.createLoginURL(redirectAfterLogin);
 
-      AuthInfo userLoginStatus = AuthInfo.createLoggedOutInfo(loginURL);
+      AuthInfo userLoginStatus = AuthInfo.builder()
+                                  .setIsLoggedIn(false)
+                                  .setLoginUrl(loginURL)
+                                  .build();
       response.getWriter().println(gson.toJson(userLoginStatus));
     }
   }

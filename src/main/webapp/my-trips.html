@@ -20,14 +20,14 @@
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBNsFRB5UFiW3Atam7bg32K_Dn47t4if0k&libraries=places"></script>
     <script src="scripts/place-suggestions.js"></script>
   </head>
-  <body onload="findNearbyPlaces();">
+  <body onload="init();">
     <nav class="blue darken-2" role="navigation">
       <div class="nav-wrapper container">
         <a href="index.html" class="brand-logo">Overnightly</a>
         <a href="#" data-target="mobile-demo" class="sidenav-trigger">
           <i class="material-icons">menu</i>
         </a>
-        <ul class="right hide-on-med-and-down">
+        <ul class="right hide-on-med-and-down" id="menu-links">
           <li><a href="index.html">Home</a></li>
           <li class="active"><a href="#">My Trips</a></li>
           <li><a href="trips-network.html">Trips Network</a></li>

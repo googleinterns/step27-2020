@@ -1,23 +1,40 @@
 package com.google.sps.data;
 
-/** An object to hold authentication information*/
-public final class AuthInfo {
+import com.google.auto.value.AutoValue;
 
-    private final boolean isLoggedIn;
-    private final String loginUrl;
-    private final String logoutUrl;
-  
-    public AuthInfo(boolean isLoggedIn, String loginUrl, String logoutUrl) {
-      this.isLoggedIn = isLoggedIn;
-      this.loginUrl = loginUrl;
-      this.logoutUrl = logoutUrl;
-    }
-  
-    public static AuthInfo createLoggedInInfo(String url) {
-      return new AuthInfo(true, "", url);
-    }
-  
-    public static AuthInfo createLoggedOutInfo(String url) {
-      return new AuthInfo(false, url, "");
-    }
+/**
+ * Value class for data pertaining to a user's auth status with a boolean
+ * repesenting login status, email, and login url or logout url. If one of these
+ * are not avaiable, the empty string is used.
+ */
+@AutoValue
+public abstract class AuthInfo {
+
+  public abstract boolean isLoggedIn();
+
+  public abstract String email();
+
+  public abstract String loginUrl();
+
+  public abstract String logoutUrl();
+
+  public static Builder builder() {
+    return new AutoValue_AuthInfo.Builder()
+                .setEmail("")
+                .setLoginUrl("")
+                .setLogoutUrl("");
   }
+
+  @AutoValue.Builder
+  public abstract static class Builder {
+    public abstract Builder setIsLoggedIn(boolean value);
+
+    public abstract Builder setEmail(String value);
+
+    public abstract Builder setLoginUrl(String value);
+
+    public abstract Builder setLogoutUrl(String value);
+
+    public abstract AuthInfo build();
+  }
+}

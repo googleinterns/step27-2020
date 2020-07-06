@@ -1,3 +1,11 @@
+/**
+ * Function run on page load that runs auth checking and other functions
+ */
+function init() {
+  authReload();
+  findNearbyPlaces();
+}
+
 let numLocations = 1;
 
 /**
