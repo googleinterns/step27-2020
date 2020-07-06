@@ -49,22 +49,22 @@ function openTripEditor() {
                 </div>
               </div>
               <div class="row">
-                <div class="col s10">
+                <div class="col m10">
+                <button 
+                  type="button"
+                  class="btn-floating btn-large waves-effect waves-light blue"
+                  onclick="addLocation()"
+                >
+                  <i class="material-icons">add</i>
+                </button>
+                </div>
+                <div class="col m2">
                   <button
                     type="button"
                     onclick="saveTrip(); cancelTripCreation()"
                     class="btn-large waves-effect indigo darken-2"
                   >
                     Save
-                  </button>
-                </div>
-                <div class="col s2">
-                  <button 
-                    type="button"
-                    class="btn-floating btn-large waves-effect waves-light blue"
-                    onclick="addLocation()"
-                  >
-                    <i class="material-icons">add</i>
                   </button>
                 </div>
               </div>
