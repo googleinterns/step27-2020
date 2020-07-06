@@ -14,14 +14,18 @@ function authUser() {
       );
 
       if (isLoggedIn) {
-        loginButton.style.display = "none";
         showLogoutButton(logoutUrl);
+        document.getElementById("cta-area").innerHTML = `
+          <a class="waves-effect white btn-large black-text" href="my-trips.html">Get Started</a>
+        `;
       } else {
         loginButton.setAttribute("href", loginUrl);
         const authRequiredLinks = document.getElementsByClassName(
           "auth-required"
         );
-        Array.from(authRequiredLinks).forEach((element) => (element.style.display = "none"));
+        Array.from(authRequiredLinks).forEach(
+          (element) => (element.style.display = "none")
+        );
       }
     });
 }
