@@ -1,5 +1,7 @@
 /**
- * Check if user is logged in and performs respective behavior to the DOM of the homepage
+ * Check if user is logged in and performs respective behavior to the DOM of the homepage:
+ * if user logged in, show navbar options for auth-walled pages and hide sign-in button
+ * if user logged out, hide navbar options for auth-walled pages and show sign-in button
  */
 function authUser() {
   fetch("/login")
@@ -10,21 +12,16 @@ function authUser() {
       const loginButtonText = document.getElementById(
         "google-login-button-text"
       );
-      const menu = document.getElementById("menu-links");
 
       if (isLoggedIn) {
         loginButton.style.display = "none";
-        menu.innerHTML += `
-          <li>
-            <a class="waves-effect btn white black-text" href="${logoutUrl}">Logout</a>
-          </li>
-        `;
+        showLogoutButton(logoutUrl);
       } else {
         loginButton.setAttribute("href", loginUrl);
         const authRequiredLinks = document.getElementsByClassName(
           "auth-required"
         );
-        Array.from(authRequiredLinks).forEach((element) => (element.href = loginUrl));
+        Array.from(authRequiredLinks).forEach((element) => (element.style.display = "none"));
       }
     });
 }

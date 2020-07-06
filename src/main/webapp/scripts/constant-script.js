@@ -29,14 +29,31 @@ function authReload() {
     .then((response) => response.json())
     .then(({isLoggedIn, loginUrl, logoutUrl}) => {
       if(isLoggedIn) {
-        const menu = document.getElementById("menu-links");
-        menu.innerHTML += `
+        showLogoutButton(logoutUrl);
+      } else {        
+        // redirect user to auth page
+        window.location.replace(loginUrl);
+      }
+    });
+}
+
+/**
+ * Shows the logout button given a logout url string in
+ * the main navbar and mobile sidenav.
+ * Precondition: user should be logged in.
+ * @param {string} logoutUrl
+ */
+function showLogoutButton(logoutUrl) {
+  const mobileSidenav = document.getElementById("mobile-demo");
+  const defaultNav = document.getElementById("menu-links");
+  mobileSidenav.innerHTML += `
           <li>
             <a class="waves-effect btn white black-text" href="${logoutUrl}">Logout</a>
           </li>
         `;
-      } else {        
-        window.location.replace(loginUrl);
-      }
-    });
+  defaultNav.innerHTML += `
+          <li>
+            <a class="waves-effect btn white black-text" href="${logoutUrl}">Logout</a>
+          </li>
+        `;
 }
