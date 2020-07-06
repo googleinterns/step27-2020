@@ -19,3 +19,41 @@ document.addEventListener("DOMContentLoaded", () => {
   const elems = document.querySelectorAll(".sidenav");
   const instances = M.Sidenav.init(elems, undefined);
 });
+
+/**
+ * Checks auth status of user and redirects to auth page if
+ * they are not logged in. For use on auth-walled pages.
+ */
+function authReload() {
+  fetch("/login")
+    .then((response) => response.json())
+    .then(({isLoggedIn, loginUrl, logoutUrl}) => {
+      if(isLoggedIn) {
+        showLogoutButton(logoutUrl);
+      } else {        
+        // redirect user to auth page
+        window.location.replace(loginUrl);
+      }
+    });
+}
+
+/**
+ * Shows the logout button given a logout url string in
+ * the main navbar and mobile sidenav.
+ * Precondition: user should be logged in.
+ * @param {string} logoutUrl
+ */
+function showLogoutButton(logoutUrl) {
+  const mobileSidenav = document.getElementById("mobile-demo");
+  const defaultNav = document.getElementById("menu-links");
+  mobileSidenav.innerHTML += `
+          <li>
+            <a class="waves-effect btn white black-text" href="${logoutUrl}">Logout</a>
+          </li>
+        `;
+  defaultNav.innerHTML += `
+          <li>
+            <a class="waves-effect btn white black-text" href="${logoutUrl}">Logout</a>
+          </li>
+        `;
+}
