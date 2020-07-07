@@ -49,22 +49,24 @@ function openTripEditor() {
                 </div>
               </div>
               <div class="row">
-                <div class="col s10">
+                <div class="col m10">
+                <button 
+                  type="button"
+                  class="btn-floating btn-large waves-effect waves-light blue tooltipped"
+                  onclick="addLocation()"
+                  data-position="bottom" 
+                  data-tooltip="Add another location"
+                >
+                  <i class="material-icons">add</i>
+                </button>
+                </div>
+                <div class="col m2">
                   <button
                     type="button"
                     onclick="saveTrip(); cancelTripCreation()"
                     class="btn-large waves-effect indigo darken-2"
                   >
                     Save
-                  </button>
-                </div>
-                <div class="col s2">
-                  <button 
-                    type="button"
-                    class="btn-floating btn-large waves-effect waves-light blue"
-                    onclick="addLocation()"
-                  >
-                    <i class="material-icons">add</i>
                   </button>
                 </div>
               </div>
@@ -94,6 +96,9 @@ function openTripEditor() {
       </div>
     </div>
   `;
+  // initialize tooltip for Add Location button
+  const tooltipElems = document.querySelectorAll('.tooltipped');
+  const tooltipInstances = M.Tooltip.init(tooltipElems, undefined);
 }
 
 /**
