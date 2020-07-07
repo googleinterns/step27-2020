@@ -52,8 +52,10 @@ function openTripEditor() {
                 <div class="col m10">
                 <button 
                   type="button"
-                  class="btn-floating btn-large waves-effect waves-light blue"
+                  class="btn-floating btn-large waves-effect waves-light blue tooltipped"
                   onclick="addLocation()"
+                  data-position="bottom" 
+                  data-tooltip="Add another location"
                 >
                   <i class="material-icons">add</i>
                 </button>
@@ -94,6 +96,9 @@ function openTripEditor() {
       </div>
     </div>
   `;
+  // initialize tooltip for Add Location button
+  const tooltipElems = document.querySelectorAll('.tooltipped');
+  const tooltipInstances = M.Tooltip.init(tooltipElems, undefined);
 }
 
 /**

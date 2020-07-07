@@ -16,7 +16,7 @@ function authUser() {
       if (isLoggedIn) {
         showLogoutButton(logoutUrl);
         document.getElementById("cta-area").innerHTML = `
-          <a class="waves-effect white btn-large black-text" href="my-trips.html">Get Started</a>
+          <a class="waves-effect white btn-large black-text" id="get-started-button" href="my-trips.html">Get Started</a>
         `;
       } else {
         loginButton.setAttribute("href", loginUrl);

@@ -2,6 +2,10 @@
   font-size: 18px;
 }
 
+#get-started-button {
+  margin-top: 2em;
+}
+
 .google-logo {
   margin: 9px 24px 0 0;
   width: 18px;
