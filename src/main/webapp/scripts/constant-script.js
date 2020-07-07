@@ -14,10 +14,10 @@
 
 // This file contains all the constant scripts to be loaded on each page.
 
-// Initialize mobile sidenav when DOM content is fully loaded
+// Initialize Materialize JS elements when DOM content is fully loaded
 document.addEventListener("DOMContentLoaded", () => {
-  const elems = document.querySelectorAll(".sidenav");
-  const instances = M.Sidenav.init(elems, undefined);
+  const sidenavElems = document.querySelectorAll(".sidenav");
+  const sideNavInstances = M.Sidenav.init(sidenavElems, undefined);
 });
 
 /**

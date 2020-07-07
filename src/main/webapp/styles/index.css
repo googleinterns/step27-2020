@@ -2,13 +2,18 @@
   font-size: 18px;
 }
 
+#get-started-button {
+  margin-top: 2em;
+}
+
 .google-logo {
   margin: 9px 24px 0 0;
   width: 18px;
 }
 
 .hero-container {
-  background: url(../assets/img/unsplash-travel.jpg) no-repeat center center fixed;
+  background: url(../assets/img/unsplash-travel.jpg) no-repeat center center
+    fixed;
   background-size: cover;
   color: white;
   min-height: calc(50vh - 60px);
@@ -28,4 +33,8 @@
 .info-container {
   background: whitesmoke;
   min-height: 50vh;
+}
+
+.subtitle {
+  margin-bottom: 0;
 }
