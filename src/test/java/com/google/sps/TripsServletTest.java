@@ -2,11 +2,8 @@ package com.google.sps;
 
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.tools.development.testing.LocalDatastoreServiceTestConfig;
-import com.google.appengine.tools.development.testing.LocalMemcacheServiceTestConfig;
 import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
-import com.google.appengine.tools.development.testing.LocalTaskQueueTestConfig;
 import com.google.sps.data.Trip;
-import com.google.sps.data.TripLocation;
 import com.google.sps.servlets.TripsServlet;
 
 import org.junit.After;
@@ -18,15 +15,15 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public class TripsServletTest {
-  private final LocalServiceTestHelper helper = new LocalServiceTestHelper(new LocalDatastoreServiceTestConfig());
+  public final LocalServiceTestHelper helper = new LocalServiceTestHelper(new LocalDatastoreServiceTestConfig());
 
   @Before
-  protected void setUp() {
+  public void setUp() {
     helper.setUp();
   }
 
   @After
-  protected void tearDown() {
+  public void tearDown() {
     helper.tearDown();
   }
 
