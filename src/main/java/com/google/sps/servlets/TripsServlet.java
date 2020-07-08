@@ -11,12 +11,14 @@ import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
 import com.google.appengine.api.datastore.Entity;
 import com.google.gson.Gson;
-import com.google.sps.data.Location;
+import com.google.sps.data.TripLocation;
 import com.google.sps.data.Trip;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -34,16 +36,40 @@ public class TripsServlet extends HttpServlet {
     UserService userService = UserServiceFactory.getUserService();
     if (userService.isUserLoggedIn()) {
       String userEmail = userService.getCurrentUser().getEmail();
-      Query query = new Query("trip")
-                    .setFilter(new FilterPredicate(Trip.ENTITY_PROPERTY_OWNER, FilterOperator.EQUAL, userEmail))
-                    .addSort(Trip.ENTITY_PROPERTY_TIMESTAMP, SortDirection.DESCENDING);
+      Query tripQuery = new Query("trip")
+                        .setFilter(new FilterPredicate(Trip.ENTITY_PROPERTY_OWNER, FilterOperator.EQUAL, userEmail))
+                        .addSort(Trip.ENTITY_PROPERTY_TIMESTAMP, SortDirection.DESCENDING);
+      Query tripLocationsQuery = new Query("trip-location")
+                                  .setFilter(new FilterPredicate(TripLocation.ENTITY_PROPERTY_OWNER, FilterOperator.EQUAL, userEmail));
       DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-      PreparedQuery results = datastore.prepare(query);
+      PreparedQuery tripResults = datastore.prepare(tripQuery);
+      PreparedQuery tripLocationResults = datastore.prepare(tripLocationsQuery);
+      Iterable<Entity> tripEntityIterable = tripResults.asIterable();
+      Iterable<Entity> tripLocationEntityIterable = tripLocationResults.asIterable();
+      
+      // Convert trip location iterable to HashMap with mapping from timestamp to TripLocation object
+      // Provides easy O(1) lookup of locations for a certain trip.
+      Map<Long, List<TripLocation>> tripLocationMap = new HashMap<>();
+      for(Entity entity : tripLocationEntityIterable) {
+        TripLocation location = convertEntityToTripLocation(entity);
+        if(tripLocationMap.containsKey(location.timestamp())) {
+          List<TripLocation> locationsUnderCurrTrip = tripLocationMap.get(location.timestamp());
+          locationsUnderCurrTrip.add(location);
+          tripLocationMap.replace(location.timestamp(), locationsUnderCurrTrip);
+        } else {
+          tripLocationMap.put(location.timestamp(), new ArrayList<>(Arrays.asList(location)));
+        }
+      }
 
-      Iterable<Entity> entityIterable = results.asIterable();
-      List<Trip> userTripsResponse = new ArrayList<>();
-      for (Entity entity : entityIterable) {
-        userTripsResponse.add(convertEntityToTrip(entity));
+      // Get list of trips without their corresponding locations
+      List<Trip> trips = new ArrayList<>();
+      for (Entity entity : tripEntityIterable) {
+        trips.add(convertEntityToTrip(entity));
+      }
+
+      
+      for(Trip trip : trips) {
+        trip.
       }
       response.setContentType("application/json;");
       Gson gson = new Gson();
@@ -63,14 +89,35 @@ public class TripsServlet extends HttpServlet {
     if (userService.isUserLoggedIn()) {
       String userEmail = userService.getCurrentUser().getEmail();
       long timestamp = System.currentTimeMillis();
-      String requestData = request.getReader().lines().collect(Collectors.joining());
-
-      Trip trip = new Gson().fromJson(requestData, Trip.class);
       
+      Trip trip = Trip.builder()
+                    .setTitle(request.getParameter(Trip.ENTITY_PROPERTY_TITLE))
+                    .setHotel(request.getParameter(Trip.ENTITY_PROPERTY_HOTEL))
+                    .setRating(Double.valueOf(request.getParameter(Trip.ENTITY_PROPERTY_RATING)))
+                    .setDescription(request.getParameter(Trip.ENTITY_PROPERTY_DESCRIPTION))
+                    .setOwner(userEmail)
+                    .setTimestamp(timestamp)
+                    .build();
       Entity tripEntity = convertTripToEntity(trip);
+
       DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-     
       datastore.put(tripEntity);
+
+      // build TripLocation objects from request data and put them in Datastore
+      
+      String[] locations = request.getParameterValues("locations");
+      String[] weights = request.getParameterValues("weights");
+      // these two arrays should be of equal length. If not, return error
+      if(locations.length != weights.length) {
+        response.setStatus(HttpServletResponse.SC_CONFLICT);
+        return;
+      }
+      
+      for(int i = 0; i < locations.length; i++) {
+        TripLocation location = TripLocation.create(locations[i], Integer.valueOf(weights[i]), timestamp, userEmail);
+        datastore.put(convertTripLocationToEntity(location));
+      }
+
       response.setStatus(HttpServletResponse.SC_OK);
     } else {
       // send error code 401 if user is not authenticated and tries to access data
@@ -87,8 +134,7 @@ public class TripsServlet extends HttpServlet {
   @SuppressWarnings("unchecked")
   private static Trip convertEntityToTrip(Entity entity) {
     String title = (String) entity.getProperty(Trip.ENTITY_PROPERTY_TITLE);
-    List<Location> locations = (List<Location>) entity.getProperty(Trip.ENTITY_PROPERTY_LOCATIONS);
-    List<String> hotels = (List<String>) entity.getProperty(Trip.ENTITY_PROPERTY_HOTELS);
+    String hotel = (String) entity.getProperty(Trip.ENTITY_PROPERTY_HOTEL);
     double rating = (double) entity.getProperty(Trip.ENTITY_PROPERTY_RATING);
     String description = (String) entity.getProperty(Trip.ENTITY_PROPERTY_DESCRIPTION);
     String owner = (String) entity.getProperty(Trip.ENTITY_PROPERTY_OWNER);
@@ -97,14 +143,42 @@ public class TripsServlet extends HttpServlet {
 
     return Trip.builder()
             .setTitle(title)
-            .setLocations(locations == null ? new ArrayList<Location>() : locations)
-            .setHotels(hotels == null ? new ArrayList<String>() : hotels)
+            .setHotel(hotel)
             .setRating(rating)
             .setDescription(description)
             .setOwner(owner)
             .setIsPublic(isPublic)
             .setTimestamp(timestamp)
             .build();
+  }
+
+  /**
+   * Converts an Entity of kind "trip-location" to the value class type.
+   * 
+   * @param entity the entity from Datastore containing TripLocation data
+   * @return TripLocation object with corresponding fields to the entity
+   */
+  private static TripLocation convertEntityToTripLocation(Entity entity) {
+    String placeID = (String) entity.getProperty(TripLocation.ENTITY_PROPERTY_PLACE);
+    int weight = (int) entity.getProperty(TripLocation.ENTITY_PROPERTY_WEIGHT);
+    long timestamp = (long) entity.getProperty(TripLocation.ENTITY_PROPERTY_TRIP);
+    String owner = (String) entity.getProperty(TripLocation.ENTITY_PROPERTY_OWNER);
+    return TripLocation.create(placeID, weight, timestamp, owner);
+  }
+
+  /**
+   * Converts a certain TripLocation object to a corresponding Entity object.
+   * 
+   * @param location the TripLocation object to be converted
+   * @return Entity object with matching property values
+   */
+  private static Entity convertTripLocationToEntity(TripLocation location) {
+    Entity tripLocationEntity = new Entity("trip-location");
+    tripLocationEntity.setProperty(TripLocation.ENTITY_PROPERTY_PLACE, location.placeID());
+    tripLocationEntity.setProperty(TripLocation.ENTITY_PROPERTY_WEIGHT, location.weight());
+    tripLocationEntity.setProperty(TripLocation.ENTITY_PROPERTY_TRIP, location.timestamp());
+    tripLocationEntity.setProperty(TripLocation.ENTITY_PROPERTY_OWNER, location.owner());
+    return tripLocationEntity;
   }
 
   /**
@@ -116,8 +190,7 @@ public class TripsServlet extends HttpServlet {
   private static Entity convertTripToEntity(Trip trip) {
     Entity tripEntity = new Entity("trip");
     tripEntity.setProperty(Trip.ENTITY_PROPERTY_TITLE, trip.title());
-    tripEntity.setProperty(Trip.ENTITY_PROPERTY_LOCATIONS, trip.locations());
-    tripEntity.setProperty(Trip.ENTITY_PROPERTY_HOTELS, trip.hotels());
+    tripEntity.setProperty(Trip.ENTITY_PROPERTY_HOTEL, trip.hotel());
     tripEntity.setProperty(Trip.ENTITY_PROPERTY_RATING, trip.rating());
     tripEntity.setProperty(Trip.ENTITY_PROPERTY_DESCRIPTION, trip.description());
     tripEntity.setProperty(Trip.ENTITY_PROPERTY_OWNER, trip.owner());
