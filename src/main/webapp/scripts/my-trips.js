@@ -27,12 +27,12 @@ function openTripEditor() {
         <div class="card">
           <div class="card-content">
             <span class="card-title">New Trip</span>
-            <form>
+            <form id="trip-editor-form">
               <div id="trip-locations-container">
                 <div class="row">
                   <div class="input-field col s6">
-                    <input id="location-1" type="text" />
                     <label for="location-1">Location 1</label>
+                    <input id="location-1" type="text" required />
                   </div>
                   <div class="col s6">
                     <p class="range-field weight-slider">
@@ -61,13 +61,11 @@ function openTripEditor() {
                 </button>
                 </div>
                 <div class="col m2">
-                  <button
-                    type="button"
+                  <input
+                    type="submit"
                     onclick="saveTrip(); cancelTripCreation()"
                     class="btn-large waves-effect indigo darken-2"
-                  >
-                    Save
-                  </button>
+                  />
                 </div>
               </div>
             </form>
@@ -97,8 +95,12 @@ function openTripEditor() {
     </div>
   `;
   // initialize tooltip for Add Location button
-  const tooltipElems = document.querySelectorAll('.tooltipped');
+  const tooltipElems = document.querySelectorAll(".tooltipped");
   const tooltipInstances = M.Tooltip.init(tooltipElems, undefined);
+  // prevent page reload on form submit
+  document
+    .getElementById("trip-editor-form")
+    .addEventListener("submit", (e) => e.preventDefault());
 }
 
 /**
@@ -146,39 +148,31 @@ function cancelTripCreation() {
   `;
 }
 
-let numTrips = 0;
-
 /**
  * Saves the current trip the user is editing to My Trips
  */
 function saveTrip() {
-  numTrips++;
-  document.getElementById("planned-trips-container").innerHTML += `
-     <div class="row">
-      <div class="col m8">
-        <div class="card">
-          <div class="card-content">
-            <span class="card-title">Trip</span>
-            <form>
-              <div id="trip-${numTrips}-locations"></div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
+  // Build location and weight arrays
+  const locations = [];
+  const weights = [];
   for (let i = 1; i <= numLocations; i++) {
-    document.getElementById(`trip-${numTrips}-locations`).innerHTML += `
-      <div class="row">
-        <div class="col s6">
-          <span>${document.getElementById("location-" + i).value}</span>
-        </div>
-        <div class="col s6">
-          <span>${
-            document.getElementById("location-" + i + "-weight").value
-          }</span>
-        </div>
-      </div>
-    `;
+    locations.push(document.getElementById(`location-${i}`).value);
+    weights.push(document.getElementById(`location-${i}-weight`).value);
   }
+  const requestBody = {
+    title: "test",
+    hotel: "hotel1234",
+    rating: -1,
+    description: "",
+    locations: locations,
+    weights: weights,
+  };
+
+  fetch("/trip-data", {
+    method: "POST",
+    headers: {
+      "content-type": "application/x-www-form-urlencoded",
+    },
+    body: JSON.stringify(requestBody),
+  });
 }
