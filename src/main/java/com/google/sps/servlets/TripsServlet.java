@@ -128,7 +128,7 @@ public class TripsServlet extends HttpServlet {
    * @param entity the entity from the Datastore containing the trip data
    * @return Trip object with corresponding fields to the entity properties
    */
-  private static Trip convertEntityToTrip(Entity entity) {
+  public static Trip convertEntityToTrip(Entity entity) {
     String title = (String) entity.getProperty(Trip.ENTITY_PROPERTY_TITLE);
     String hotel = (String) entity.getProperty(Trip.ENTITY_PROPERTY_HOTEL);
     double rating = (double) entity.getProperty(Trip.ENTITY_PROPERTY_RATING);
@@ -154,7 +154,7 @@ public class TripsServlet extends HttpServlet {
    * @param entity the entity from Datastore containing TripLocation data
    * @return TripLocation object with corresponding fields to the entity
    */
-  private static TripLocation convertEntityToTripLocation(Entity entity) {
+  public static TripLocation convertEntityToTripLocation(Entity entity) {
     String placeID = (String) entity.getProperty(TripLocation.ENTITY_PROPERTY_PLACE);
     int weight = (int) entity.getProperty(TripLocation.ENTITY_PROPERTY_WEIGHT);
     long timestamp = (long) entity.getProperty(TripLocation.ENTITY_PROPERTY_TRIP);
@@ -168,7 +168,7 @@ public class TripsServlet extends HttpServlet {
    * @param location the TripLocation object to be converted
    * @return Entity object with matching property values
    */
-  private static Entity convertTripLocationToEntity(TripLocation location) {
+  public static Entity convertTripLocationToEntity(TripLocation location) {
     Entity tripLocationEntity = new Entity("trip-location");
     tripLocationEntity.setProperty(TripLocation.ENTITY_PROPERTY_PLACE, location.placeID());
     tripLocationEntity.setProperty(TripLocation.ENTITY_PROPERTY_WEIGHT, location.weight());
@@ -183,7 +183,7 @@ public class TripsServlet extends HttpServlet {
    * @param trip the Trip object to be converted
    * @return Entity object with matching property values
    */
-  private static Entity convertTripToEntity(Trip trip) {
+  public static Entity convertTripToEntity(Trip trip) {
     Entity tripEntity = new Entity("trip");
     tripEntity.setProperty(Trip.ENTITY_PROPERTY_TITLE, trip.title());
     tripEntity.setProperty(Trip.ENTITY_PROPERTY_HOTEL, trip.hotel());
