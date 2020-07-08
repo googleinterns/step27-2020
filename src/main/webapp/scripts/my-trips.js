@@ -97,10 +97,10 @@ function openTripEditor() {
   // initialize tooltip for Add Location button
   const tooltipElems = document.querySelectorAll(".tooltipped");
   const tooltipInstances = M.Tooltip.init(tooltipElems, undefined);
+
   // prevent page reload on form submit
-  document
-    .getElementById("trip-editor-form")
-    .addEventListener("submit", (e) => e.preventDefault());
+  const form = document.getElementById("trip-editor-form");
+  form.addEventListener("submit", (e) => e.preventDefault());
 }
 
 /**
@@ -167,7 +167,7 @@ function saveTrip() {
     locations: locations,
     weights: weights,
   };
-
+  console.log(requestBody);
   fetch("/trip-data", {
     method: "POST",
     headers: {

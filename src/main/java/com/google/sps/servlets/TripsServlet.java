@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -88,6 +89,8 @@ public class TripsServlet extends HttpServlet {
       String userEmail = userService.getCurrentUser().getEmail();
       long timestamp = System.currentTimeMillis();
       
+      System.out.println(request.getReader().lines().collect(Collectors.joining(System.lineSeparator())));
+
       Trip trip = Trip.builder()
                     .setTitle(request.getParameter(Trip.ENTITY_PROPERTY_TITLE))
                     .setHotel(request.getParameter(Trip.ENTITY_PROPERTY_HOTEL))
