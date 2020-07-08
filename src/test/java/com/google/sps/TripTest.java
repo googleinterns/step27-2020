@@ -20,11 +20,11 @@ public class TripTest {
     Location loc1 = Location.create("aBc123", 4);
     Location loc2 = Location.create("xY4z65", 2);
     Trip defaultTrip = Trip.builder()
-                              .setTitle("Trip 1")
-                              .setLocations(new ArrayList<Location>(Arrays.asList(loc1, loc2)))
-                              .setOwner("test@gmail.com")
-                              .setTimestamp(1594160425000L)
-                              .build();
+                        .setTitle("Trip 1")
+                        .setLocations(new ArrayList<Location>(Arrays.asList(loc1, loc2)))
+                        .setOwner("test@gmail.com")
+                        .setTimestamp(1594160425000L)
+                        .build();
     Assert.assertEquals("Trip 1", defaultTrip.title());
     Assert.assertEquals(Arrays.asList(loc1, loc2), defaultTrip.locations());
     Assert.assertEquals(Collections.emptyList(), defaultTrip.hotels());
