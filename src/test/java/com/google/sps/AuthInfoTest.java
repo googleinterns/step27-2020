@@ -1,4 +1,6 @@
-package com.google.sps.tests;
+package com.google.sps;
+
+import com.google.sps.data.AuthInfo;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -7,12 +9,25 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public final class AuthInfoTest {
-  
+
   @Test
-  public void example() {
-    // placeholder test to show that tests are evaluated
-    Assert.assertEquals(1 + 1, 2);
-    Assert.assertEquals(2 * 2, 4);
-    Assert.assertEquals(1337, 1500 - 163);
+  public void testDefaultBuilderValues() {
+    AuthInfo uninitializedAuthInfo = AuthInfo.builder().setIsLoggedIn(false).build();
+    Assert.assertEquals("", uninitializedAuthInfo.email());
+    Assert.assertEquals("", uninitializedAuthInfo.loginUrl());
+    Assert.assertEquals("", uninitializedAuthInfo.logoutUrl());
+  }
+
+  @Test
+  public void testBuilderLoggedInFields() {
+    AuthInfo loggedInAuthInfo = AuthInfo.builder()
+                                  .setIsLoggedIn(true)
+                                  .setEmail("test@gmail.com")
+                                  .setLogoutUrl("https://google.com")
+                                  .build();
+    Assert.assertEquals(true, loggedInAuthInfo.isLoggedIn());
+    Assert.assertEquals("test@gmail.com", loggedInAuthInfo.email());
+    Assert.assertEquals("https://google.com", loggedInAuthInfo.logoutUrl());
+    Assert.assertEquals("", loggedInAuthInfo.loginUrl());
   }
 }
