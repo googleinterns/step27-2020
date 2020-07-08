@@ -4,7 +4,6 @@ import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.PreparedQuery;
 import com.google.appengine.api.datastore.Query;
-import com.google.appengine.api.datastore.Query.Filter;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query.FilterPredicate;
 import com.google.appengine.api.datastore.Query.SortDirection;
@@ -12,13 +11,12 @@ import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
 import com.google.appengine.api.datastore.Entity;
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.google.sps.data.Location;
 import com.google.sps.data.Trip;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -51,6 +49,7 @@ public class TripsServlet extends HttpServlet {
       Gson gson = new Gson();
       String serializedJSON = gson.toJson(userTripsResponse);
       response.getWriter().println(serializedJSON);
+      response.setStatus(HttpServletResponse.SC_OK);
     } else {
       // send error code 401 if user is not authenticated and tries to access data
       response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -59,16 +58,18 @@ public class TripsServlet extends HttpServlet {
 
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    response.setContentType("application/json;");
     UserService userService = UserServiceFactory.getUserService();
     if (userService.isUserLoggedIn()) {
-      
       String userEmail = userService.getCurrentUser().getEmail();
       long timestamp = System.currentTimeMillis();
+      String requestData = request.getReader().lines().collect(Collectors.joining());
+
+      Trip trip = new Gson().fromJson(requestData, Trip.class);
       
-      String title = request.getParameter(Trip.ENTITY_PROPERTY_TITLE);
-      String locationsJSON = request.getParameter(Trip.ENTITY_PROPERTY_LOCATIONS);
-      
+      Entity tripEntity = convertTripToEntity(trip);
       DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+     
       datastore.put(tripEntity);
       response.setStatus(HttpServletResponse.SC_OK);
     } else {
@@ -104,5 +105,24 @@ public class TripsServlet extends HttpServlet {
             .setIsPublic(isPublic)
             .setTimestamp(timestamp)
             .build();
+  }
+
+  /**
+   * Converts a certain Trip object to a corresponding Entity object.
+   * 
+   * @param trip the Trip object to be converted
+   * @return Entity object with matching property values
+   */
+  private static Entity convertTripToEntity(Trip trip) {
+    Entity tripEntity = new Entity("trip");
+    tripEntity.setProperty(Trip.ENTITY_PROPERTY_TITLE, trip.title());
+    tripEntity.setProperty(Trip.ENTITY_PROPERTY_LOCATIONS, trip.locations());
+    tripEntity.setProperty(Trip.ENTITY_PROPERTY_HOTELS, trip.hotels());
+    tripEntity.setProperty(Trip.ENTITY_PROPERTY_RATING, trip.rating());
+    tripEntity.setProperty(Trip.ENTITY_PROPERTY_DESCRIPTION, trip.description());
+    tripEntity.setProperty(Trip.ENTITY_PROPERTY_OWNER, trip.owner());
+    tripEntity.setProperty(Trip.ENTITY_PROPERTY_PUBLIC, trip.isPublic());
+    tripEntity.setProperty(Trip.ENTITY_PROPERTY_TIMESTAMP, trip.timestamp());
+    return tripEntity;
   }
 }
