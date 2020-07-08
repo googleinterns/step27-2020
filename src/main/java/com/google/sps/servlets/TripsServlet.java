@@ -62,18 +62,15 @@ public class TripsServlet extends HttpServlet {
       }
 
       // Get list of trips without their corresponding locations
-      List<Trip> trips = new ArrayList<>();
+      Map<Trip, List<TripLocation>> userTripsDataResponse = new HashMap<>();
       for (Entity entity : tripEntityIterable) {
-        trips.add(convertEntityToTrip(entity));
+        Trip trip = convertEntityToTrip(entity);
+        userTripsDataResponse.put(trip, tripLocationMap.get(trip.timestamp()));
       }
 
-      
-      for(Trip trip : trips) {
-        trip.
-      }
       response.setContentType("application/json;");
       Gson gson = new Gson();
-      String serializedJSON = gson.toJson(userTripsResponse);
+      String serializedJSON = gson.toJson(userTripsDataResponse);
       response.getWriter().println(serializedJSON);
       response.setStatus(HttpServletResponse.SC_OK);
     } else {
@@ -131,7 +128,6 @@ public class TripsServlet extends HttpServlet {
    * @param entity the entity from the Datastore containing the trip data
    * @return Trip object with corresponding fields to the entity properties
    */
-  @SuppressWarnings("unchecked")
   private static Trip convertEntityToTrip(Entity entity) {
     String title = (String) entity.getProperty(Trip.ENTITY_PROPERTY_TITLE);
     String hotel = (String) entity.getProperty(Trip.ENTITY_PROPERTY_HOTEL);
