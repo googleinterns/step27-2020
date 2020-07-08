@@ -1,5 +1,6 @@
 package com.google.sps.data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.google.auto.value.AutoValue;
@@ -10,6 +11,16 @@ import com.google.auto.value.AutoValue;
  */
 @AutoValue
 public abstract class Trip {
+
+  public static final String ENTITY_PROPERTY_TITLE = "title";
+  public static final String ENTITY_PROPERTY_LOCATIONS = "locations";
+  public static final String ENTITY_PROPERTY_HOTELS = "hotels";
+  public static final String ENTITY_PROPERTY_RATING = "rating";
+  public static final String ENTITY_PROPERTY_DESCRIPTION = "description";
+  public static final String ENTITY_PROPERTY_OWNER = "owner";
+  public static final String ENTITY_PROPERTY_PUBLIC = "is_public";
+  public static final String ENTITY_PROPERTY_TIMESTAMP = "timestamp";
+
   public abstract String title();
 
   public abstract List<Location> locations();
@@ -29,7 +40,12 @@ public abstract class Trip {
   public abstract long timestamp();
 
   public static Builder builder() {
-    return new AutoValue_Trip.Builder();
+    // initialize fields not required at first creation
+    return new AutoValue_Trip.Builder()
+                .setHotels(new ArrayList<String>())
+                .setRating(-1)
+                .setDescription("")
+                .setIsPublic(false);
   }
 
   @AutoValue.Builder
