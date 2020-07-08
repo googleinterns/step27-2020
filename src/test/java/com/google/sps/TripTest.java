@@ -2,10 +2,6 @@ package com.google.sps;
 
 import com.google.sps.data.Trip;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
