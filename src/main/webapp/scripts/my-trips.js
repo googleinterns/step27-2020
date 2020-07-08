@@ -153,19 +153,19 @@ function cancelTripCreation() {
  */
 function saveTrip() {
   // Build location and weight arrays
-  const locations = [];
-  const weights = [];
+  const locationData = [];
   for (let i = 1; i <= numLocations; i++) {
-    locations.push(document.getElementById(`location-${i}`).value);
-    weights.push(document.getElementById(`location-${i}-weight`).value);
+    locationData.push({
+      name: document.getElementById(`location-${i}`).value,
+      weight: document.getElementById(`location-${i}-weight`).value,
+    });
   }
   const requestBody = {
     title: "test",
     hotel: "hotel1234",
     rating: -1,
     description: "",
-    locations: locations,
-    weights: weights,
+    locations: locationData,
   };
   console.log(requestBody);
   fetch("/trip-data", {
