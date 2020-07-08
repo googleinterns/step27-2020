@@ -10,6 +10,7 @@ import com.google.appengine.api.datastore.Query.SortDirection;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
 import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.Key;
 import com.google.gson.Gson;
 import com.google.sps.data.TripLocation;
 import com.google.sps.data.Trip;
@@ -49,15 +50,15 @@ public class TripsServlet extends HttpServlet {
       
       // Convert trip location iterable to HashMap with mapping from timestamp to TripLocation object
       // Provides easy O(1) lookup of locations for a certain trip.
-      Map<Long, List<TripLocation>> tripLocationMap = new HashMap<>();
+      Map<Key, List<TripLocation>> tripLocationMap = new HashMap<>();
       for(Entity entity : tripLocationEntityIterable) {
         TripLocation location = convertEntityToTripLocation(entity);
-        if(tripLocationMap.containsKey(location.timestamp())) {
-          List<TripLocation> locationsUnderCurrTrip = tripLocationMap.get(location.timestamp());
+        if(tripLocationMap.containsKey(entity.getParent())) {
+          List<TripLocation> locationsUnderCurrTrip = tripLocationMap.get(entity.getParent());
           locationsUnderCurrTrip.add(location);
-          tripLocationMap.replace(location.timestamp(), locationsUnderCurrTrip);
+          tripLocationMap.replace(entity.getParent(), locationsUnderCurrTrip);
         } else {
-          tripLocationMap.put(location.timestamp(), new ArrayList<>(Arrays.asList(location)));
+          tripLocationMap.put(entity.getParent(), new ArrayList<>(Arrays.asList(location)));
         }
       }
 
@@ -65,7 +66,7 @@ public class TripsServlet extends HttpServlet {
       Map<Trip, List<TripLocation>> userTripsDataResponse = new HashMap<>();
       for (Entity entity : tripEntityIterable) {
         Trip trip = convertEntityToTrip(entity);
-        userTripsDataResponse.put(trip, tripLocationMap.get(trip.timestamp()));
+        userTripsDataResponse.put(trip, tripLocationMap.get(entity.getKey()));
       }
 
       response.setContentType("application/json;");
@@ -111,8 +112,8 @@ public class TripsServlet extends HttpServlet {
       }
       
       for(int i = 0; i < locations.length; i++) {
-        TripLocation location = TripLocation.create(locations[i], Integer.valueOf(weights[i]), timestamp, userEmail);
-        datastore.put(convertTripLocationToEntity(location));
+        TripLocation location = TripLocation.create(locations[i], Integer.valueOf(weights[i]), userEmail);
+        datastore.put(convertTripLocationToEntity(location, tripEntity));
       }
 
       response.setStatus(HttpServletResponse.SC_OK);
@@ -157,22 +158,21 @@ public class TripsServlet extends HttpServlet {
   public static TripLocation convertEntityToTripLocation(Entity entity) {
     String placeID = (String) entity.getProperty(TripLocation.ENTITY_PROPERTY_PLACE);
     int weight = (int) entity.getProperty(TripLocation.ENTITY_PROPERTY_WEIGHT);
-    long timestamp = (long) entity.getProperty(TripLocation.ENTITY_PROPERTY_TRIP);
     String owner = (String) entity.getProperty(TripLocation.ENTITY_PROPERTY_OWNER);
-    return TripLocation.create(placeID, weight, timestamp, owner);
+    return TripLocation.create(placeID, weight, owner);
   }
 
   /**
    * Converts a certain TripLocation object to a corresponding Entity object.
    * 
    * @param location the TripLocation object to be converted
+   * @param parent   the parent Trip holding these locations
    * @return Entity object with matching property values
    */
-  public static Entity convertTripLocationToEntity(TripLocation location) {
-    Entity tripLocationEntity = new Entity("trip-location");
+  public static Entity convertTripLocationToEntity(TripLocation location, Entity parent) {
+    Entity tripLocationEntity = new Entity("trip-location", parent.getKey());
     tripLocationEntity.setProperty(TripLocation.ENTITY_PROPERTY_PLACE, location.placeID());
     tripLocationEntity.setProperty(TripLocation.ENTITY_PROPERTY_WEIGHT, location.weight());
-    tripLocationEntity.setProperty(TripLocation.ENTITY_PROPERTY_TRIP, location.timestamp());
     tripLocationEntity.setProperty(TripLocation.ENTITY_PROPERTY_OWNER, location.owner());
     return tripLocationEntity;
   }
