@@ -4,6 +4,7 @@
 function init() {
   authReload();
   findNearbyPlaces();
+  fetchAndRenderTripsFromDB();
 }
 
 let numLocations = 1;
@@ -215,4 +216,8 @@ async function fetchAndRenderTripsFromDB() {
       </div>
     `;
   }
+}
+
+function parseTripJson(json) {
+  
 }

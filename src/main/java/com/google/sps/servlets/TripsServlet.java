@@ -163,7 +163,7 @@ public class TripsServlet extends HttpServlet {
    */
   public static TripLocation convertEntityToTripLocation(Entity entity) {
     String placeID = (String) entity.getProperty(TripLocation.ENTITY_PROPERTY_PLACE);
-    int weight = (int) entity.getProperty(TripLocation.ENTITY_PROPERTY_WEIGHT);
+    int weight = Math.toIntExact((long) entity.getProperty(TripLocation.ENTITY_PROPERTY_WEIGHT));
     String owner = (String) entity.getProperty(TripLocation.ENTITY_PROPERTY_OWNER);
     return TripLocation.create(placeID, weight, owner);
   }
