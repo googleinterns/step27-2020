@@ -27,15 +27,29 @@ document.addEventListener("DOMContentLoaded", () => {
 function authReload() {
   fetch("/login")
     .then((response) => response.json())
-    .then(({isLoggedIn, loginUrl, logoutUrl}) => {
-      if(isLoggedIn) {
+    .then(({ isLoggedIn, loginUrl, logoutUrl }) => {
+      if (isLoggedIn) {
         showLogoutButton(logoutUrl);
-      } else {        
+      } else {
         // redirect user to auth page
         window.location.replace(loginUrl);
       }
     });
 }
+
+const LOADING_ANIMATION_HTML = `
+  <div class="preloader-wrapper big active loading-animation">
+    <div class="spinner-layer spinner-blue-only">
+      <div class="circle-clipper left">
+        <div class="circle"></div>
+      </div><div class="gap-patch">
+        <div class="circle"></div>
+      </div><div class="circle-clipper right">
+        <div class="circle"></div>
+      </div>
+    </div>
+  </div>
+`;
 
 /**
  * Shows the logout button given a logout url string in
@@ -68,7 +82,7 @@ function showLogoutButton(logoutUrl) {
 function parseSerializedJson(json) {
   const charArray = [...json];
   const startIndex = charArray.indexOf("{");
-  
+
   // Build JS object by iterating through
   let obj = {};
   let isField = true;
