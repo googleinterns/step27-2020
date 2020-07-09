@@ -217,7 +217,3 @@ async function fetchAndRenderTripsFromDB() {
     `;
   }
 }
-
-function parseTripJson(json) {
-  
-}

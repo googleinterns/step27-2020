@@ -57,3 +57,44 @@ function showLogoutButton(logoutUrl) {
           </li>
         `;
 }
+
+/**
+ * Parses a serialized JSON string produced by Gson for a value class and
+ * converts it to a JS object.
+ * @param {string} json a JSON string in the form
+ *                      "ClassName{field1=val, ..., fieldN=val}"
+ * @returns {Object} JS object with the data stored in json.
+ */
+function parseSerializedJson(json) {
+  const charArray = [...json];
+  const startIndex = charArray.indexOf("{");
+  
+  // Build JS object by iterating through
+  let obj = {};
+  let isField = true;
+  let [currField, currValue] = ["", ""];
+  for (let i = startIndex + 1; i < charArray.length; i++) {
+    const currChar = charArray[i];
+    if (currChar === " ") {
+      continue;
+    }
+    if (isField) {
+      if (currChar !== "=") {
+        currField += currChar;
+      } else {
+        isField = false;
+      }
+    } else {
+      if (currChar !== "," && currChar !== "}") {
+        currValue += currChar;
+      } else {
+        isField = true;
+        // add field to obj and reset field and value strings
+        obj[currField] = currValue;
+        [currField, currValue] = ["", ""];
+      }
+    }
+  }
+
+  return obj;
+}
