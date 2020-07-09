@@ -149,7 +149,8 @@ function cancelTripCreation() {
 }
 
 /**
- * Saves the current trip the user is editing to My Trips
+ * Saves the current trip the user is editing to My Trips, through a POST request
+ * to the backend.
  */
 function saveTrip() {
   // Build location and weight arrays
@@ -167,12 +168,51 @@ function saveTrip() {
     description: "",
     locations: locationData,
   };
-  console.log(requestBody);
+
   fetch("/trip-data", {
     method: "POST",
     headers: {
-      "content-type": "application/x-www-form-urlencoded",
+      "content-type": "application/json",
     },
     body: JSON.stringify(requestBody),
   });
+}
+
+/**
+ * Fetches trip data from the DB and renders each trip to the page.
+ */
+async function fetchAndRenderTripsFromDB() {
+  const response = await fetch("/trip-data", {
+    method: "GET",
+  });
+  const tripsData = await response.json();
+  console.log(tripsData);
+  document.getElementById("planned-trips-container").innerHTML += `
+     <div class="row">
+      <div class="col m8">
+        <div class="card">
+          <div class="card-content">
+            <span class="card-title">Trip</span>
+            <form>
+              <div id="trip-${numTrips}-locations"></div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  for (let i = 1; i <= numLocations; i++) {
+    document.getElementById(`trip-${numTrips}-locations`).innerHTML += `
+      <div class="row">
+        <div class="col s6">
+          <span>${document.getElementById("location-" + i).value}</span>
+        </div>
+        <div class="col s6">
+          <span>${
+            document.getElementById("location-" + i + "-weight").value
+          }</span>
+        </div>
+      </div>
+    `;
+  }
 }
