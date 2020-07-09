@@ -44,8 +44,7 @@ public class TripsServlet extends HttpServlet {
     if (userService.isUserLoggedIn()) {
       String userEmail = userService.getCurrentUser().getEmail();
       Query tripQuery = new Query("trip")
-                        .setFilter(new FilterPredicate(Trip.ENTITY_PROPERTY_OWNER, FilterOperator.EQUAL, userEmail))
-                        .addSort(Trip.ENTITY_PROPERTY_TIMESTAMP, SortDirection.ASCENDING);
+                        .setFilter(new FilterPredicate(Trip.ENTITY_PROPERTY_OWNER, FilterOperator.EQUAL, userEmail));
       Query tripLocationsQuery = new Query("trip-location")
                                   .setFilter(new FilterPredicate(TripLocation.ENTITY_PROPERTY_OWNER, FilterOperator.EQUAL, userEmail));
       DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();

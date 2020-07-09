@@ -158,9 +158,9 @@ function cancelTripCreation() {
 
 /**
  * Saves the current trip the user is editing to My Trips, through a POST request
- * to the backend.
+ * to the backend. Then rerenders the trips based on DB data.
  */
-function saveTrip() {
+async function saveTrip() {
   // Build location and weight arrays
   const locationData = [];
   for (let i = 1; i <= numLocations; i++) {
@@ -176,13 +176,14 @@ function saveTrip() {
     locations: locationData,
   };
 
-  fetch("/trip-data", {
+  await fetch("/trip-data", {
     method: "POST",
     headers: {
       "content-type": "application/json",
     },
     body: JSON.stringify(requestBody),
   });
+  fetchAndRenderTripsFromDB();
 }
 
 /**
@@ -197,8 +198,23 @@ async function fetchAndRenderTripsFromDB() {
     method: "GET",
   });
   const tripsData = await response.json();
+  
+  const keys = Object.keys(tripsData);
+  if (keys.length === 0) {
+    plannedTripsHTMLElement.innerHTML = `
+      <div class="row"><div class="col s12">
+      <p class="placeholder-text">No trips to show. Let's go somewhere!</p>
+      </div></div>
+    `
+    return;
+  }
+  keys.sort(
+    (a, b) => parseSerializedJson(b).timestamp - parseSerializedJson(a).timestamp
+  );
   plannedTripsHTMLElement.innerHTML = "";
-  for (key in Object.keys(tripsData).reverse()) {
+  for (key of keys) {
+    // Fields of tripsData are currently in string format.
+    // Deserialize using parseSerializedJson.
     const { title, hotel, timestamp } = parseSerializedJson(key);
     const locations = tripsData[key];
     plannedTripsHTMLElement.innerHTML += `
@@ -207,7 +223,7 @@ async function fetchAndRenderTripsFromDB() {
             <div class="card">
               <div class="card-content">
                 <span class="card-title">${title}</span>
-                <span>Hotel Place ID: ${hotel}</span>
+                <p>Hotel Place ID: ${hotel}</p>
                 <form>
                   <div id="trip-${timestamp}-locations"></div>
                 </form>
@@ -219,16 +235,16 @@ async function fetchAndRenderTripsFromDB() {
     document.getElementById(
       `trip-${timestamp}-locations`
     ).innerHTML = locations.map(
-      ({ placeID, weight }) => `
+      ({ placeID, weight }, index) => `
         <div class="row">
           <div class="col s6">
-            <span>Place ID: ${placeID}</span>
+            <span>Place ${index + 1} ID: ${placeID}</span>
           </div>
           <div class="col s6">
             <span>Weight: ${weight}</span>
           </div>
         </div>
       `
-    );
+    ).join("");
   }
 }
