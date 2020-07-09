@@ -187,33 +187,36 @@ async function fetchAndRenderTripsFromDB() {
     method: "GET",
   });
   const tripsData = await response.json();
-  console.log(tripsData);
-  document.getElementById("planned-trips-container").innerHTML += `
-     <div class="row">
-      <div class="col m8">
-        <div class="card">
-          <div class="card-content">
-            <span class="card-title">Trip</span>
-            <form>
-              <div id="trip-${numTrips}-locations"></div>
-            </form>
+  for(key in Object.keys(tripsData).reverse()) {
+    const { title, hotel, timestamp } = parseSerializedJson(key);
+    const locations = tripsData[key];
+      document.getElementById("planned-trips-container").innerHTML += `
+        <div class="row">
+          <div class="col m8">
+            <div class="card">
+              <div class="card-content">
+                <span class="card-title">Trip</span>
+                <form>
+                  <div id="trip-${timestamp}-locations"></div>
+                </form>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-  `;
-  for (let i = 1; i <= numLocations; i++) {
-    document.getElementById(`trip-${numTrips}-locations`).innerHTML += `
-      <div class="row">
-        <div class="col s6">
-          <span>${document.getElementById("location-" + i).value}</span>
+      `;
+      document.getElementById(`trip-${timestamp}-locations`).innerHTML = `
+        <div class="row">
+          <div class="col s6">
+            <span>${document.getElementById("location-" + i).value}</span>
+          </div>
+          <div class="col s6">
+            <span>${
+              document.getElementById("location-" + i + "-weight").value
+            }</span>
+          </div>
         </div>
-        <div class="col s6">
-          <span>${
-            document.getElementById("location-" + i + "-weight").value
-          }</span>
-        </div>
-      </div>
-    `;
+      `;
+    }
   }
+  
 }
