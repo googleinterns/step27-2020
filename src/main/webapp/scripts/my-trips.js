@@ -27,7 +27,14 @@ function openTripEditor() {
       <div class="col m8">
         <div class="card">
           <div class="card-content">
-            <span class="card-title">New Trip</span>
+          <div class="card-title">
+            <div class="row">
+              <div class="input-field col s12">
+                <label for="trip-title">Trip Name</label>  
+                <input id="trip-title" type="text" required />
+              </div>
+            </div>
+          </div>
             <form id="trip-editor-form">
               <div id="trip-locations-container">
                 <div class="row">
@@ -163,10 +170,9 @@ function saveTrip() {
     });
   }
   const requestBody = {
-    title: "test",
+    title: document.getElementById("trip-title").value,
     hotel: "hotel1234",
     rating: -1,
-    description: "",
     locations: locationData,
   };
 
@@ -183,19 +189,25 @@ function saveTrip() {
  * Fetches trip data from the DB and renders each trip to the page.
  */
 async function fetchAndRenderTripsFromDB() {
+  const plannedTripsHTMLElement = document.getElementById(
+    "planned-trips-container"
+  );
+  plannedTripsHTMLElement.innerHTML = LOADING_ANIMATION_HTML;
   const response = await fetch("/trip-data", {
     method: "GET",
   });
   const tripsData = await response.json();
-  for(key in Object.keys(tripsData).reverse()) {
+  plannedTripsHTMLElement.innerHTML = "";
+  for (key in Object.keys(tripsData).reverse()) {
     const { title, hotel, timestamp } = parseSerializedJson(key);
     const locations = tripsData[key];
-      document.getElementById("planned-trips-container").innerHTML += `
+    plannedTripsHTMLElement.innerHTML += `
         <div class="row">
           <div class="col m8">
             <div class="card">
               <div class="card-content">
-                <span class="card-title">Trip</span>
+                <span class="card-title">${title}</span>
+                <span>Hotel Place ID: ${hotel}</span>
                 <form>
                   <div id="trip-${timestamp}-locations"></div>
                 </form>
@@ -203,20 +215,20 @@ async function fetchAndRenderTripsFromDB() {
             </div>
           </div>
         </div>
-      `;
-      document.getElementById(`trip-${timestamp}-locations`).innerHTML = `
+    `;
+    document.getElementById(
+      `trip-${timestamp}-locations`
+    ).innerHTML = locations.map(
+      ({ placeID, weight }) => `
         <div class="row">
           <div class="col s6">
-            <span>${document.getElementById("location-" + i).value}</span>
+            <span>Place ID: ${placeID}</span>
           </div>
           <div class="col s6">
-            <span>${
-              document.getElementById("location-" + i + "-weight").value
-            }</span>
+            <span>Weight: ${weight}</span>
           </div>
         </div>
-      `;
-    }
+      `
+    );
   }
-  
 }

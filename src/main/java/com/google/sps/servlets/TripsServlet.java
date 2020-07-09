@@ -101,7 +101,6 @@ public class TripsServlet extends HttpServlet {
                     .setTitle(jsonObject.getAsJsonPrimitive(Trip.ENTITY_PROPERTY_TITLE).getAsString())
                     .setHotel(jsonObject.getAsJsonPrimitive(Trip.ENTITY_PROPERTY_HOTEL).getAsString())
                     .setRating(jsonObject.getAsJsonPrimitive(Trip.ENTITY_PROPERTY_RATING).getAsDouble())
-                    .setDescription(jsonObject.getAsJsonPrimitive(Trip.ENTITY_PROPERTY_DESCRIPTION).getAsString())
                     .setOwner(userEmail)
                     .setTimestamp(timestamp)
                     .build();
