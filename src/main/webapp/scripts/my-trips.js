@@ -174,24 +174,26 @@ function cancelTripCreation() {
  */
 async function findHotel() {
   document.getElementById("hotel-results").innerHTML = LOADING_ANIMATION_HTML;
-  if(numLocations !== getNumPlaceObjectsInArray(locationPlaceObjects)) {
+  if (numLocations !== getNumPlaceObjectsInArray(locationPlaceObjects)) {
     M.Toast.dismissAll();
-    M.toast({html: "Not all of your places are selected through autocomplete."})
+    M.toast({
+      html: "Not all of your places are selected through autocomplete.",
+    });
     return;
   }
   const elem = document.getElementById("hotel-modal");
   const instance = M.Modal.getInstance(elem);
   instance.open();
-  
+
   // Get center point from which to start searching for hotels
   const coords = placesToCoordsWeightArray(locationPlaceObjects);
   const [lat, lng] = centerOfMass(coords);
-  const response = await fetch(`https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/textsearch/json?query=lodging&location=${lat},${lng}&radius=10000&key=${GOOGLE_API_KEY}&output=json`);
+  const response = await fetch(
+    `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/textsearch/json?query=lodging&location=${lat},${lng}&radius=10000&key=${GOOGLE_API_KEY}&output=json`
+  );
   const results = await response.json();
   parseAndRenderHotelResults(results);
 }
-
-let chosenHotel;
 
 /**
  * Parses response from Places API lodging query to render list of
@@ -201,23 +203,27 @@ let chosenHotel;
  */
 function parseAndRenderHotelResults(json) {
   const modalContent = document.getElementById("hotel-results");
-  if(!json.results) {
+  if (!json.results) {
     modalContent.innerText = "No hotels nearby. Sorry.";
   } else {
     json.results = json.results.slice(0, 4);
-    modalContent.innerHTML = json.results.map(({ name, formatted_address, rating, place_id }) => `
-      <div class="col s6">
-        <div class="card white">
-          <div class="card-content black-text">
-            <span class="card-title">${name} - Rating: ${rating}</span>
-            <p>${formatted_address}</p>
+    modalContent.innerHTML = json.results
+      .map(
+        ({ name, formatted_address, rating, place_id }) => `
+          <div class="col s6">
+            <div class="card white">
+              <div class="card-content black-text">
+                <span class="card-title">${name} - Rating: ${rating}</span>
+                <p>${formatted_address}</p>
+              </div>
+              <div class="card-action">
+                <button id="${place_id}" class="btn indigo" onClick="saveTrip(this.id)">CHOOSE</button>
+              </div>
+            </div>
           </div>
-          <div class="card-action">
-            <button id="${place_id}" class="btn indigo" onClick="saveTrip(this.id)">CHOOSE</button>
-          </div>
-        </div>
-      </div>
-    `).join("");
+        `
+      )
+      .join("");
   }
 }
 
@@ -277,11 +283,12 @@ async function fetchAndRenderTripsFromDB() {
       <div class="row"><div class="col s12">
       <p class="placeholder-text">No trips to show. Let's go somewhere!</p>
       </div></div>
-    `
+    `;
     return;
   }
   keys.sort(
-    (a, b) => parseSerializedJson(b).timestamp - parseSerializedJson(a).timestamp
+    (a, b) =>
+      parseSerializedJson(b).timestamp - parseSerializedJson(a).timestamp
   );
   plannedTripsHTMLElement.innerHTML = "";
   for (key of keys) {
@@ -290,25 +297,22 @@ async function fetchAndRenderTripsFromDB() {
     const { title, hotel, timestamp } = parseSerializedJson(key);
     const locations = tripsData[key];
     plannedTripsHTMLElement.innerHTML += `
-        <div class="row">
-          <div class="col m8">
-            <div class="card">
-              <div class="card-content">
-                <span class="card-title">${title}</span>
-                <p>Hotel Place ID: ${hotel}</p>
-                <form>
-                  <div id="trip-${timestamp}-locations"></div>
-                </form>
-              </div>
+      <div class="row">
+        <div class="col m8">
+          <div class="card">
+            <div class="card-content">
+              <span class="card-title">${title}</span>
+              <p>Hotel Place ID: ${hotel}</p>
+              <form>
+                <div id="trip-${timestamp}-locations"></div>
+              </form>
             </div>
           </div>
         </div>
+      </div>
     `;
-    document.getElementById(
-      `trip-${timestamp}-locations`
-    ).innerHTML = locations.map(
-      ({ placeID, weight }, index) => {
-        let placeName = "Error";
+    document.getElementById(`trip-${timestamp}-locations`).innerHTML = locations
+      .map(({ weight }, index) => {
         return `
           <div class="row">
             <div class="col s6">
@@ -318,15 +322,18 @@ async function fetchAndRenderTripsFromDB() {
               <span>Weight: ${weight}</span>
             </div>
           </div>
-        `
-    }).join("");
+        `;
+      })
+      .join("");
 
-    locations.forEach(({ placeID, weight }, index) => {
+    locations.forEach(({ placeID }, index) => {
       geocoder.geocode({ placeId: placeID }, (results, status) => {
         if (status === "OK") {
           if (results[0]) {
             placeName = results[0].formatted_address;
-            document.getElementById(`location-${timestamp}-${index}`).innerText = placeName;
+            document.getElementById(
+              `location-${timestamp}-${index}`
+            ).innerText = placeName;
           }
         }
       });
@@ -337,8 +344,8 @@ async function fetchAndRenderTripsFromDB() {
 /**
  * Adds a listener to the autocompleted field for location
  * locationNum.
- * @param {google.maps.places.Autocomplete} element - current field
- * @param {number} locationNum - the number identifying the field
+ * @param {google.maps.places.Autocomplete} element current field
+ * @param {number} locationNum the number identifying the field
  */
 function createPlaceHandler(element, locationNum) {
   google.maps.event.addListener(element, "place_changed", () => {
@@ -359,8 +366,8 @@ function centerOfMass(arr) {
   let totalWeight = 0;
   let totalXWeightedSum = 0;
   let totalYWeightedSum = 0;
-  arr.forEach(({lat, lng, weight}) => {
-    weight = (1 + 0.05 * weight);
+  arr.forEach(({ lat, lng, weight }) => {
+    weight = 1 + 0.05 * weight;
     totalWeight += weight;
     totalXWeightedSum += weight * lng;
     totalYWeightedSum += weight * lat;
@@ -391,5 +398,8 @@ function placesToCoordsWeightArray(arr) {
  * @returns {number} # of Place objects in said array
  */
 function getNumPlaceObjectsInArray(arr) {
-  return arr.reduce((acc, curr) => acc + (curr.place_id == undefined ? 0 : 1), 0);
+  return arr.reduce(
+    (acc, curr) => acc + (curr.place_id == undefined ? 0 : 1),
+    0
+  );
 }
