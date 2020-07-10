@@ -3,6 +3,10 @@ let service;
 
 const MTV = new google.maps.LatLng(37.3861,122.0839);
 
+function init() {
+  authReload();
+  findNearbyPlaces();
+}
 /**
  * Inits map and calls a nearby search of prominent restaurants in 5000m 
  * radius of MTV

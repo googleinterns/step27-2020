@@ -3,7 +3,6 @@
  */
 function init() {
   authReload();
-  findNearbyPlaces();
 }
 
 let numLocations = 1;
