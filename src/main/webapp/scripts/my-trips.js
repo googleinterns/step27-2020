@@ -7,13 +7,14 @@ function init() {
   fetchAndRenderTripsFromDB();
 }
 
-let numLocations = 1;
-
+let numLocations;
+let locationPlaceObjects;
 /**
  * Adds a trip editor interface to the DOM, which the user can use to add a trip.
  */
 function openTripEditor() {
   numLocations = 1;
+  locationPlaceObjects = [""];
   document.getElementById("open-close-button-area").innerHTML = `
     <button
       onclick="cancelTripCreation()"
@@ -69,11 +70,13 @@ function openTripEditor() {
                 </button>
                 </div>
                 <div class="col m2">
-                  <input
-                    type="submit"
+                  <button
+                    type="button"
                     onclick="saveTrip(); cancelTripCreation()"
                     class="btn-large waves-effect indigo darken-2"
-                  />
+                  >
+                    Save Trip
+                  </button>
                 </div>
               </div>
             </form>
@@ -113,6 +116,7 @@ function openTripEditor() {
   // add autocomplete through Places API for first location
   const location1 = document.getElementById("location-1");
   const autocomplete = new google.maps.places.Autocomplete(location1);
+  createPlaceHandler(autocomplete, 1);
 }
 
 /**
@@ -125,8 +129,8 @@ function addLocation() {
     "beforeend",
     `<div class="row">
       <div class="col s6">
-        <input id="location-${numLocations}" type="text" />
         <label for="location-${numLocations}">Location ${numLocations}</label>
+        <input id="location-${numLocations}" type="text" />
       </div>
       <div class="col s6">
         <p class="range-field weight-slider">
@@ -145,6 +149,8 @@ function addLocation() {
   // add autocomplete through Places API for new location
   const location = document.getElementById(`location-${numLocations}`);
   const autocomplete = new google.maps.places.Autocomplete(location);
+  createPlaceHandler(autocomplete, numLocations);
+  locationPlaceObjects.push("");
 }
 
 /**
@@ -176,6 +182,11 @@ async function saveTrip() {
       weight: document.getElementById(`location-${i}-weight`).value,
     });
   }
+  // Get center point from which to start searching for hotels
+  const coords = placesToCoordsWeightArray(locationPlaceObjects);
+  console.log(coords);
+  console.log(centerOfMass(coords));
+
   const requestBody = {
     title: document.getElementById("trip-title").value,
     hotel: "hotel1234",
@@ -254,4 +265,54 @@ async function fetchAndRenderTripsFromDB() {
       `
     ).join("");
   }
+}
+
+/**
+ * Adds a listener to the autocompleted field for location
+ * locationNum.
+ * @param {google.maps.places.Autocomplete} element - current field
+ * @param {number} locationNum - the number identifying the field
+ */
+function createPlaceHandler(element, locationNum) {
+  google.maps.event.addListener(element, "place_changed", () => {
+    const obj = element.getPlace();
+    obj.locationNum = locationNum;
+    locationPlaceObjects[locationNum - 1] = obj;
+  });
+}
+
+/**
+ * Computes a pair in the form [lat, lng] of the
+ * center of "mass" given weights for an array
+ * of coordinate pairs.
+ * @param {Array} arr array of {lat, lng, weight}
+ * @returns {Array} centerpoint given weights and coords.
+ */
+function centerOfMass(arr) {
+  let totalWeight = 0;
+  let totalXWeightedSum = 0;
+  let totalYWeightedSum = 0;
+  arr.forEach(({lat, lng, weight}) => {
+    weight = (1 + 0.05 * weight);
+    totalWeight += weight;
+    totalXWeightedSum += weight * lng;
+    totalYWeightedSum += weight * lat;
+  });
+
+  return [totalYWeightedSum / totalWeight, totalXWeightedSum / totalWeight];
+}
+
+/**
+ * Reduces an array of Google Places objects to their
+ * latitude/longitude pairs and a weight object array.
+ * @param {Array} arr an array of Places
+ * @returns {Array} array of {lat, lng weight} objects
+ */
+function placesToCoordsWeightArray(arr) {
+  // Build array containing {lat, lng, weight} objects
+  return arr.map(({ geometry, locationNum }) => ({
+    lat: geometry.location.lat(),
+    lng: geometry.location.lng(),
+    weight: document.getElementById(`location-${locationNum}-weight`).value,
+  }));
 }

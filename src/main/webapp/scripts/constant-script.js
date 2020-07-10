@@ -89,10 +89,10 @@ function parseSerializedJson(json) {
   let [currField, currValue] = ["", ""];
   for (let i = startIndex + 1; i < charArray.length; i++) {
     const currChar = charArray[i];
-    if (currChar === " ") {
-      continue;
-    }
     if (isField) {
+      if (currChar === " ") {
+        continue;
+      }
       if (currChar !== "=") {
         currField += currChar;
       } else {
