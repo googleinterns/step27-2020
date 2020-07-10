@@ -352,7 +352,7 @@ function createPlaceHandler(element, locationNum) {
     if(!mapInitialized) {
       map = new google.maps.Map(document.getElementById("editor-map"), {
         center: coords,
-        zoom: 6,
+        zoom: 13,
       });
       mapInitialized = true;
     }
