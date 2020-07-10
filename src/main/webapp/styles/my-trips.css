@@ -2,6 +2,10 @@
   margin-top: 2.5rem;
 }
 
+#editor-map {
+  min-height: 400px;
+}
+
 .placeholder-text {
   color: grey;
   font-size: 18px;

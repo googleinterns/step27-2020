@@ -9,12 +9,16 @@ function init() {
 
 let numLocations;
 let locationPlaceObjects;
+let mapInitialized;
+let markers;
 /**
  * Adds a trip editor interface to the DOM, which the user can use to add a trip.
  */
 function openTripEditor() {
   numLocations = 1;
   locationPlaceObjects = [""];
+  mapInitialized = false;
+  markers = [""];
   document.getElementById("open-close-button-area").innerHTML = `
     <button
       onclick="cancelTripCreation()"
@@ -25,7 +29,7 @@ function openTripEditor() {
   `;
   document.getElementById("trip-editor-container").innerHTML = `
     <div class="row">
-      <div class="col m8">
+      <div class="col s12 m8">
         <div class="card">
           <div class="card-content">
           <div class="card-title">
@@ -83,23 +87,13 @@ function openTripEditor() {
           </div>
         </div>
       </div>
-      <div class="col m4">
+      <div class="col s12 m4">
         <div class="card">
           <div class="card-content">
-            <span class="card-title">Filters</span>
-            <form>
-              <div class="row">
-                <div class="col s2">
-                  <button class="btn-small">$</button>
-                </div>
-                <div class="col s2">
-                  <button class="btn-small">$$</button>
-                </div>
-                <div class="col s2">
-                  <button class="btn-small">$$$</button>
-                </div>
-              </div>
-            </form>
+            <span class="card-title">Map</span>
+            <div id="editor-map">
+              <p class="placeholder-text">Enter some destinations!</p>
+            </div>
           </div>
         </div>
       </div>
@@ -150,6 +144,7 @@ function addLocation() {
   const location = document.getElementById(`location-${numLocations}`);
   const autocomplete = new google.maps.places.Autocomplete(location);
   createPlaceHandler(autocomplete, numLocations);
+  markers.push("");
   locationPlaceObjects.push("");
 }
 
@@ -213,7 +208,7 @@ function parseAndRenderHotelResults(json) {
           <div class="col s6">
             <div class="card white">
               <div class="card-content black-text">
-                <span class="card-title">${name} - Rating: ${rating}</span>
+                <span class="card-title"><strong>${name}</strong> | Rating: ${rating}</span>
                 <p>${formatted_address}</p>
               </div>
               <div class="card-action">
@@ -350,9 +345,41 @@ async function fetchAndRenderTripsFromDB() {
 function createPlaceHandler(element, locationNum) {
   google.maps.event.addListener(element, "place_changed", () => {
     const obj = element.getPlace();
+    console.log(obj);
     obj.locationNum = locationNum;
     locationPlaceObjects[locationNum - 1] = obj;
+    const coords = { lat: obj.geometry.location.lat(), lng: obj.geometry.location.lng() };
+    if(!mapInitialized) {
+      map = new google.maps.Map(document.getElementById("editor-map"), {
+        center: coords,
+        zoom: 6,
+      });
+      mapInitialized = true;
+    }
+    const marker = new google.maps.Marker({
+      position: coords,
+      map: map,
+      title: obj.name,
+    });
+    markers[locationNum - 1] = marker;
+    if (locationNum !== 1) {
+      fitMapToMarkers();
+      map.setZoom(map.getZoom() - 1);
+    }
   });
+}
+
+/**
+ * Uses the markers array to rerender the map and fit all the current locations.
+ */
+function fitMapToMarkers() {
+  const bounds = new google.maps.LatLngBounds();
+  for (marker of markers) {
+    if(marker !== "") {
+      bounds.extend({ lat: marker.position.lat(), lng: marker.position.lng() });
+    }
+  }
+  map.fitBounds(bounds);
 }
 
 /**
