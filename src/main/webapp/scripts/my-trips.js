@@ -72,10 +72,10 @@ function openTripEditor() {
                 <div class="col m2">
                   <button
                     type="button"
-                    onclick="saveTrip(); cancelTripCreation()"
+                    onclick="saveTrip()"
                     class="btn-large waves-effect indigo darken-2"
                   >
-                    Save Trip
+                    Next
                   </button>
                 </div>
               </div>
@@ -176,15 +176,20 @@ function cancelTripCreation() {
 async function saveTrip() {
   // Build location and weight arrays
   const locationData = [];
+  if(numLocations !== getNumPlaceObjectsInArray(locationPlaceObjects)) {
+      M.Toast.dismissAll();
+      M.toast({html: "Not all of your places are selected through autocomplete."})
+      return;
+  }
+
   for (let i = 1; i <= numLocations; i++) {
     locationData.push({
-      name: document.getElementById(`location-${i}`).value,
+      id: locationPlaceObjects[i - 1].place_id,
       weight: document.getElementById(`location-${i}-weight`).value,
     });
   }
   // Get center point from which to start searching for hotels
   const coords = placesToCoordsWeightArray(locationPlaceObjects);
-  console.log(coords);
   console.log(centerOfMass(coords));
 
   const requestBody = {
@@ -201,6 +206,7 @@ async function saveTrip() {
     },
     body: JSON.stringify(requestBody),
   });
+  cancelTripCreation();
   fetchAndRenderTripsFromDB();
 }
 
@@ -216,7 +222,7 @@ async function fetchAndRenderTripsFromDB() {
     method: "GET",
   });
   const tripsData = await response.json();
-  
+  const geocoder = new google.maps.Geocoder();
   const keys = Object.keys(tripsData);
   if (keys.length === 0) {
     plannedTripsHTMLElement.innerHTML = `
@@ -253,17 +259,30 @@ async function fetchAndRenderTripsFromDB() {
     document.getElementById(
       `trip-${timestamp}-locations`
     ).innerHTML = locations.map(
-      ({ placeID, weight }, index) => `
-        <div class="row">
-          <div class="col s6">
-            <span>Place ${index + 1} ID: ${placeID}</span>
+      ({ placeID, weight }, index) => {
+        let placeName = "Error";
+        return `
+          <div class="row">
+            <div class="col s6">
+              <span id="location-${timestamp}-${index}"></span>
+            </div>
+            <div class="col s6">
+              <span>Weight: ${weight}</span>
+            </div>
           </div>
-          <div class="col s6">
-            <span>Weight: ${weight}</span>
-          </div>
-        </div>
-      `
-    ).join("");
+        `
+    }).join("");
+
+    locations.forEach(({ placeID, weight }, index) => {
+      geocoder.geocode({ placeId: placeID }, (results, status) => {
+        if (status === "OK") {
+          if (results[0]) {
+            placeName = results[0].formatted_address;
+            document.getElementById(`location-${timestamp}-${index}`).innerText = placeName;
+          }
+        }
+      });
+    });
   }
 }
 
@@ -315,4 +334,14 @@ function placesToCoordsWeightArray(arr) {
     lng: geometry.location.lng(),
     weight: document.getElementById(`location-${locationNum}-weight`).value,
   }));
+}
+
+/**
+ * Helper function to determine the # of
+ * Google Place objects in a certain array.
+ * @param {Array} arr an array of Places or empty strings
+ * @returns {number} # of Place objects in said array
+ */
+function getNumPlaceObjectsInArray(arr) {
+  return arr.reduce((acc, curr) => acc + (curr.place_id == undefined ? 0 : 1), 0);
 }
