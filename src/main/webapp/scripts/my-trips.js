@@ -38,7 +38,7 @@ function openTripEditor() {
             <form id="trip-editor-form">
               <div id="trip-locations-container">
                 <div class="row">
-                  <div class="input-field col s6">
+                  <div class="col s6">
                     <label for="location-1">Location 1</label>
                     <input id="location-1" type="text" required />
                   </div>
@@ -109,6 +109,10 @@ function openTripEditor() {
   // prevent page reload on form submit
   const form = document.getElementById("trip-editor-form");
   form.addEventListener("submit", (e) => e.preventDefault());
+
+  // add autocomplete through Places API for first location
+  const location1 = document.getElementById("location-1");
+  const autocomplete = new google.maps.places.Autocomplete(location1);
 }
 
 /**
@@ -120,7 +124,7 @@ function addLocation() {
   document.getElementById("trip-locations-container").insertAdjacentHTML(
     "beforeend",
     `<div class="row">
-      <div class="input-field col s6">
+      <div class="col s6">
         <input id="location-${numLocations}" type="text" />
         <label for="location-${numLocations}">Location ${numLocations}</label>
       </div>
@@ -138,6 +142,9 @@ function addLocation() {
       </div>
     </div>`
   );
+  // add autocomplete through Places API for new location
+  const location = document.getElementById(`location-${numLocations}`);
+  const autocomplete = new google.maps.places.Autocomplete(location);
 }
 
 /**
