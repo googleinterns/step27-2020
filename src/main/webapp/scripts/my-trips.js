@@ -72,7 +72,7 @@ function openTripEditor() {
                 <div class="col m2">
                   <button
                     type="button"
-                    onclick="saveTrip()"
+                    onclick="findHotel()"
                     class="btn-large waves-effect indigo darken-2"
                   >
                     Next
@@ -170,17 +170,68 @@ function cancelTripCreation() {
 }
 
 /**
+ * Opens modal with results for user to confirm and save trip.
+ */
+async function findHotel() {
+  document.getElementById("hotel-results").innerHTML = LOADING_ANIMATION_HTML;
+  if(numLocations !== getNumPlaceObjectsInArray(locationPlaceObjects)) {
+    M.Toast.dismissAll();
+    M.toast({html: "Not all of your places are selected through autocomplete."})
+    return;
+  }
+  const elem = document.getElementById("hotel-modal");
+  const instance = M.Modal.getInstance(elem);
+  instance.open();
+  
+  // Get center point from which to start searching for hotels
+  const coords = placesToCoordsWeightArray(locationPlaceObjects);
+  const [lat, lng] = centerOfMass(coords);
+  const response = await fetch(`https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/textsearch/json?query=lodging&location=${lat},${lng}&radius=10000&key=${GOOGLE_API_KEY}&output=json`);
+  const results = await response.json();
+  parseAndRenderHotelResults(results);
+}
+
+let chosenHotel;
+
+/**
+ * Parses response from Places API lodging query to render list of
+ * cards to the hotel results modal.
+ * @param {Object} json the resulting JS object from calling the
+ *                      Places API for the centerpoint.
+ */
+function parseAndRenderHotelResults(json) {
+  const modalContent = document.getElementById("hotel-results");
+  if(!json.results) {
+    modalContent.innerText = "No hotels nearby. Sorry.";
+  } else {
+    json.results = json.results.slice(0, 4);
+    modalContent.innerHTML = json.results.map(({ name, formatted_address, rating, place_id }) => `
+      <div class="col s6">
+        <div class="card white">
+          <div class="card-content black-text">
+            <span class="card-title">${name} - Rating: ${rating}</span>
+            <p>${formatted_address}</p>
+          </div>
+          <div class="card-action">
+            <button id="${place_id}" class="btn indigo" onClick="saveTrip(this.id)">CHOOSE</button>
+          </div>
+        </div>
+      </div>
+    `).join("");
+  }
+}
+
+/**
  * Saves the current trip the user is editing to My Trips, through a POST request
  * to the backend. Then rerenders the trips based on DB data.
  */
-async function saveTrip() {
+async function saveTrip(hotelID) {
+  const elem = document.getElementById("hotel-modal");
+  const instance = M.Modal.getInstance(elem);
+  instance.close();
+
   // Build location and weight arrays
   const locationData = [];
-  if(numLocations !== getNumPlaceObjectsInArray(locationPlaceObjects)) {
-      M.Toast.dismissAll();
-      M.toast({html: "Not all of your places are selected through autocomplete."})
-      return;
-  }
 
   for (let i = 1; i <= numLocations; i++) {
     locationData.push({
@@ -188,13 +239,10 @@ async function saveTrip() {
       weight: document.getElementById(`location-${i}-weight`).value,
     });
   }
-  // Get center point from which to start searching for hotels
-  const coords = placesToCoordsWeightArray(locationPlaceObjects);
-  console.log(centerOfMass(coords));
 
   const requestBody = {
     title: document.getElementById("trip-title").value,
-    hotel: "hotel1234",
+    hotel: hotelID,
     rating: -1,
     locations: locationData,
   };

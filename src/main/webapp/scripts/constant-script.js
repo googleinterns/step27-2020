@@ -14,10 +14,14 @@
 
 // This file contains all the constant scripts to be loaded on each page.
 
+const GOOGLE_API_KEY = "AIzaSyDlLtx69Y4-65_dCK67ZX3lzKTYpyc5CWI";
+
 // Initialize Materialize JS elements when DOM content is fully loaded
 document.addEventListener("DOMContentLoaded", () => {
   const sidenavElems = document.querySelectorAll(".sidenav");
   const sideNavInstances = M.Sidenav.init(sidenavElems, undefined);
+  const modalElems = document.querySelectorAll('.modal');
+  const modalInstances = M.Modal.init(modalElems, undefined);
 });
 
 /**
