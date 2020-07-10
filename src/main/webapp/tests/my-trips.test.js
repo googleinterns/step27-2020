@@ -23,15 +23,10 @@ describe("Test center of mass function", () => {
       },
     ];
 
-    expectToBeCloseToArray(centerOfMass(example1), [
-      53.5626865,
-      43.1298507,
-    ]);
+    expectToBeCloseToArray(centerOfMass(example1), [53.5626865, 43.1298507]);
   });
 });
 
 function expectToBeCloseToArray(actual, expected) {
-  actual.forEach((x, i) =>
-    expect(x).toBeCloseTo(expected[i], 6)
-  );
+  actual.forEach((x, i) => expect(x).toBeCloseTo(expected[i], 6));
 }

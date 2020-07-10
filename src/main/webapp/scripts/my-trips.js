@@ -348,8 +348,11 @@ function createPlaceHandler(element, locationNum) {
     console.log(obj);
     obj.locationNum = locationNum;
     locationPlaceObjects[locationNum - 1] = obj;
-    const coords = { lat: obj.geometry.location.lat(), lng: obj.geometry.location.lng() };
-    if(!mapInitialized) {
+    const coords = {
+      lat: obj.geometry.location.lat(),
+      lng: obj.geometry.location.lng(),
+    };
+    if (!mapInitialized) {
       map = new google.maps.Map(document.getElementById("editor-map"), {
         center: coords,
         zoom: 13,
@@ -375,7 +378,7 @@ function createPlaceHandler(element, locationNum) {
 function fitMapToMarkers() {
   const bounds = new google.maps.LatLngBounds();
   for (marker of markers) {
-    if(marker !== "") {
+    if (marker !== "") {
       bounds.extend({ lat: marker.position.lat(), lng: marker.position.lng() });
     }
   }
