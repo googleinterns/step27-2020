@@ -27,15 +27,29 @@ document.addEventListener("DOMContentLoaded", () => {
 function authReload() {
   fetch("/login")
     .then((response) => response.json())
-    .then(({isLoggedIn, loginUrl, logoutUrl}) => {
-      if(isLoggedIn) {
+    .then(({ isLoggedIn, loginUrl, logoutUrl }) => {
+      if (isLoggedIn) {
         showLogoutButton(logoutUrl);
-      } else {        
+      } else {
         // redirect user to auth page
         window.location.replace(loginUrl);
       }
     });
 }
+
+const LOADING_ANIMATION_HTML = `
+  <div class="preloader-wrapper big active loading-animation">
+    <div class="spinner-layer spinner-blue-only">
+      <div class="circle-clipper left">
+        <div class="circle"></div>
+      </div><div class="gap-patch">
+        <div class="circle"></div>
+      </div><div class="circle-clipper right">
+        <div class="circle"></div>
+      </div>
+    </div>
+  </div>
+`;
 
 /**
  * Shows the logout button given a logout url string in
@@ -56,4 +70,45 @@ function showLogoutButton(logoutUrl) {
             <a class="waves-effect btn white black-text" href="${logoutUrl}">Logout</a>
           </li>
         `;
+}
+
+/**
+ * Parses a serialized JSON string produced by Gson for a value class and
+ * converts it to a JS object.
+ * @param {string} json a JSON string in the form
+ *                      "ClassName{field1=val, ..., fieldN=val}"
+ * @returns {Object} JS object with the data stored in json.
+ */
+function parseSerializedJson(json) {
+  const charArray = [...json];
+  const startIndex = charArray.indexOf("{");
+
+  // Build JS object by iterating through
+  let obj = {};
+  let isField = true;
+  let [currField, currValue] = ["", ""];
+  for (let i = startIndex + 1; i < charArray.length; i++) {
+    const currChar = charArray[i];
+    if (currChar === " ") {
+      continue;
+    }
+    if (isField) {
+      if (currChar !== "=") {
+        currField += currChar;
+      } else {
+        isField = false;
+      }
+    } else {
+      if (currChar !== "," && currChar !== "}") {
+        currValue += currChar;
+      } else {
+        isField = true;
+        // add field to obj and reset field and value strings
+        obj[currField] = currValue;
+        [currField, currValue] = ["", ""];
+      }
+    }
+  }
+
+  return obj;
 }

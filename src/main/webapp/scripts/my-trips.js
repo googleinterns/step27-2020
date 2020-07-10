@@ -4,6 +4,7 @@
 function init() {
   authReload();
   findNearbyPlaces();
+  fetchAndRenderTripsFromDB();
 }
 
 let numLocations = 1;
@@ -26,13 +27,20 @@ function openTripEditor() {
       <div class="col m8">
         <div class="card">
           <div class="card-content">
-            <span class="card-title">New Trip</span>
-            <form>
+          <div class="card-title">
+            <div class="row">
+              <div class="input-field col s12">
+                <label for="trip-title">Trip Name</label>  
+                <input id="trip-title" type="text" required />
+              </div>
+            </div>
+          </div>
+            <form id="trip-editor-form">
               <div id="trip-locations-container">
                 <div class="row">
                   <div class="input-field col s6">
-                    <input id="location-1" type="text" />
                     <label for="location-1">Location 1</label>
+                    <input id="location-1" type="text" required />
                   </div>
                   <div class="col s6">
                     <p class="range-field weight-slider">
@@ -61,13 +69,11 @@ function openTripEditor() {
                 </button>
                 </div>
                 <div class="col m2">
-                  <button
-                    type="button"
+                  <input
+                    type="submit"
                     onclick="saveTrip(); cancelTripCreation()"
                     class="btn-large waves-effect indigo darken-2"
-                  >
-                    Save
-                  </button>
+                  />
                 </div>
               </div>
             </form>
@@ -97,8 +103,12 @@ function openTripEditor() {
     </div>
   `;
   // initialize tooltip for Add Location button
-  const tooltipElems = document.querySelectorAll('.tooltipped');
+  const tooltipElems = document.querySelectorAll(".tooltipped");
   const tooltipInstances = M.Tooltip.init(tooltipElems, undefined);
+
+  // prevent page reload on form submit
+  const form = document.getElementById("trip-editor-form");
+  form.addEventListener("submit", (e) => e.preventDefault());
 }
 
 /**
@@ -146,39 +156,95 @@ function cancelTripCreation() {
   `;
 }
 
-let numTrips = 0;
+/**
+ * Saves the current trip the user is editing to My Trips, through a POST request
+ * to the backend. Then rerenders the trips based on DB data.
+ */
+async function saveTrip() {
+  // Build location and weight arrays
+  const locationData = [];
+  for (let i = 1; i <= numLocations; i++) {
+    locationData.push({
+      name: document.getElementById(`location-${i}`).value,
+      weight: document.getElementById(`location-${i}-weight`).value,
+    });
+  }
+  const requestBody = {
+    title: document.getElementById("trip-title").value,
+    hotel: "hotel1234",
+    rating: -1,
+    locations: locationData,
+  };
+
+  await fetch("/trip-data", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(requestBody),
+  });
+  fetchAndRenderTripsFromDB();
+}
 
 /**
- * Saves the current trip the user is editing to My Trips
+ * Fetches trip data from the DB and renders each trip to the page.
  */
-function saveTrip() {
-  numTrips++;
-  document.getElementById("planned-trips-container").innerHTML += `
-     <div class="row">
-      <div class="col m8">
-        <div class="card">
-          <div class="card-content">
-            <span class="card-title">Trip</span>
-            <form>
-              <div id="trip-${numTrips}-locations"></div>
-            </form>
+async function fetchAndRenderTripsFromDB() {
+  const plannedTripsHTMLElement = document.getElementById(
+    "planned-trips-container"
+  );
+  plannedTripsHTMLElement.innerHTML = LOADING_ANIMATION_HTML;
+  const response = await fetch("/trip-data", {
+    method: "GET",
+  });
+  const tripsData = await response.json();
+  
+  const keys = Object.keys(tripsData);
+  if (keys.length === 0) {
+    plannedTripsHTMLElement.innerHTML = `
+      <div class="row"><div class="col s12">
+      <p class="placeholder-text">No trips to show. Let's go somewhere!</p>
+      </div></div>
+    `
+    return;
+  }
+  keys.sort(
+    (a, b) => parseSerializedJson(b).timestamp - parseSerializedJson(a).timestamp
+  );
+  plannedTripsHTMLElement.innerHTML = "";
+  for (key of keys) {
+    // Fields of tripsData are currently in string format.
+    // Deserialize using parseSerializedJson.
+    const { title, hotel, timestamp } = parseSerializedJson(key);
+    const locations = tripsData[key];
+    plannedTripsHTMLElement.innerHTML += `
+        <div class="row">
+          <div class="col m8">
+            <div class="card">
+              <div class="card-content">
+                <span class="card-title">${title}</span>
+                <p>Hotel Place ID: ${hotel}</p>
+                <form>
+                  <div id="trip-${timestamp}-locations"></div>
+                </form>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-  `;
-  for (let i = 1; i <= numLocations; i++) {
-    document.getElementById(`trip-${numTrips}-locations`).innerHTML += `
-      <div class="row">
-        <div class="col s6">
-          <span>${document.getElementById("location-" + i).value}</span>
-        </div>
-        <div class="col s6">
-          <span>${
-            document.getElementById("location-" + i + "-weight").value
-          }</span>
-        </div>
-      </div>
     `;
+    document.getElementById(
+      `trip-${timestamp}-locations`
+    ).innerHTML = locations.map(
+      ({ placeID, weight }, index) => `
+        <div class="row">
+          <div class="col s6">
+            <span>Place ${index + 1} ID: ${placeID}</span>
+          </div>
+          <div class="col s6">
+            <span>Weight: ${weight}</span>
+          </div>
+        </div>
+      `
+    ).join("");
   }
 }

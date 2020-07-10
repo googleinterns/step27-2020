@@ -73,19 +73,9 @@ function loadSharedTripsData() {
   // Render loading animation while awaiting the backend fetch. Since the
   // function is not yet async, this part of the code is not visible since
   // the loading is negligible with constant preloaded data
-  document.getElementById("shared-trips-section").innerHTML = `
-    <div class="preloader-wrapper big active loading-animation">
-      <div class="spinner-layer spinner-blue-only">
-        <div class="circle-clipper left">
-          <div class="circle"></div>
-        </div><div class="gap-patch">
-          <div class="circle"></div>
-        </div><div class="circle-clipper right">
-          <div class="circle"></div>
-        </div>
-      </div>
-    </div>
-  `;
+  document.getElementById(
+    "shared-trips-section"
+  ).innerHTML = LOADING_ANIMATION_HTML;
 
   // Sort posts with newest first
   SAMPLE_POSTS_DATA.sort((a, b) => b.timestamp - a.timestamp);

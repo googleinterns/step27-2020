@@ -12,14 +12,20 @@ import com.google.appengine.api.users.UserServiceFactory;
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.Key;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.sps.data.TripLocation;
 import com.google.sps.data.Trip;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -38,8 +44,7 @@ public class TripsServlet extends HttpServlet {
     if (userService.isUserLoggedIn()) {
       String userEmail = userService.getCurrentUser().getEmail();
       Query tripQuery = new Query("trip")
-                        .setFilter(new FilterPredicate(Trip.ENTITY_PROPERTY_OWNER, FilterOperator.EQUAL, userEmail))
-                        .addSort(Trip.ENTITY_PROPERTY_TIMESTAMP, SortDirection.DESCENDING);
+                        .setFilter(new FilterPredicate(Trip.ENTITY_PROPERTY_OWNER, FilterOperator.EQUAL, userEmail));
       Query tripLocationsQuery = new Query("trip-location")
                                   .setFilter(new FilterPredicate(TripLocation.ENTITY_PROPERTY_OWNER, FilterOperator.EQUAL, userEmail));
       DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
@@ -88,11 +93,13 @@ public class TripsServlet extends HttpServlet {
       String userEmail = userService.getCurrentUser().getEmail();
       long timestamp = System.currentTimeMillis();
       
+      String requestBody = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+      JsonObject jsonObject = JsonParser.parseString(requestBody).getAsJsonObject();
+      
       Trip trip = Trip.builder()
-                    .setTitle(request.getParameter(Trip.ENTITY_PROPERTY_TITLE))
-                    .setHotel(request.getParameter(Trip.ENTITY_PROPERTY_HOTEL))
-                    .setRating(Double.valueOf(request.getParameter(Trip.ENTITY_PROPERTY_RATING)))
-                    .setDescription(request.getParameter(Trip.ENTITY_PROPERTY_DESCRIPTION))
+                    .setTitle(jsonObject.getAsJsonPrimitive(Trip.ENTITY_PROPERTY_TITLE).getAsString())
+                    .setHotel(jsonObject.getAsJsonPrimitive(Trip.ENTITY_PROPERTY_HOTEL).getAsString())
+                    .setRating(jsonObject.getAsJsonPrimitive(Trip.ENTITY_PROPERTY_RATING).getAsDouble())
                     .setOwner(userEmail)
                     .setTimestamp(timestamp)
                     .build();
@@ -102,17 +109,14 @@ public class TripsServlet extends HttpServlet {
       datastore.put(tripEntity);
 
       // build TripLocation objects from request data and put them in Datastore
+      JsonArray locationData = jsonObject.getAsJsonArray("locations");
+      Iterator<JsonElement> locationIterator = locationData.iterator();
       
-      String[] locations = request.getParameterValues("locations");
-      String[] weights = request.getParameterValues("weights");
-      // these two arrays should be of equal length. If not, return error
-      if(locations.length != weights.length) {
-        response.setStatus(HttpServletResponse.SC_CONFLICT);
-        return;
-      }
-      
-      for(int i = 0; i < locations.length; i++) {
-        TripLocation location = TripLocation.create(locations[i], Integer.valueOf(weights[i]), userEmail);
+      while(locationIterator.hasNext()) {
+        JsonObject curr = locationIterator.next().getAsJsonObject();
+        String place = curr.getAsJsonPrimitive("name").getAsString();
+        int weight = curr.getAsJsonPrimitive("weight").getAsInt();
+        TripLocation location = TripLocation.create(place, weight, userEmail);
         datastore.put(convertTripLocationToEntity(location, tripEntity));
       }
 
@@ -157,7 +161,7 @@ public class TripsServlet extends HttpServlet {
    */
   public static TripLocation convertEntityToTripLocation(Entity entity) {
     String placeID = (String) entity.getProperty(TripLocation.ENTITY_PROPERTY_PLACE);
-    int weight = (int) entity.getProperty(TripLocation.ENTITY_PROPERTY_WEIGHT);
+    int weight = Math.toIntExact((long) entity.getProperty(TripLocation.ENTITY_PROPERTY_WEIGHT));
     String owner = (String) entity.getProperty(TripLocation.ENTITY_PROPERTY_OWNER);
     return TripLocation.create(placeID, weight, owner);
   }
