@@ -358,7 +358,7 @@ function createPlaceHandler(element, locationNum) {
 /**
  * Computes a pair in the form [lat, lng] of the
  * center of "mass" given weights for an array
- * of coordinate pairs.
+ * of coordinate pairs. Weights at a factor of 0.05 added to one.
  * @param {Array} arr array of {lat, lng, weight}
  * @returns {Array} centerpoint given weights and coords.
  */
