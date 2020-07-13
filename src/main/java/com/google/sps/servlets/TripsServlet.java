@@ -114,7 +114,7 @@ public class TripsServlet extends HttpServlet {
       
       while(locationIterator.hasNext()) {
         JsonObject curr = locationIterator.next().getAsJsonObject();
-        String place = curr.getAsJsonPrimitive("name").getAsString();
+        String place = curr.getAsJsonPrimitive("id").getAsString();
         int weight = curr.getAsJsonPrimitive("weight").getAsInt();
         TripLocation location = TripLocation.create(place, weight, userEmail);
         datastore.put(convertTripLocationToEntity(location, tripEntity));
