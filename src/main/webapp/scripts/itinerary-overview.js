@@ -22,6 +22,19 @@ function initMap() {
         });
     }
 
+/**
+ * Takes a latitude and longitude pair as parameters and centers the map on that specific
+ * Location
+ */
+function setCenter(LatLng) {
+    map.setCenter(LatLng)
+}
+
+
+/**
+ * Takes a latitude and longitude value as parameters and drops a maker on that specific
+ * Location
+ */
 function dropMarker(lat,lng) {
     const location = {lat: lat, lng: lng};
     const marker = new google.maps.Marker({
@@ -29,21 +42,18 @@ function dropMarker(lat,lng) {
         position: location, //Default coords if geolocation fails
         animation: google.maps.Animation.DROP,
 
-        });
-    }
+    });
+}
 
 function calculateAndDisplayRoute(directionsService, directionsRenderer) {
     const heath = new google.maps.LatLng(32.8368128, -96.4820992);
     const summit = new google.maps.LatLng(33.0083762, -96.7793862);
 
-    
     var selectedMode = document.getElementById("mode").value;
     directionsService.route(
         {
             origin: "25 Main Street, Belvedere Tiburon, CA",
             destination: "Union Square, Post Street, San Francisco, CA",
-            // waypoints: waypoints,
-            // optimizeWaypoints: true,
             travelMode: google.maps.TravelMode[selectedMode]
         },
         function(response, status) {
