@@ -1,54 +1,82 @@
-let map;
-let latitude;
-let longitude;
-
 function initMap() {
-    getUserLocation()
+    var directionsRenderer = new google.maps.DirectionsRenderer();
+    var directionsService = new google.maps.DirectionsService();
 
-    map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: 32, lng: -96.4820992},
-        zoom: 10
+    const heath = new google.maps.LatLng(32.8368128, -96.4820992);
+
+    var map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 10,
+        center: heath
     });
+    directionsRenderer.setMap(map);
 
-    marker = new google.maps.Marker({
-        map:map,
-        position: { lat: 32, lng: -96.4820992},
+    calculateAndDisplayRoute(directionsService, directionsRenderer);
+    document.getElementById("mode").addEventListener("change", function() {
+        calculateAndDisplayRoute(directionsService, directionsRenderer);
+        });
+    }
+
+function dropMarker(lat,lng) {
+    const location = {lat: lat, lng: lng};
+    const marker = new google.maps.Marker({
+        map: map,
+        position: location, //Default coords if geolocation fails
         animation: google.maps.Animation.DROP,
 
+        });
+    }
+
+function calculateAndDisplayRoute(directionsService, directionsRenderer) {
+    const heath = new google.maps.LatLng(32.8368128, -96.4820992);
+    const summit = new google.maps.LatLng(33.0083762, -96.7793862);
+
+    var selectedMode = document.getElementById("mode").value;
+    directionsService.route(
+        {
+            origin: heath,
+            destination: summit,
+            travelMode: google.maps.TravelMode[selectedMode]
+        },
+        function(response, status) {
+            if (status === "OK") {
+                directionsRenderer.setDirections(response);
+            } else {
+                window.alert("Directions request failed due to " + status);
+            }
+        }
+    );
+
+    function markUserLocation() {
+    navigator.geolocation.getCurrentPosition(function(position) {
+        lat = position.coords.latitude;
+        lng = position.coords.longitude;
+
+        userPos = {
+            lat: lat,
+            lng: lng
+        };
+
+        setCenter(userPos);
+        dropMarker(lat,lng);
+    }, function() {
+        handleLocationError(true, infoWindow, map.getCenter());
+    });
+
+    }
+
+function handleLocationError(browserHasGeolocation, infoWindow, pos) {
+    infoWindow.setPosition(pos);
+    infoWindow.setContent(browserHasGeolocation ?
+        'Error: The Geolocation service failed.' :
+        'Error: Your browser doesn\'t support geolocation.');
+    infoWindow.open(map);
+
+    }
+
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var elems = document.querySelectorAll('select');
+        var instances = M.FormSelect.init(elems, options);
     });
 }
-
-function getUserLocation() {
-    const options = {timeout: 60000};
-    navigator.geolocation.getCurrentPosition(retrieveUserLatLng, errorHandler, options);
-}
-
-function retrieveUserLatLng(position) {
-
-    latitude = Number(position.coords.latitude)
-    longitude = Number(position.coords.longitude)
-    const coords = [latitude, longitude];
-
-    alert("Lat: " + coords[0] + " Lng: " + coords[1])
-
-    return(coords)
-}
-
-function errorHandler(err) {
-    if(err.code === 1) {
-        alert("Error: Access is denied!");
-    } else if( err.code === 2) {
-        alert("Error: Position is unavailable!");
-    }
-}
-
-function getLatitude() {
-    return(Number(latitude));
-}
-
-function getLongitude() {
-    return(Number(longitude));
-}
-
-
 
