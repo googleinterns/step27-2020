@@ -196,9 +196,8 @@ async function findHotel() {
  * @param {Object} json the resulting JS object from calling the
  *                      Places API for the centerpoint.
  */
-function parseAndRenderHotelResults(json, centerPoint) {
+async function parseAndRenderHotelResults(json, centerPoint) {
   const modalContent = document.getElementById("hotel-results");
-  console.log(json.results);
   if (!json.results) {
     modalContent.innerText = "No hotels nearby. Sorry.";
   } else {
@@ -208,12 +207,26 @@ function parseAndRenderHotelResults(json, centerPoint) {
       obj.distance_center = distanceBetween(location, centerPoint);
       return obj;
     });
+    for (obj of json.results) {
+      const photoRef = obj.photos[0] ? obj.photos[0].photo_reference : undefined;
+      console.log(photoRef);
+      const photoResponse = await fetch(`https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/photo?maxwidth=1000&photoreference=${photoRef} &key=${GOOGLE_API_KEY}`)
+      const blob = await photoResponse.blob();
+      const photoUrl = await URL.createObjectURL(blob);
+      obj.photoUrl = photoUrl;
+    }
+
     json.results.sort((a, b) => a.distance_center - b.distance_center);
+    console.log(json.results);
     modalContent.innerHTML = json.results
       .map(
-        ({ name, formatted_address, rating, place_id }) => `
+        ({ name, formatted_address, rating, place_id, photoUrl }) => {
+          return `
           <div class="col s6">
-            <div class="card white">
+            <div class="card white">` + photoUrl ? `
+              <div class="card-image">
+                <img src="${photoUrl}" alt="photo of ${name} from Google" />
+              </div> ` : undefined + `
               <div class="card-content black-text">
                 <span class="card-title"><strong>${name}</strong> | Rating: ${rating}</span>
                 <p>${formatted_address}</p>
@@ -224,6 +237,7 @@ function parseAndRenderHotelResults(json, centerPoint) {
             </div>
           </div>
         `
+        }
       )
       .join("");
   }
@@ -401,6 +415,11 @@ function createPlaceHandler(element, locationNum) {
       map: map,
       title: obj.name,
     });
+    const infoWindow = new google.maps.InfoWindow({
+      content: `<h5 class="infowindow-text">${obj.name}</h5>
+          <p class="infowindow-text">Location ${locationNum}</p>`,
+    });
+    marker.addListener("click", () => infoWindow.open(map, marker));
     markers[locationNum - 1] = marker;
     if (locationNum !== 1) {
       fitMapToMarkers();
