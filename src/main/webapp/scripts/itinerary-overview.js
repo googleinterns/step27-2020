@@ -1,3 +1,9 @@
+document.addEventListener('DOMContentLoaded', function() {
+    var elems = document.querySelectorAll('select');
+    var instances = M.FormSelect.init(elems, undefined);
+});
+
+
 function initMap() {
     var directionsRenderer = new google.maps.DirectionsRenderer();
     var directionsService = new google.maps.DirectionsService();
@@ -6,7 +12,7 @@ function initMap() {
 
     var map = new google.maps.Map(document.getElementById("map"), {
         zoom: 10,
-        center: heath
+        center: "25 Main Street, Belvedere Tiburon, CA"
     });
     directionsRenderer.setMap(map);
 
@@ -30,11 +36,14 @@ function calculateAndDisplayRoute(directionsService, directionsRenderer) {
     const heath = new google.maps.LatLng(32.8368128, -96.4820992);
     const summit = new google.maps.LatLng(33.0083762, -96.7793862);
 
+    
     var selectedMode = document.getElementById("mode").value;
     directionsService.route(
         {
-            origin: heath,
-            destination: summit,
+            origin: "25 Main Street, Belvedere Tiburon, CA",
+            destination: "Union Square, Post Street, San Francisco, CA",
+            // waypoints: waypoints,
+            // optimizeWaypoints: true,
             travelMode: google.maps.TravelMode[selectedMode]
         },
         function(response, status) {
@@ -73,10 +82,5 @@ function handleLocationError(browserHasGeolocation, infoWindow, pos) {
 
     }
 
-
-    document.addEventListener('DOMContentLoaded', function() {
-        var elems = document.querySelectorAll('select');
-        var instances = M.FormSelect.init(elems, options);
-    });
 }
 
