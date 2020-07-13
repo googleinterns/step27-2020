@@ -187,7 +187,7 @@ async function findHotel() {
     `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/textsearch/json?query=lodging&location=${lat},${lng}&radius=10000&key=${GOOGLE_API_KEY}&output=json`
   );
   const results = await response.json();
-  parseAndRenderHotelResults(results);
+  parseAndRenderHotelResults(results, { lat: lat, lng: lng });
 }
 
 /**
@@ -196,12 +196,19 @@ async function findHotel() {
  * @param {Object} json the resulting JS object from calling the
  *                      Places API for the centerpoint.
  */
-function parseAndRenderHotelResults(json) {
+function parseAndRenderHotelResults(json, centerPoint) {
   const modalContent = document.getElementById("hotel-results");
+  console.log(json.results);
   if (!json.results) {
     modalContent.innerText = "No hotels nearby. Sorry.";
   } else {
-    json.results = json.results.slice(0, 4);
+    json.results = json.results.map((obj) => {
+      const { geometry } = obj;
+      const { location } = geometry;
+      obj.distance_center = distanceBetween(location, centerPoint);
+      return obj;
+    });
+    json.results.sort((a, b) => a.distance_center - b.distance_center);
     modalContent.innerHTML = json.results
       .map(
         ({ name, formatted_address, rating, place_id }) => `
@@ -220,6 +227,36 @@ function parseAndRenderHotelResults(json) {
       )
       .join("");
   }
+}
+
+/**
+ * Implementation of the Haversine formula, recommended by NASA to calculate
+ * distances between two coordinate pairs based on Latitude and Longitude
+ * (source: https://andrew.hedges.name/experiments/haversine/)
+ * @param {Object} p1 a coordinate pair with fields lat and lng
+ * @param {Object} p2 a coordinate pair with fields lat and lng
+ * @returns {number} the distance between the two.
+ */
+function distanceBetween(p1, p2) {
+  // Earth mean radius - 6371 km by Google
+  const lngDelta = degToRad(p2.lng - p1.lng);
+  const latDelta = degToRad(p2.lat - p1.lat);
+  const a =
+    Math.sin(latDelta / 2) ** 2 +
+    Math.cos(degToRad(p1.lat)) *
+      Math.cos(degToRad(p2.lat)) *
+      Math.sin(lngDelta / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return 6371 * c;
+}
+
+/**
+ * Converts a certain angle in degrees to radians.
+ * @param {number} angle
+ * @returns {number} the angle param in radians.
+ */
+function degToRad(angle) {
+  return angle * Math.PI / 180;
 }
 
 /**
