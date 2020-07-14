@@ -203,10 +203,13 @@ async function parseAndRenderHotelResults(json, centerPoint) {
   } else {
     const hotelsMapElem = document.getElementById("hotels-map");
     json = json.slice(0, 10);
-    const hotelMap = new google.maps.Map(document.getElementById("hotels-map"), {
-      center: centerPoint,
-      zoom: 13,
-    });
+    const hotelMap = new google.maps.Map(
+      document.getElementById("hotels-map"),
+      {
+        center: centerPoint,
+        zoom: 13,
+      }
+    );
     // Add existing locations to the map
     markers.forEach((obj) => {
       const { position } = obj;
@@ -228,17 +231,21 @@ async function parseAndRenderHotelResults(json, centerPoint) {
         title: obj.name,
         label: {
           fontFamily: "Material Icons",
-          text: "hotel"
-        }
+          text: "hotel",
+        },
       });
       const infoWindow = new google.maps.InfoWindow({
         content: `<h5 class="infowindow-text">${obj.name}</h5>`,
       });
       marker.addListener("click", () => infoWindow.open(hotelMap, marker));
       obj.distance_center = distanceBetween(location, centerPoint);
-      const photoRef = obj.photos[0] ? obj.photos[0].photo_reference : undefined;
+      const photoRef = obj.photos[0]
+        ? obj.photos[0].photo_reference
+        : undefined;
       if (photoRef) {
-        const photoResponse = await fetch(`https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/photo?maxwidth=500&photoreference=${photoRef} &key=${GOOGLE_API_KEY}`)
+        const photoResponse = await fetch(
+          `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/photo?maxwidth=500&photoreference=${photoRef} &key=${GOOGLE_API_KEY}`
+        );
         const blob = await photoResponse.blob();
         const photoUrl = await URL.createObjectURL(blob);
         obj.photo_url = photoUrl;
@@ -254,13 +261,18 @@ async function parseAndRenderHotelResults(json, centerPoint) {
     hotelsMapElem.style.marginBottom = "2em";
     modalContent.innerHTML = json
       .map(
-        ({ name, formatted_address, rating, place_id, photo_url }) => `
+        ({ name, formatted_address, rating, place_id, photo_url }) =>
+          `
           <div class="row">
             <div class="col s12 m6">
-              <div class="card large white">` + (photo_url ? `
+              <div class="card large white">` +
+          (photo_url
+            ? `
                 <div class="card-image">
                   <img src="${photo_url}" alt="photo of ${name} from Google" loading="lazy" />
-                </div> ` : "") + `
+                </div> `
+            : "") +
+          `
                 <div class="card-content black-text">
                   <span class="card-title"><strong>${name}</strong></span>
                   <p>${formatted_address}</p>
@@ -313,7 +325,7 @@ function distanceBetween(p1, p2) {
  * @returns {number} the angle param in radians.
  */
 function degToRad(angle) {
-  return angle * Math.PI / 180;
+  return (angle * Math.PI) / 180;
 }
 
 /**
