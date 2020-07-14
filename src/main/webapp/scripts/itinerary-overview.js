@@ -7,11 +7,14 @@ document.addEventListener('DOMContentLoaded', function() {
 function initMap() {
     const directionsRenderer = new google.maps.DirectionsRenderer();
     const directionsService = new google.maps.DirectionsService();
+    const transitLayer = new google.maps.TransitLayer();
 
     const map = new google.maps.Map(document.getElementById("map"), {
         zoom: 10,
         center: "25 Main Street, Belvedere Tiburon, CA"
     });
+
+    transitLayer.setMap(map);
     directionsRenderer.setMap(map);
 
     calculateAndDisplayRoute(directionsService, directionsRenderer);
@@ -49,9 +52,9 @@ function dropMarker(lat,lng) {
 }
 
 function calculateAndDisplayRoute(directionsService, directionsRenderer) {
-    var waypoints = [];
-    var checkboxArray = document.getElementById("waypoints");
-    for (var i = 0; i < checkboxArray.length; i++) {
+    const waypoints = [];
+    const checkboxArray = document.getElementById("waypoints");
+    for (let i = 0; i < checkboxArray.length; i++) {
         if (checkboxArray.options[i].selected) {
             waypoints.push({
                 location: checkboxArray[i].value,
