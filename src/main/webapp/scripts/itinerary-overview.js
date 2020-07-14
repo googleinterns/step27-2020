@@ -92,10 +92,10 @@ function calculateAndDisplayRoute(directionsService, directionsRenderer) {
 
     function markUserLocation() {
         navigator.geolocation.getCurrentPosition(function(position) {
-            let lat = position.coords.latitude;
-            let lng = position.coords.longitude;
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
 
-            let userPos = {
+            const userPos = {
                 lat: lat,
                 lng: lng
             };
