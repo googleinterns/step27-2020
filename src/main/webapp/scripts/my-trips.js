@@ -62,7 +62,7 @@ function openTripEditor() {
                 </div>
               </div>
               <div class="row">
-                <div class="col m10">
+                <div class="left">
                 <button 
                   type="button"
                   class="btn-floating btn-large waves-effect waves-light blue tooltipped"
@@ -73,7 +73,7 @@ function openTripEditor() {
                   <i class="material-icons">add</i>
                 </button>
                 </div>
-                <div class="col m2">
+                <div class="right">
                   <button
                     type="button"
                     onclick="findHotel()"
@@ -207,7 +207,7 @@ async function parseAndRenderHotelResults(json, centerPoint) {
       document.getElementById("hotels-map"),
       {
         center: centerPoint,
-        zoom: 13,
+        zoom: 12
       }
     );
     // Add existing locations to the map
@@ -244,7 +244,7 @@ async function parseAndRenderHotelResults(json, centerPoint) {
         : undefined;
       if (photoRef) {
         const photoResponse = await fetch(
-          `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/photo?maxwidth=500&photoreference=${photoRef} &key=${GOOGLE_API_KEY}`
+          `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/photo?maxwidth=500&photoreference=${photoRef}&key=${GOOGLE_API_KEY}`
         );
         const blob = await photoResponse.blob();
         const photoUrl = await URL.createObjectURL(blob);
@@ -457,13 +457,18 @@ function createPlaceHandler(element, locationNum) {
       lat: obj.geometry.location.lat(),
       lng: obj.geometry.location.lng(),
     };
-    if (!mapInitialized) {
+    if (!mapInitialized || locationNum === 1) {
       map = new google.maps.Map(document.getElementById("editor-map"), {
         center: coords,
         zoom: 13,
       });
       mapInitialized = true;
     }
+    if(markers[locationNum - 1] !== "") {
+      const currMarkerForLocation = markers[locationNum - 1];
+      currMarkerForLocation.setMap(null);
+    }
+
     const marker = new google.maps.Marker({
       position: coords,
       map: map,
@@ -476,23 +481,27 @@ function createPlaceHandler(element, locationNum) {
     marker.addListener("click", () => infoWindow.open(map, marker));
     markers[locationNum - 1] = marker;
     if (locationNum !== 1) {
-      fitMapToMarkers();
-      map.setZoom(map.getZoom() - 1);
+      fitMapToMarkers(map, markers);
+      map.setZoom(map.getZoom() - 0.3);
     }
   });
 }
 
 /**
  * Uses the markers array to rerender the map and fit all the current locations.
+ * @param {google.maps.Map} mapRef the map object to update
+ * @param {Array} markers array of Marker objects
  */
-function fitMapToMarkers() {
-  const bounds = new google.maps.LatLngBounds();
+function fitMapToMarkers(mapRef, markers) {
+  const bounds = new google.maps.LatLngBounds(null);
   for (marker of markers) {
     if (marker !== "") {
-      bounds.extend({ lat: marker.position.lat(), lng: marker.position.lng() });
+      bounds.extend(marker.getPosition());
     }
   }
-  map.fitBounds(bounds);
+  mapRef.fitBounds(bounds);
+  mapRef.panToBounds(bounds);
+  mapRef.setCenter(bounds.getCenter());
 }
 
 /**
