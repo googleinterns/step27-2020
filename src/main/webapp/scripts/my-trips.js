@@ -184,7 +184,7 @@ async function findHotel() {
   const coords = placesToCoordsWeightArray(locationPlaceObjects);
   const [lat, lng] = centerOfMass(coords);
   const response = await fetch(
-    `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/textsearch/json?query=lodging&location=${lat},${lng}&radius=10000&key=${GOOGLE_API_KEY}&output=json`
+    `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/textsearch/json?type=lodging&location=${lat},${lng}&radius=10000&key=${GOOGLE_API_KEY}&output=json`
   );
   const { results } = await response.json();
   parseAndRenderHotelResults(results, { lat: lat, lng: lng });
@@ -201,6 +201,7 @@ async function parseAndRenderHotelResults(json, centerPoint) {
   if (!json) {
     modalContent.innerText = "No hotels nearby. Sorry.";
   } else {
+    const hotelsMapElem = document.getElementById("hotels-map");
     json = json.slice(0, 10);
     const hotelMap = new google.maps.Map(document.getElementById("hotels-map"), {
       center: centerPoint,
@@ -225,6 +226,10 @@ async function parseAndRenderHotelResults(json, centerPoint) {
         position: location,
         map: hotelMap,
         title: obj.name,
+        label: {
+          fontFamily: "Material Icons",
+          text: "hotel"
+        }
       });
       const infoWindow = new google.maps.InfoWindow({
         content: `<h5 class="infowindow-text">${obj.name}</h5>`,
@@ -240,11 +245,13 @@ async function parseAndRenderHotelResults(json, centerPoint) {
       } else {
         obj.photo_url = undefined;
       }
-      return obj;
+      return await obj;
     });
-    console.log(json);
+    json = await Promise.all(json);
     json.sort((a, b) => a.distance_center - b.distance_center);
-    console.log(json);
+    hotelsMapElem.style.width = "100%";
+    hotelsMapElem.style.height = "400px";
+    hotelsMapElem.style.marginBottom = "2em";
     modalContent.innerHTML = json
       .map(
         ({ name, formatted_address, rating, place_id, photo_url }) => `
