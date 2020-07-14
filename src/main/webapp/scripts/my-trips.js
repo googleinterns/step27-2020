@@ -186,7 +186,7 @@ async function findHotel() {
   const response = await fetch(
     `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/textsearch/json?query=lodging&location=${lat},${lng}&radius=10000&key=${GOOGLE_API_KEY}&output=json`
   );
-  const results = await response.json();
+  const { results } = await response.json();
   parseAndRenderHotelResults(results, { lat: lat, lng: lng });
 }
 
@@ -198,46 +198,82 @@ async function findHotel() {
  */
 async function parseAndRenderHotelResults(json, centerPoint) {
   const modalContent = document.getElementById("hotel-results");
-  if (!json.results) {
+  if (!json) {
     modalContent.innerText = "No hotels nearby. Sorry.";
   } else {
-    json.results = json.results.map((obj) => {
+    json = json.slice(0, 10);
+    const hotelMap = new google.maps.Map(document.getElementById("hotels-map"), {
+      center: centerPoint,
+      zoom: 13,
+    });
+    // Add existing locations to the map
+    markers.forEach((obj) => {
+      const { position } = obj;
+      const { lat, lng } = position;
+      const marker = new google.maps.Marker({
+        position: { lat: lat(), lng: lng() },
+        map: hotelMap,
+        title: obj.title,
+      });
+    });
+    // Add distance_center and photo_url fields to each object in
+    // json.results
+    json = json.map(async (obj) => {
       const { geometry } = obj;
       const { location } = geometry;
+      const marker = new google.maps.Marker({
+        position: location,
+        map: hotelMap,
+        title: obj.name,
+      });
+      const infoWindow = new google.maps.InfoWindow({
+        content: `<h5 class="infowindow-text">${obj.name}</h5>`,
+      });
+      marker.addListener("click", () => infoWindow.open(hotelMap, marker));
       obj.distance_center = distanceBetween(location, centerPoint);
+      const photoRef = obj.photos[0] ? obj.photos[0].photo_reference : undefined;
+      if (photoRef) {
+        const photoResponse = await fetch(`https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/photo?maxwidth=500&photoreference=${photoRef} &key=${GOOGLE_API_KEY}`)
+        const blob = await photoResponse.blob();
+        const photoUrl = await URL.createObjectURL(blob);
+        obj.photo_url = photoUrl;
+      } else {
+        obj.photo_url = undefined;
+      }
       return obj;
     });
-    for (obj of json.results) {
-      const photoRef = obj.photos[0] ? obj.photos[0].photo_reference : undefined;
-      console.log(photoRef);
-      const photoResponse = await fetch(`https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/photo?maxwidth=1000&photoreference=${photoRef} &key=${GOOGLE_API_KEY}`)
-      const blob = await photoResponse.blob();
-      const photoUrl = await URL.createObjectURL(blob);
-      obj.photoUrl = photoUrl;
-    }
-
-    json.results.sort((a, b) => a.distance_center - b.distance_center);
-    console.log(json.results);
-    modalContent.innerHTML = json.results
+    console.log(json);
+    json.sort((a, b) => a.distance_center - b.distance_center);
+    console.log(json);
+    modalContent.innerHTML = json
       .map(
-        ({ name, formatted_address, rating, place_id, photoUrl }) => {
-          return `
-          <div class="col s6">
-            <div class="card white">` + photoUrl ? `
-              <div class="card-image">
-                <img src="${photoUrl}" alt="photo of ${name} from Google" />
-              </div> ` : undefined + `
-              <div class="card-content black-text">
-                <span class="card-title"><strong>${name}</strong> | Rating: ${rating}</span>
-                <p>${formatted_address}</p>
+        ({ name, formatted_address, rating, place_id, photo_url }) => `
+          <div class="row">
+            <div class="col s12 m6">
+              <div class="card large white">` + (photo_url ? `
+                <div class="card-image">
+                  <img src="${photo_url}" alt="photo of ${name} from Google" loading="lazy" />
+                </div> ` : "") + `
+                <div class="card-content black-text">
+                  <span class="card-title"><strong>${name}</strong></span>
+                  <p>${formatted_address}</p>
+                </div>
+                <div class="card-action center">
+                  <button id="${place_id}" class="btn indigo" onClick="saveTrip(this.id)">CHOOSE</button>
+                </div>
               </div>
-              <div class="card-action">
-                <button id="${place_id}" class="btn indigo" onClick="saveTrip(this.id)">CHOOSE</button>
+            </div>
+            <div class="col s12 m6">
+              <div class="card large white">
+                <div class="card-content black-text">
+                  <span class="card-title"><i class="material-icons">info</i>Info</span>
+                  <p>Rating: ${rating}</p>
+                  <p class="placeholder-text">More coming soon!</p>
+                </div>            
               </div>
             </div>
           </div>
         `
-        }
       )
       .join("");
   }
@@ -249,7 +285,7 @@ async function parseAndRenderHotelResults(json, centerPoint) {
  * (source: https://andrew.hedges.name/experiments/haversine/)
  * @param {Object} p1 a coordinate pair with fields lat and lng
  * @param {Object} p2 a coordinate pair with fields lat and lng
- * @returns {number} the distance between the two.
+ * @returns {number} the distance between the two in km
  */
 function distanceBetween(p1, p2) {
   // Earth mean radius - 6371 km by Google
@@ -396,7 +432,6 @@ async function fetchAndRenderTripsFromDB() {
 function createPlaceHandler(element, locationNum) {
   google.maps.event.addListener(element, "place_changed", () => {
     const obj = element.getPlace();
-    console.log(obj);
     obj.locationNum = locationNum;
     locationPlaceObjects[locationNum - 1] = obj;
     const coords = {

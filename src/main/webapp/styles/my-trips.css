@@ -10,3 +10,9 @@
   color: grey;
   font-size: 18px;
 }
+
+#hotels-map {
+  height: 400px;
+  margin-bottom: 2em;
+  width: 100%;
+}
