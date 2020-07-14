@@ -198,10 +198,11 @@ async function findHotel() {
  */
 async function parseAndRenderHotelResults(json, centerPoint) {
   const modalContent = document.getElementById("hotel-results");
-  if (!json) {
-    modalContent.innerText = "No hotels nearby. Sorry.";
+  const hotelsMapElem = document.getElementById("hotels-map");
+  if (!json || json.length === 0) {
+    modalContent.innerText = "We couldn't find any hotels nearby. Sorry about that.";
+    hotelsMapElem.innerHTML = "";
   } else {
-    const hotelsMapElem = document.getElementById("hotels-map");
     json = json.slice(0, 10);
     const hotelMap = new google.maps.Map(
       document.getElementById("hotels-map"),
@@ -239,7 +240,7 @@ async function parseAndRenderHotelResults(json, centerPoint) {
       });
       marker.addListener("click", () => infoWindow.open(hotelMap, marker));
       obj.distance_center = distanceBetween(location, centerPoint);
-      const photoRef = obj.photos[0]
+      const photoRef = (obj.photos && Array.isArray(obj.photos))
         ? obj.photos[0].photo_reference
         : undefined;
       if (photoRef) {
@@ -256,6 +257,7 @@ async function parseAndRenderHotelResults(json, centerPoint) {
     });
     json = await Promise.all(json);
     json.sort((a, b) => a.distance_center - b.distance_center);
+    
     hotelsMapElem.style.width = "100%";
     hotelsMapElem.style.height = "400px";
     hotelsMapElem.style.marginBottom = "2em";
