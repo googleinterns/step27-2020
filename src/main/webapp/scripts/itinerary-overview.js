@@ -63,6 +63,15 @@ function calculateAndDisplayRoute(directionsService, directionsRenderer) {
         }
     }
 
+    // let locations = ["Steiner St & Hayes St, San Francisco, CA 94117", "Fisherman's Wharf, San Francisco, CA"]
+
+    // for(let i = 0; i < locations.length; i++){
+    //     waypoints.push({
+    //         location: locations[i],
+    //         stopover: true
+    //     })
+    // }
+
     const selectedMode = document.getElementById("mode").value;
     directionsService.route(
         {
