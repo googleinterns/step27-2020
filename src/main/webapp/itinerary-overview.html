@@ -2,18 +2,12 @@
 <html>
 <head>
     <meta
-            charset="UTF-8"
-            name="viewport"
-            content="width=device-width, initial-scale=1.0"
+    charset="UTF-8"
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
     />
     <title>Itinerary Overview</title>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
-
-    <script
-            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDlLtx69Y4-65_dCK67ZX3lzKTYpyc5CWI&callback=initMap&libraries=&v=weekly"
-            defer
-    ></script>
-
     <link
             href="https://fonts.googleapis.com/icon?family=Material+Icons"
             rel="stylesheet"
@@ -25,10 +19,45 @@
             href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
     />
 </head>
-<body>
+<body onload="initMap()">
+
 <div id="map"></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-<script src="scripts/constant-script.js"></script>
-<script src="scripts/itinerary-overview.js"></script>
-</body>
+
+<div class="row">
+    <div class="col s3">
+        <div id="itinerary-panel">
+            <div id="mode-panel">
+                <select id="mode">
+                    <option value="DRIVING">Driving</option>
+                    <option value="WALKING">Walking</option>
+                    <option value="BICYCLING">Bicycling</option>
+                    <option value="TRANSIT">Transit</option>
+                </select>
+                <label for="mode"><b>Mode of Travel:</b></label>
+            </div>
+            <select multiple id="waypoints">
+                <option value="Steiner St & Hayes St, San Francisco, CA 94117">Steiner St & Hayes St</option>
+                <option value="Fisherman's Wharf, San Francisco, CA">Fisherman's Wharf</option>
+                <option value="Golden Gate Bridge">Golden Gate Bridge</option>
+                <option value="Presidio of San Francisco, San Francisco, CA">Presidio of San Francisco</option>
+                <option value="Baker Beach, San Francisco, CA">Baker Beach</option>
+                <
+            </select>
+            <label for="waypoints">Locations</label>
+        </div>
+    </div>
+    <div class="col s9">
+        <div class="card">
+        </div>
+    </div>
+</div>
+        <script
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDlLtx69Y4-65_dCK67ZX3lzKTYpyc5CWI&libraries=&v=weekly"
+        defer
+        ></script>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+        <script src="scripts/constant-script.js"></script>
+        <script src="scripts/itinerary-overview.js"></script>
+    </body>
 </html>

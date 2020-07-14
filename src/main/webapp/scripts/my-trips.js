@@ -62,7 +62,7 @@ function openTripEditor() {
                 </div>
               </div>
               <div class="row">
-                <div class="col m10">
+                <div class="left">
                 <button 
                   type="button"
                   class="btn-floating btn-large waves-effect waves-light blue tooltipped"
@@ -73,7 +73,7 @@ function openTripEditor() {
                   <i class="material-icons">add</i>
                 </button>
                 </div>
-                <div class="col m2">
+                <div class="right">
                   <button
                     type="button"
                     onclick="findHotel()"
@@ -184,10 +184,10 @@ async function findHotel() {
   const coords = placesToCoordsWeightArray(locationPlaceObjects);
   const [lat, lng] = centerOfMass(coords);
   const response = await fetch(
-    `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/textsearch/json?query=lodging&location=${lat},${lng}&radius=10000&key=${GOOGLE_API_KEY}&output=json`
+    `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/textsearch/json?type=lodging&location=${lat},${lng}&radius=10000&key=${GOOGLE_API_KEY}&output=json`
   );
-  const results = await response.json();
-  parseAndRenderHotelResults(results);
+  const { results } = await response.json();
+  parseAndRenderHotelResults(results, { lat: lat, lng: lng });
 }
 
 /**
@@ -196,23 +196,99 @@ async function findHotel() {
  * @param {Object} json the resulting JS object from calling the
  *                      Places API for the centerpoint.
  */
-function parseAndRenderHotelResults(json) {
+async function parseAndRenderHotelResults(json, centerPoint) {
   const modalContent = document.getElementById("hotel-results");
-  if (!json.results) {
+  if (!json) {
     modalContent.innerText = "No hotels nearby. Sorry.";
   } else {
-    json.results = json.results.slice(0, 4);
-    modalContent.innerHTML = json.results
+    const hotelsMapElem = document.getElementById("hotels-map");
+    json = json.slice(0, 10);
+    const hotelMap = new google.maps.Map(
+      document.getElementById("hotels-map"),
+      {
+        center: centerPoint,
+        zoom: 12
+      }
+    );
+    // Add existing locations to the map
+    markers.forEach((obj) => {
+      const { position } = obj;
+      const { lat, lng } = position;
+      const marker = new google.maps.Marker({
+        position: { lat: lat(), lng: lng() },
+        map: hotelMap,
+        title: obj.title,
+      });
+    });
+    // Add distance_center and photo_url fields to each object in
+    // json.results
+    json = json.map(async (obj) => {
+      const { geometry } = obj;
+      const { location } = geometry;
+      const marker = new google.maps.Marker({
+        position: location,
+        map: hotelMap,
+        title: obj.name,
+        label: {
+          fontFamily: "Material Icons",
+          text: "hotel",
+        },
+      });
+      const infoWindow = new google.maps.InfoWindow({
+        content: `<h5 class="infowindow-text">${obj.name}</h5>`,
+      });
+      marker.addListener("click", () => infoWindow.open(hotelMap, marker));
+      obj.distance_center = distanceBetween(location, centerPoint);
+      const photoRef = obj.photos[0]
+        ? obj.photos[0].photo_reference
+        : undefined;
+      if (photoRef) {
+        const photoResponse = await fetch(
+          `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/photo?maxwidth=500&photoreference=${photoRef}&key=${GOOGLE_API_KEY}`
+        );
+        const blob = await photoResponse.blob();
+        const photoUrl = await URL.createObjectURL(blob);
+        obj.photo_url = photoUrl;
+      } else {
+        obj.photo_url = undefined;
+      }
+      return await obj;
+    });
+    json = await Promise.all(json);
+    json.sort((a, b) => a.distance_center - b.distance_center);
+    hotelsMapElem.style.width = "100%";
+    hotelsMapElem.style.height = "400px";
+    hotelsMapElem.style.marginBottom = "2em";
+    modalContent.innerHTML = json
       .map(
-        ({ name, formatted_address, rating, place_id }) => `
-          <div class="col s6">
-            <div class="card white">
-              <div class="card-content black-text">
-                <span class="card-title"><strong>${name}</strong> | Rating: ${rating}</span>
-                <p>${formatted_address}</p>
+        ({ name, formatted_address, rating, place_id, photo_url }) =>
+          `
+          <div class="row">
+            <div class="col s12 m6">
+              <div class="card large white">` +
+          (photo_url
+            ? `
+                <div class="card-image">
+                  <img src="${photo_url}" alt="photo of ${name} from Google" loading="lazy" />
+                </div> `
+            : "") +
+          `
+                <div class="card-content black-text">
+                  <span class="card-title"><strong>${name}</strong></span>
+                  <p>${formatted_address}</p>
+                </div>
+                <div class="card-action center">
+                  <button id="${place_id}" class="btn indigo" onClick="saveTrip(this.id)">CHOOSE</button>
+                </div>
               </div>
-              <div class="card-action">
-                <button id="${place_id}" class="btn indigo" onClick="saveTrip(this.id)">CHOOSE</button>
+            </div>
+            <div class="col s12 m6">
+              <div class="card large white">
+                <div class="card-content black-text">
+                  <span class="card-title"><i class="material-icons">info</i>Info</span>
+                  <p>Rating: ${rating}</p>
+                  <p class="placeholder-text">More coming soon!</p>
+                </div>            
               </div>
             </div>
           </div>
@@ -220,6 +296,36 @@ function parseAndRenderHotelResults(json) {
       )
       .join("");
   }
+}
+
+/**
+ * Implementation of the Haversine formula, recommended by NASA to calculate
+ * distances between two coordinate pairs based on Latitude and Longitude
+ * (source: https://andrew.hedges.name/experiments/haversine/)
+ * @param {Object} p1 a coordinate pair with fields lat and lng
+ * @param {Object} p2 a coordinate pair with fields lat and lng
+ * @returns {number} the distance between the two in km
+ */
+function distanceBetween(p1, p2) {
+  // Earth mean radius - 6371 km by Google
+  const lngDelta = degToRad(p2.lng - p1.lng);
+  const latDelta = degToRad(p2.lat - p1.lat);
+  const a =
+    Math.sin(latDelta / 2) ** 2 +
+    Math.cos(degToRad(p1.lat)) *
+      Math.cos(degToRad(p2.lat)) *
+      Math.sin(lngDelta / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return 6371 * c;
+}
+
+/**
+ * Converts a certain angle in degrees to radians.
+ * @param {number} angle
+ * @returns {number} the angle param in radians.
+ */
+function degToRad(angle) {
+  return (angle * Math.PI) / 180;
 }
 
 /**
@@ -345,44 +451,57 @@ async function fetchAndRenderTripsFromDB() {
 function createPlaceHandler(element, locationNum) {
   google.maps.event.addListener(element, "place_changed", () => {
     const obj = element.getPlace();
-    console.log(obj);
     obj.locationNum = locationNum;
     locationPlaceObjects[locationNum - 1] = obj;
     const coords = {
       lat: obj.geometry.location.lat(),
       lng: obj.geometry.location.lng(),
     };
-    if (!mapInitialized) {
+    if (!mapInitialized || locationNum === 1) {
       map = new google.maps.Map(document.getElementById("editor-map"), {
         center: coords,
         zoom: 13,
       });
       mapInitialized = true;
     }
+    if(markers[locationNum - 1] !== "") {
+      const currMarkerForLocation = markers[locationNum - 1];
+      currMarkerForLocation.setMap(null);
+    }
+
     const marker = new google.maps.Marker({
       position: coords,
       map: map,
       title: obj.name,
     });
+    const infoWindow = new google.maps.InfoWindow({
+      content: `<h5 class="infowindow-text">${obj.name}</h5>
+          <p class="infowindow-text">Location ${locationNum}</p>`,
+    });
+    marker.addListener("click", () => infoWindow.open(map, marker));
     markers[locationNum - 1] = marker;
     if (locationNum !== 1) {
-      fitMapToMarkers();
-      map.setZoom(map.getZoom() - 1);
+      fitMapToMarkers(map, markers);
+      map.setZoom(map.getZoom() - 0.3);
     }
   });
 }
 
 /**
  * Uses the markers array to rerender the map and fit all the current locations.
+ * @param {google.maps.Map} mapRef the map object to update
+ * @param {Array} markers array of Marker objects
  */
-function fitMapToMarkers() {
-  const bounds = new google.maps.LatLngBounds();
+function fitMapToMarkers(mapRef, markers) {
+  const bounds = new google.maps.LatLngBounds(null);
   for (marker of markers) {
     if (marker !== "") {
-      bounds.extend({ lat: marker.position.lat(), lng: marker.position.lng() });
+      bounds.extend(marker.getPosition());
     }
   }
-  map.fitBounds(bounds);
+  mapRef.fitBounds(bounds);
+  mapRef.panToBounds(bounds);
+  mapRef.setCenter(bounds.getCenter());
 }
 
 /**
