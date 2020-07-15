@@ -282,7 +282,12 @@ async function parseAndRenderHotelResults(json, centerPoint) {
                   <p>${formatted_address}</p>
                 </div>
                 <div class="card-action center">
-                  <button id="${place_id}" class="btn indigo" onClick="saveTrip(this.id)">CHOOSE</button>
+                  <button 
+                    class="btn indigo" 
+                    onClick="saveTrip("${place_id}", "${photo_url}", "${name})"
+                  >
+                    CHOOSE
+                  </button>
                 </div>
               </div>
             </div>
@@ -336,7 +341,7 @@ function degToRad(angle) {
  * Saves the current trip the user is editing to My Trips, through a POST request
  * to the backend. Then rerenders the trips based on DB data.
  */
-async function saveTrip(hotelID) {
+async function saveTrip(hotelID, hotelImg, hotelName) {
   const elem = document.getElementById("hotel-modal");
   const instance = M.Modal.getInstance(elem);
   instance.close();
@@ -347,13 +352,16 @@ async function saveTrip(hotelID) {
   for (let i = 1; i <= numLocations; i++) {
     locationData.push({
       id: locationPlaceObjects[i - 1].place_id,
+      name: locationPlaceObjects[i - 1].name,
       weight: document.getElementById(`location-${i}-weight`).value,
     });
   }
 
   const requestBody = {
     title: document.getElementById("trip-title").value,
-    hotel: hotelID,
+    hotel_id: hotelID,
+    hotel_img: hotelImg,
+    hotel_name: hotelName,
     rating: -1,
     locations: locationData,
   };
