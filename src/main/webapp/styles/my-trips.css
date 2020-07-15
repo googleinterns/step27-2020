@@ -10,3 +10,8 @@
   color: grey;
   font-size: 18px;
 }
+
+#trip-map {
+  min-height: 300px;
+  width: 100%;
+}

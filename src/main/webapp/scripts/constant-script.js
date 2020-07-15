@@ -122,6 +122,7 @@ function parseSerializedJson(json) {
  * Uses the client timezone to calculate the string; behavior can differ
  * on different devices.
  * @param {number} timestamp
+ * @returns {string} date corresponding to timestamp in MM/DD/YYYY form.
  */
 function unixTimestampToString(timestamp) {
   return new Date(timestamp).toLocaleDateString();

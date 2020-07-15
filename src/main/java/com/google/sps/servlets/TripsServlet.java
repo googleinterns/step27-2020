@@ -144,6 +144,7 @@ public class TripsServlet extends HttpServlet {
     double rating = (double) entity.getProperty(Trip.ENTITY_PROPERTY_RATING);
     String description = (String) entity.getProperty(Trip.ENTITY_PROPERTY_DESCRIPTION);
     String owner = (String) entity.getProperty(Trip.ENTITY_PROPERTY_OWNER);
+    boolean isPastTrip = (boolean) entity.getProperty(Trip.ENTITY_PROPERTY_PAST_TRIP);
     boolean isPublic = (boolean) entity.getProperty(Trip.ENTITY_PROPERTY_PUBLIC);
     long timestamp = (long) entity.getProperty(Trip.ENTITY_PROPERTY_TIMESTAMP);
 
@@ -155,6 +156,7 @@ public class TripsServlet extends HttpServlet {
             .setRating(rating)
             .setDescription(description)
             .setOwner(owner)
+            .setIsPastTrip(isPastTrip)
             .setIsPublic(isPublic)
             .setTimestamp(timestamp)
             .build();
@@ -205,6 +207,7 @@ public class TripsServlet extends HttpServlet {
     tripEntity.setProperty(Trip.ENTITY_PROPERTY_RATING, trip.rating());
     tripEntity.setProperty(Trip.ENTITY_PROPERTY_DESCRIPTION, trip.description());
     tripEntity.setProperty(Trip.ENTITY_PROPERTY_OWNER, trip.owner());
+    tripEntity.setProperty(Trip.ENTITY_PROPERTY_PAST_TRIP, trip.isPastTrip());
     tripEntity.setProperty(Trip.ENTITY_PROPERTY_PUBLIC, trip.isPublic());
     tripEntity.setProperty(Trip.ENTITY_PROPERTY_TIMESTAMP, trip.timestamp());
     return tripEntity;

@@ -284,7 +284,7 @@ async function parseAndRenderHotelResults(json, centerPoint) {
                 <div class="card-action center">
                   <button 
                     class="btn indigo" 
-                    onClick="saveTrip("${place_id}", "${photo_url}", "${name})"
+                    onClick="saveTrip('${place_id}', '${photo_url}', '${name}')"
                   >
                     CHOOSE
                   </button>
@@ -414,7 +414,7 @@ async function fetchAndRenderTripsFromDB() {
   );
   plannedTripsHTMLElement.innerHTML = "";
   pastTripsHTMLElement.innerHTML = "";
-
+  console.log(tripsData);
   let isPlannedTripsEmpty = true;
   let isPastTripsEmpty = true;
   for (key of keys) {
@@ -422,14 +422,16 @@ async function fetchAndRenderTripsFromDB() {
     // Deserialize using parseSerializedJson.
     const {
       title,
-      hotel_name,
-      hotel_img,
-      is_past_trip,
+      hotelName,
+      hotelImage,
+      isPastTrip,
       timestamp,
+      hotelID,
+      isPublic
     } = parseSerializedJson(key);
     const locations = tripsData[key];
     let HTMLElementToUpdate;
-    if (is_past_trip) {
+    if (isPastTrip === "true") {
       isPastTripsEmpty = false;
       HTMLElementToUpdate = pastTripsHTMLElement;
     } else {
@@ -442,32 +444,37 @@ async function fetchAndRenderTripsFromDB() {
           <div class="card">
             <div class="card-content">
               <span class="card-title">${title}</span>
-              <p>Created on ${unixTimestampToString(timestamp)}</p>
-              <form>
-                <div id="trip-${timestamp}-locations"></div>
-              </form>
+              <div id="trip-${timestamp}-locations"></div>
+              <div id="trip-${timestamp}-map" class="trip-map"></div>
             </div>
           </div>
         </div>
         <div class="col m4">
-          <div class="card">
+          <div class="card medium">
             <div class="card-image">
-              <img src="${hotel_img}">
+              <img src="${hotelImage}">
             </div>
             <div class="card-content">
-              <span class="card-title">${hotel_name}</span>
+              <span class="card-title">${hotelName}</span>
               <div id="trip-${timestamp}-locations"></div>
             </div>
           </div>
         </div>
       </div>
     `;
+    // Get coords of all locations in this trip and the hotel to add to the Google map
+    const tripMap = new google.maps.Map(document.getElementById(`trip-${timestamp}-map`), undefined);
+    const service = new google.maps.places.PlacesService(tripMap);
+
+    const coords = [];
+    coords.
+    
     document.getElementById(`trip-${timestamp}-locations`).innerHTML = locations
-      .map(({ weight, place_name }) => {
+      .map(({ weight, placeName }) => {
         return `
           <div class="row">
             <div class="col s6">
-              <span><strong>${place_name}</strong></span>
+              <span><strong>${placeName}</strong></span>
             </div>
             <div class="col s6">
               <span>Weight: ${weight}</span>
