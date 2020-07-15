@@ -17,6 +17,7 @@ public abstract class Trip {
   public static final String ENTITY_PROPERTY_DESCRIPTION = "description";
   public static final String ENTITY_PROPERTY_OWNER = "owner";
   public static final String ENTITY_PROPERTY_PUBLIC = "is_public";
+  public static final String ENTITY_PROPERTY_PAST_TRIP = "is_past_trip";
   public static final String ENTITY_PROPERTY_TIMESTAMP = "timestamp";
 
   public abstract String title();
@@ -35,13 +36,19 @@ public abstract class Trip {
 
   public abstract String owner();
 
+  public abstract boolean isPastTrip();
+
   public abstract boolean isPublic();
 
   public abstract long timestamp();
 
   public static Builder builder() {
     // initialize fields not required at first creation
-    return new AutoValue_Trip.Builder().setRating(-1).setDescription("").setIsPublic(false);
+    return new AutoValue_Trip.Builder()
+                .setRating(-1)
+                .setDescription("")
+                .setIsPublic(false)
+                .setIsPastTrip(false);
   }
 
   @AutoValue.Builder
@@ -59,6 +66,8 @@ public abstract class Trip {
     public abstract Builder setDescription(String value);
 
     public abstract Builder setOwner(String value);
+
+    public abstract Builder setIsPastTrip(boolean value);
 
     public abstract Builder setIsPublic(boolean value);
 
