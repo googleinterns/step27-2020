@@ -119,13 +119,3 @@ function loadSharedTripsData() {
       `
   ).join(" ");
 }
-
-/**
- * Converts Unix epoch time number to a string of the form MM/DD/YYYY.
- * Uses the client timezone to calculate the string; behavior can differ
- * on different devices.
- * @param {number} timestamp
- */
-function unixTimestampToString(timestamp) {
-  return new Date(timestamp).toLocaleDateString();
-}

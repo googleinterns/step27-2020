@@ -200,7 +200,8 @@ async function parseAndRenderHotelResults(json, centerPoint) {
   const modalContent = document.getElementById("hotel-results");
   const hotelsMapElem = document.getElementById("hotels-map");
   if (!json || json.length === 0) {
-    modalContent.innerText = "We couldn't find any hotels nearby. Sorry about that.";
+    modalContent.innerText =
+      "We couldn't find any hotels nearby. Sorry about that.";
     hotelsMapElem.innerHTML = "";
   } else {
     json = json.slice(0, 10);
@@ -208,7 +209,7 @@ async function parseAndRenderHotelResults(json, centerPoint) {
       document.getElementById("hotels-map"),
       {
         center: centerPoint,
-        zoom: 12
+        zoom: 12,
       }
     );
     // Add existing locations to the map
@@ -240,9 +241,10 @@ async function parseAndRenderHotelResults(json, centerPoint) {
       });
       marker.addListener("click", () => infoWindow.open(hotelMap, marker));
       obj.distance_center = distanceBetween(location, centerPoint);
-      const photoRef = (obj.photos && Array.isArray(obj.photos))
-        ? obj.photos[0].photo_reference
-        : undefined;
+      const photoRef =
+        obj.photos && Array.isArray(obj.photos)
+          ? obj.photos[0].photo_reference
+          : undefined;
       if (photoRef) {
         const photoResponse = await fetch(
           `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/photo?maxwidth=500&photoreference=${photoRef}&key=${GOOGLE_API_KEY}`
@@ -257,7 +259,7 @@ async function parseAndRenderHotelResults(json, centerPoint) {
     });
     json = await Promise.all(json);
     json.sort((a, b) => a.distance_center - b.distance_center);
-    
+
     hotelsMapElem.style.width = "100%";
     hotelsMapElem.style.height = "400px";
     hotelsMapElem.style.marginBottom = "2em";
@@ -371,22 +373,31 @@ async function saveTrip(hotelID) {
  * Fetches trip data from the DB and renders each trip to the page.
  */
 async function fetchAndRenderTripsFromDB() {
+  const EMPTY_PLANNED_TRIPS_HTML = `
+    <div class="row"><div class="col s12">
+    <p class="placeholder-text">No planned trips to show. Let's go somewhere!</p>
+    </div></div>
+  `;
+  const EMPTY_PAST_TRIPS_HTML = `
+    <div class="row"><div class="col s12">
+    <p class="placeholder-text">No past trips to show.</p>
+    </div></div>
+  `;
+
   const plannedTripsHTMLElement = document.getElementById(
     "planned-trips-container"
   );
+  const pastTripsHTMLElement = document.getElementById("past-trips-container");
   plannedTripsHTMLElement.innerHTML = LOADING_ANIMATION_HTML;
+  pastTripsHTMLElement.innerHTML = LOADING_ANIMATION_HTML;
   const response = await fetch("/trip-data", {
     method: "GET",
   });
   const tripsData = await response.json();
-  const geocoder = new google.maps.Geocoder();
   const keys = Object.keys(tripsData);
   if (keys.length === 0) {
-    plannedTripsHTMLElement.innerHTML = `
-      <div class="row"><div class="col s12">
-      <p class="placeholder-text">No trips to show. Let's go somewhere!</p>
-      </div></div>
-    `;
+    plannedTripsHTMLElement.innerHTML = EMPTY_PLANNED_TRIPS_HTML;
+    pastTripsHTMLElement.innerHTML = EMPTY_PAST_TRIPS_HTML;
     return;
   }
   keys.sort(
@@ -394,32 +405,61 @@ async function fetchAndRenderTripsFromDB() {
       parseSerializedJson(b).timestamp - parseSerializedJson(a).timestamp
   );
   plannedTripsHTMLElement.innerHTML = "";
+  pastTripsHTMLElement.innerHTML = "";
+
+  let isPlannedTripsEmpty = true;
+  let isPastTripsEmpty = true;
   for (key of keys) {
     // Fields of tripsData are currently in string format.
     // Deserialize using parseSerializedJson.
-    const { title, hotel, timestamp } = parseSerializedJson(key);
+    const {
+      title,
+      hotel_name,
+      hotel_img,
+      is_past_trip,
+      timestamp,
+    } = parseSerializedJson(key);
     const locations = tripsData[key];
-    plannedTripsHTMLElement.innerHTML += `
+    let HTMLElementToUpdate;
+    if (is_past_trip) {
+      isPastTripsEmpty = false;
+      HTMLElementToUpdate = pastTripsHTMLElement;
+    } else {
+      isPlannedTripsEmpty = false;
+      HTMLElementToUpdate = plannedTripsHTMLElement;
+    }
+    HTMLElementToUpdate.innerHTML += `
       <div class="row">
         <div class="col m8">
           <div class="card">
             <div class="card-content">
               <span class="card-title">${title}</span>
-              <p>Hotel Place ID: ${hotel}</p>
+              <p>Created on ${unixTimestampToString(timestamp)}</p>
               <form>
                 <div id="trip-${timestamp}-locations"></div>
               </form>
             </div>
           </div>
         </div>
+        <div class="col m4">
+          <div class="card">
+            <div class="card-image">
+              <img src="${hotel_img}">
+            </div>
+            <div class="card-content">
+              <span class="card-title">${hotel_name}</span>
+              <div id="trip-${timestamp}-locations"></div>
+            </div>
+          </div>
+        </div>
       </div>
     `;
     document.getElementById(`trip-${timestamp}-locations`).innerHTML = locations
-      .map(({ weight }, index) => {
+      .map(({ weight, place_name }) => {
         return `
           <div class="row">
             <div class="col s6">
-              <span id="location-${timestamp}-${index}"></span>
+              <span><strong>${place_name}</strong></span>
             </div>
             <div class="col s6">
               <span>Weight: ${weight}</span>
@@ -428,19 +468,12 @@ async function fetchAndRenderTripsFromDB() {
         `;
       })
       .join("");
-
-    locations.forEach(({ placeID }, index) => {
-      geocoder.geocode({ placeId: placeID }, (results, status) => {
-        if (status === "OK") {
-          if (results[0]) {
-            placeName = results[0].formatted_address;
-            document.getElementById(
-              `location-${timestamp}-${index}`
-            ).innerText = placeName;
-          }
-        }
-      });
-    });
+  }
+  if (isPastTripsEmpty) {
+    pastTripsHTMLElement.innerHTML = EMPTY_PAST_TRIPS_HTML;
+  }
+  if (isPlannedTripsEmpty) {
+    plannedTripsHTMLElement.innerHTML = EMPTY_PLANNED_TRIPS_HTML;
   }
 }
 
@@ -466,7 +499,7 @@ function createPlaceHandler(element, locationNum) {
       });
       mapInitialized = true;
     }
-    if(markers[locationNum - 1] !== "") {
+    if (markers[locationNum - 1] !== "") {
       const currMarkerForLocation = markers[locationNum - 1];
       currMarkerForLocation.setMap(null);
     }
