@@ -199,10 +199,11 @@ async function findHotel() {
 async function parseAndRenderHotelResults(json, centerPoint) {
   const modalContent = document.getElementById("hotel-results");
   const hotelsMapElem = document.getElementById("hotels-map");
+  hotelsMapElem.style.height = "";
+  hotelsMapElem.innerHTML = "";
   if (!json || json.length === 0) {
     modalContent.innerText =
       "We couldn't find any hotels nearby. Sorry about that.";
-    hotelsMapElem.innerHTML = "";
   } else {
     json = json.slice(0, 10);
     const hotelMap = new google.maps.Map(
@@ -427,7 +428,7 @@ async function fetchAndRenderTripsFromDB() {
       isPastTrip,
       timestamp,
       hotelID,
-      isPublic
+      isPublic,
     } = parseSerializedJson(key);
     const locations = tripsData[key];
     let HTMLElementToUpdate;
@@ -450,25 +451,19 @@ async function fetchAndRenderTripsFromDB() {
           </div>
         </div>
         <div class="col m4">
-          <div class="card medium">
+          <div class="card large">
             <div class="card-image">
               <img src="${hotelImage}">
             </div>
             <div class="card-content">
               <span class="card-title">${hotelName}</span>
-              <div id="trip-${timestamp}-locations"></div>
+              <div id="trip-${timestamp}-hotel-info"></div>
             </div>
           </div>
         </div>
       </div>
     `;
-    // Get coords of all locations in this trip and the hotel to add to the Google map
-    const tripMap = new google.maps.Map(document.getElementById(`trip-${timestamp}-map`), undefined);
-    const service = new google.maps.places.PlacesService(tripMap);
 
-    const coords = [];
-    coords.
-    
     document.getElementById(`trip-${timestamp}-locations`).innerHTML = locations
       .map(({ weight, placeName }) => {
         return `
@@ -484,6 +479,77 @@ async function fetchAndRenderTripsFromDB() {
       })
       .join("");
   }
+
+  // Iterate through keys again to load the map for each trip
+  for (key of keys) {
+    const tripMarkers = [];
+    const { timestamp, hotelID } = parseSerializedJson(key);
+    // Get coords of all locations in this trip and the hotel to add to the Google map
+    const tripMap = new google.maps.Map(
+      document.getElementById(`trip-${timestamp}-map`),
+      {
+        zoom: 13,
+      }
+    );
+    const service = new google.maps.places.PlacesService(tripMap);
+
+    // Get hotel location and add it as a marker first
+    service.getDetails({ placeId: hotelID }, (place, status) => {
+      if (status === google.maps.places.PlacesServiceStatus.OK) {
+        const { geometry, name, formatted_address, website } = place;
+        const { location, viewport } = geometry;
+        const marker = new google.maps.Marker({
+          map: tripMap,
+          position: location,
+          label: {
+            fontFamily: "Material Icons",
+            text: "hotel",
+          },
+        });
+        tripMarkers.push(marker);
+        tripMap.setCenter(location);
+        const infoWindow = new google.maps.InfoWindow({
+          content: `<h5 class="infowindow-text">${name}</h5>
+              <p class="infowindow-text">Hotel for Trip</p>`,
+        });
+        google.maps.event.addListener(marker, "click", () => {
+          infoWindow.open(tripMap, marker);
+        });
+        tripMap.fitBounds(viewport);
+        document.getElementById(`trip-${timestamp}-hotel-info`).innerHTML =
+          `
+          <p>${formatted_address}</p>` +
+          (website != undefined
+            ? `<div class="card-action center"><a class="btn indigo waves-effect" href="${website}" target="_blank">Website</a></div>`
+            : "");
+      }
+    });
+
+    // Get location coords for each location in the trip and add to map
+    const locations = tripsData[key];
+    locations.forEach(({ placeID, placeName }) => {
+      service.getDetails({ placeId: placeID }, (place, status) => {
+        if (status === google.maps.places.PlacesServiceStatus.OK) {
+          const { geometry, name } = place;
+          const { location, viewport } = geometry;
+          const placeMarker = new google.maps.Marker({
+            map: tripMap,
+            position: location,
+          });
+          tripMarkers.push(placeMarker);
+          const infoWindow = new google.maps.InfoWindow({
+            content: `<h5 class="infowindow-text">${placeName}</h5>`,
+          });
+          google.maps.event.addListener(placeMarker, "click", () => {
+            infoWindow.open(tripMap, placeMarker);
+          });
+          tripMap.fitBounds(viewport);
+          fitMapToMarkers(tripMap, tripMarkers);
+        }
+      });
+    });
+  }
+
   if (isPastTripsEmpty) {
     pastTripsHTMLElement.innerHTML = EMPTY_PAST_TRIPS_HTML;
   }
@@ -503,9 +569,12 @@ function createPlaceHandler(element, locationNum) {
     const obj = element.getPlace();
     obj.locationNum = locationNum;
     locationPlaceObjects[locationNum - 1] = obj;
+    const { geometry, name } = obj;
+    const { location } = geometry;
+    const { lat, lng } = location;
     const coords = {
-      lat: obj.geometry.location.lat(),
-      lng: obj.geometry.location.lng(),
+      lat: lat(),
+      lng: lng(),
     };
     if (!mapInitialized || locationNum === 1) {
       map = new google.maps.Map(document.getElementById("editor-map"), {
@@ -522,7 +591,7 @@ function createPlaceHandler(element, locationNum) {
     const marker = new google.maps.Marker({
       position: coords,
       map: map,
-      title: obj.name,
+      title: name,
     });
     const infoWindow = new google.maps.InfoWindow({
       content: `<h5 class="infowindow-text">${obj.name}</h5>

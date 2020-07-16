@@ -11,7 +11,7 @@
   font-size: 18px;
 }
 
-#trip-map {
+.trip-map {
   min-height: 300px;
   width: 100%;
 }
