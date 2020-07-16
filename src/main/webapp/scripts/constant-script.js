@@ -22,6 +22,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const sideNavInstances = M.Sidenav.init(sidenavElems, undefined);
   const modalElems = document.querySelectorAll(".modal");
   const modalInstances = M.Modal.init(modalElems, undefined);
+  const formSelectElems = document.querySelectorAll('select');
+  const formSelectInstances = M.FormSelect.init(formSelectElems, undefined);
 });
 
 /**
