@@ -11,15 +11,18 @@ import com.google.auto.value.AutoValue;
  */
 @AutoValue
 public abstract class TripLocation {
-  public static final String ENTITY_PROPERTY_PLACE = "place_id";
+  public static final String ENTITY_PROPERTY_PLACE_ID = "place_id";
+  public static final String ENTITY_PROPERTY_PLACE_NAME = "place_name";
   public static final String ENTITY_PROPERTY_WEIGHT = "weight";
   public static final String ENTITY_PROPERTY_OWNER = "owner";
 
-  public static TripLocation create(String placeID, int weight, String owner) {
-    return new AutoValue_TripLocation(placeID, weight, owner);
+  public static TripLocation create(String placeID, String placeName, int weight, String owner) {
+    return new AutoValue_TripLocation(placeID, placeName, weight, owner);
   }
 
   public abstract String placeID();
+
+  public abstract String placeName();
 
   public abstract int weight();
 

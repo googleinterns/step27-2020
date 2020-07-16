@@ -20,7 +20,7 @@ const GOOGLE_API_KEY = "AIzaSyDlLtx69Y4-65_dCK67ZX3lzKTYpyc5CWI";
 document.addEventListener("DOMContentLoaded", () => {
   const sidenavElems = document.querySelectorAll(".sidenav");
   const sideNavInstances = M.Sidenav.init(sidenavElems, undefined);
-  const modalElems = document.querySelectorAll('.modal');
+  const modalElems = document.querySelectorAll(".modal");
   const modalInstances = M.Modal.init(modalElems, undefined);
 });
 
@@ -115,4 +115,15 @@ function parseSerializedJson(json) {
   }
 
   return obj;
+}
+
+/**
+ * Converts Unix epoch time number to a string of the form MM/DD/YYYY.
+ * Uses the client timezone to calculate the string; behavior can differ
+ * on different devices.
+ * @param {number} timestamp
+ * @returns {string} date corresponding to timestamp in MM/DD/YYYY form.
+ */
+function unixTimestampToString(timestamp) {
+  return new Date(timestamp).toLocaleDateString();
 }
