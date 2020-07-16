@@ -69,50 +69,50 @@
 
     <div id="map"></div>
 
-    <div id="input-container" class="center-align">
-      <div id="city-input-area" class="row center-align">
-        <h5 id="city-input-title" class="col s5">
-          Where do you want to go?
-        </h5>
-        <div id="city-input-field-area" class="input-field col s3">
-          <input placeholder="Enter a city" id="city-input" type="text">
-        </div>
-      </div>
-
-      <div id="filter-selection-area" class="row center-align">
-        <h5 id="filter-selection-title" class="col s5">
-          Select the types of places you want to visit
-        </h5>
-        <div class="input-field col s3">
-          <select multiple>
-            <option value="" disabled selected>Choose place type</option>
-            <option value="amusement_park">Amusement Park</option>
-            <option value="aquarium">Aquarium</option>
-            <option value="art_gallery">Art Gallery</option>
-            <option value="bakery">Bakery</option>
-            <option value="bar">Bar</option>
-            <option value="book_store">Book Store</option>
-            <option value="bowling_alley">Bowling Alley</option>
-            <option value="cafe">Cafe</option>
-            <option value="campground">Campground</option>
-            <option value="casino">Casino</option>
-            <option value="movie-theater">Movie Theater</option>
-            <option value="museum">Museum</option>
-            <option value="night-club">Night Club</option>
-            <option value="park">Park</option>
-            <option value="restaurant">Restaurant</option>
-            <option value="shopping_mall">Shopping Mall</option>
-            <option value="spa">Spa</option>
-            <option value="stadium">Stadium</option>
-            <option value="tourist_attraction">Tourist Attraction</option>
-            <option value="zoo">Zoo</option>
-          </select>
-        </div>
-      </div>
-    </div>
-
     <div class="page-container container">
-      <div class="row" id="place-cards-container"></div>
+      <div id="input-container">
+        <div id="city-input-area" class="row">
+          <h5 id="city-input-title" class="col s12 m7">
+            Where do you want to go?
+          </h5>
+          <div id="city-input-field" class="input-field col s12 m5">
+            <input placeholder="Enter a city" id="city-input" type="text">
+          </div>
+        </div>
+
+        <div id="filter-selection-area" class="row">
+          <h5 id="filter-selection-title" class="col s12 m7">
+            Select the types of places you want to visit:
+          </h5>
+          <div id="filter-selection" class="input-field col s12 m5">
+            <select multiple>
+              <option value="" disabled selected>Choose place type</option>
+              <option value="amusement_park">Amusement Park</option>
+              <option value="aquarium">Aquarium</option>
+              <option value="art_gallery">Art Gallery</option>
+              <option value="bakery">Bakery</option>
+              <option value="bar">Bar</option>
+              <option value="book_store">Book Store</option>
+              <option value="bowling_alley">Bowling Alley</option>
+              <option value="cafe">Cafe</option>
+              <option value="campground">Campground</option>
+              <option value="casino">Casino</option>
+              <option value="movie-theater">Movie Theater</option>
+              <option value="museum">Museum</option>
+              <option value="night-club">Night Club</option>
+              <option value="park">Park</option>
+              <option value="restaurant">Restaurant</option>
+              <option value="shopping_mall">Shopping Mall</option>
+              <option value="spa">Spa</option>
+              <option value="stadium">Stadium</option>
+              <option value="tourist_attraction">Tourist Attraction</option>
+              <option value="zoo">Zoo</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div id="place-cards-container" class="row"></div>
     </div>
 
     <footer class="page-footer blue lighten-1">

@@ -1,10 +1,19 @@
 let map;
 let service;
 
+/**
+ * Inits filter selection element
+ */
+document.addEventListener('DOMContentLoaded', function() {
+    var elems = document.querySelectorAll('select');
+    var instances = M.FormSelect.init(elems, undefined);
+});
+
 function init() {
   authReload();
   findNearbyPlaces();
 }
+
 /**
  * Inits map and calls a nearby search of prominent restaurants in 5000m 
  * radius of city inputted by user
@@ -59,7 +68,7 @@ function renderPlaceCards(results, status) {
             <div class="card-image">
               <img src="${photos[0].getUrl()}">
               <span class="card-title">${name}</span>
-              <a class="btn-floating halfway-fab waves-effect waves-light red"><i class="material-icons">add</i></a>
+              <a class="btn-floating halfway-fab waves-effect waves-light blue"><i class="material-icons">add</i></a>
             </div>
             <div class="card-content">
               <p>Rating: ${rating}</p>
