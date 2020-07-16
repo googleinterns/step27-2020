@@ -85,7 +85,7 @@
             Select the types of places you want to visit:
           </h5>
           <div id="filter-selection" class="input-field col s12 m5">
-            <select multiple>
+            <select multiple id="filters">
               <option value="" disabled selected>Choose place type</option>
               <option value="amusement_park">Amusement Park</option>
               <option value="aquarium">Aquarium</option>
@@ -109,6 +109,12 @@
               <option value="zoo">Zoo</option>
             </select>
           </div>
+        </div>
+
+        <div class="center-align">
+          <button class="btn waves-effect waves-light blue" onclick="findNearbyPlaces();">Submit
+            <i class="material-icons right">send</i>
+          </button>
         </div>
       </div>
 
