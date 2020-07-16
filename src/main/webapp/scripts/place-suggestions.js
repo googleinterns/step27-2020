@@ -1,17 +1,5 @@
-let map;
-let service;
-
-/**
- * Inits filter selection element
- */
-document.addEventListener('DOMContentLoaded', function() {
-    var elems = document.querySelectorAll('select');
-    var instances = M.FormSelect.init(elems, undefined);
-});
-
 function init() {
   authReload();
-  findNearbyPlaces();
 }
 
 /**
@@ -19,32 +7,9 @@ function init() {
  * radius of city inputted by user
  */
 function findNearbyPlaces() {
-  const cityInputField = document.getElementById('city-input');
-  const autocomplete = new google.maps.places.Autocomplete(cityInputField);
-  let userCity;
-
-  google.maps.event.addListener(autocomplete, 'place_changed', () => {
-    userCity = autocomplete.getPlace();
-    console.log(userCity);
-    const coords = {
-      lat: userCity.geometry.location.lat(),
-      lng: userCity.geometry.location.lng()
-    };
-
-    map = new google.maps.Map(document.getElementById('map'), {
-      center: coords,
-      zoom: 15
-    });
-
-    let request = {
-      location: coords,
-      radius: '5000',
-      type: ['restaurant']
-    };
-
-    service = new google.maps.places.PlacesService(map);
-    service.nearbySearch(request, renderPlaceCards);
-  });
+  const filtersElem = document.getElementById("filters");
+  const filters = M.FormSelect.getInstance(filtersElem).getSelectedValues();
+  console.log(filters);
 }
 
 /**
