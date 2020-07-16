@@ -98,7 +98,9 @@ public class TripsServlet extends HttpServlet {
       
       Trip trip = Trip.builder()
                     .setTitle(jsonObject.getAsJsonPrimitive(Trip.ENTITY_PROPERTY_TITLE).getAsString())
-                    .setHotel(jsonObject.getAsJsonPrimitive(Trip.ENTITY_PROPERTY_HOTEL).getAsString())
+                    .setHotelID(jsonObject.getAsJsonPrimitive(Trip.ENTITY_PROPERTY_HOTEL_ID).getAsString())
+                    .setHotelName(jsonObject.getAsJsonPrimitive(Trip.ENTITY_PROPERTY_HOTEL_NAME).getAsString())
+                    .setHotelImage(jsonObject.getAsJsonPrimitive(Trip.ENTITY_PROPERTY_HOTEL_IMAGE).getAsString())
                     .setRating(jsonObject.getAsJsonPrimitive(Trip.ENTITY_PROPERTY_RATING).getAsDouble())
                     .setOwner(userEmail)
                     .setTimestamp(timestamp)
@@ -114,9 +116,10 @@ public class TripsServlet extends HttpServlet {
       
       while(locationIterator.hasNext()) {
         JsonObject curr = locationIterator.next().getAsJsonObject();
-        String place = curr.getAsJsonPrimitive("id").getAsString();
+        String placeID = curr.getAsJsonPrimitive("id").getAsString();
+        String placeName = curr.getAsJsonPrimitive("name").getAsString();
         int weight = curr.getAsJsonPrimitive("weight").getAsInt();
-        TripLocation location = TripLocation.create(place, weight, userEmail);
+        TripLocation location = TripLocation.create(placeID, placeName, weight, userEmail);
         datastore.put(convertTripLocationToEntity(location, tripEntity));
       }
 
@@ -135,19 +138,25 @@ public class TripsServlet extends HttpServlet {
    */
   public static Trip convertEntityToTrip(Entity entity) {
     String title = (String) entity.getProperty(Trip.ENTITY_PROPERTY_TITLE);
-    String hotel = (String) entity.getProperty(Trip.ENTITY_PROPERTY_HOTEL);
+    String hotelID = (String) entity.getProperty(Trip.ENTITY_PROPERTY_HOTEL_ID);
+    String hotelName = (String) entity.getProperty(Trip.ENTITY_PROPERTY_HOTEL_NAME);
+    String hotelImage = (String) entity.getProperty(Trip.ENTITY_PROPERTY_HOTEL_IMAGE);
     double rating = (double) entity.getProperty(Trip.ENTITY_PROPERTY_RATING);
     String description = (String) entity.getProperty(Trip.ENTITY_PROPERTY_DESCRIPTION);
     String owner = (String) entity.getProperty(Trip.ENTITY_PROPERTY_OWNER);
+    boolean isPastTrip = (boolean) entity.getProperty(Trip.ENTITY_PROPERTY_PAST_TRIP);
     boolean isPublic = (boolean) entity.getProperty(Trip.ENTITY_PROPERTY_PUBLIC);
     long timestamp = (long) entity.getProperty(Trip.ENTITY_PROPERTY_TIMESTAMP);
 
     return Trip.builder()
             .setTitle(title)
-            .setHotel(hotel)
+            .setHotelID(hotelID)
+            .setHotelName(hotelName)
+            .setHotelImage(hotelImage)
             .setRating(rating)
             .setDescription(description)
             .setOwner(owner)
+            .setIsPastTrip(isPastTrip)
             .setIsPublic(isPublic)
             .setTimestamp(timestamp)
             .build();
@@ -160,10 +169,11 @@ public class TripsServlet extends HttpServlet {
    * @return TripLocation object with corresponding fields to the entity
    */
   public static TripLocation convertEntityToTripLocation(Entity entity) {
-    String placeID = (String) entity.getProperty(TripLocation.ENTITY_PROPERTY_PLACE);
+    String placeID = (String) entity.getProperty(TripLocation.ENTITY_PROPERTY_PLACE_ID);
+    String placeName = (String) entity.getProperty(TripLocation.ENTITY_PROPERTY_PLACE_NAME);
     int weight = Math.toIntExact((long) entity.getProperty(TripLocation.ENTITY_PROPERTY_WEIGHT));
     String owner = (String) entity.getProperty(TripLocation.ENTITY_PROPERTY_OWNER);
-    return TripLocation.create(placeID, weight, owner);
+    return TripLocation.create(placeID, placeName, weight, owner);
   }
 
   /**
@@ -175,7 +185,8 @@ public class TripsServlet extends HttpServlet {
    */
   public static Entity convertTripLocationToEntity(TripLocation location, Entity parent) {
     Entity tripLocationEntity = new Entity("trip-location", parent.getKey());
-    tripLocationEntity.setProperty(TripLocation.ENTITY_PROPERTY_PLACE, location.placeID());
+    tripLocationEntity.setProperty(TripLocation.ENTITY_PROPERTY_PLACE_ID, location.placeID());
+    tripLocationEntity.setProperty(TripLocation.ENTITY_PROPERTY_PLACE_NAME, location.placeName());
     tripLocationEntity.setProperty(TripLocation.ENTITY_PROPERTY_WEIGHT, location.weight());
     tripLocationEntity.setProperty(TripLocation.ENTITY_PROPERTY_OWNER, location.owner());
     return tripLocationEntity;
@@ -190,10 +201,13 @@ public class TripsServlet extends HttpServlet {
   public static Entity convertTripToEntity(Trip trip) {
     Entity tripEntity = new Entity("trip");
     tripEntity.setProperty(Trip.ENTITY_PROPERTY_TITLE, trip.title());
-    tripEntity.setProperty(Trip.ENTITY_PROPERTY_HOTEL, trip.hotel());
+    tripEntity.setProperty(Trip.ENTITY_PROPERTY_HOTEL_ID, trip.hotelID());
+    tripEntity.setProperty(Trip.ENTITY_PROPERTY_HOTEL_NAME, trip.hotelName());
+    tripEntity.setProperty(Trip.ENTITY_PROPERTY_HOTEL_IMAGE, trip.hotelImage());
     tripEntity.setProperty(Trip.ENTITY_PROPERTY_RATING, trip.rating());
     tripEntity.setProperty(Trip.ENTITY_PROPERTY_DESCRIPTION, trip.description());
     tripEntity.setProperty(Trip.ENTITY_PROPERTY_OWNER, trip.owner());
+    tripEntity.setProperty(Trip.ENTITY_PROPERTY_PAST_TRIP, trip.isPastTrip());
     tripEntity.setProperty(Trip.ENTITY_PROPERTY_PUBLIC, trip.isPublic());
     tripEntity.setProperty(Trip.ENTITY_PROPERTY_TIMESTAMP, trip.timestamp());
     return tripEntity;
