@@ -8,6 +8,7 @@ import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query.FilterPredicate;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
+import com.google.common.collect.Iterables;
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.Key;
 import com.google.gson.Gson;
@@ -89,9 +90,9 @@ public class TripsServlet extends HttpServlet {
     UserService userService = UserServiceFactory.getUserService();
     if (!userService.isUserLoggedIn()) {
       response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+      return;
     }
     String userEmail = userService.getCurrentUser().getEmail();
-    
     
     String requestBody = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
     JsonObject jsonObject = JsonParser.parseString(requestBody).getAsJsonObject();
@@ -140,6 +141,43 @@ public class TripsServlet extends HttpServlet {
 
       response.setStatus(HttpServletResponse.SC_CREATED);
     }
+  }
+
+  @Override
+  public void doDelete(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    UserService userService = UserServiceFactory.getUserService();
+    if (!userService.isUserLoggedIn()) {
+      response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+      return;
+    }
+    String userEmail = userService.getCurrentUser().getEmail();
+    long timestamp = Long.parseLong(request.getParameter("timestamp"));
+    DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+
+    Query tripQuery = new Query("trip")
+                        .setFilter(new FilterPredicate(Trip.ENTITY_PROPERTY_OWNER, FilterOperator.EQUAL, userEmail))
+                        .setFilter(new FilterPredicate(Trip.ENTITY_PROPERTY_TIMESTAMP, FilterOperator.EQUAL, timestamp));
+    Iterable<Entity> tripEntityIterable =  datastore.prepare(tripQuery).asIterable();
+
+    if (Iterables.size(tripEntityIterable) == 0) {
+      // If we reach this breakpoint, that means no Trip matches the timestamp 
+      // to be deleted. Send back an error code 404.
+      response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+      return;
+    }
+
+    Iterator<Entity> iterator = tripEntityIterable.iterator();
+    Key parentTripKey = iterator.next().getKey();
+
+    // Get all trip locations with the trip to be deleted as their parent
+    Query tripLocationsQuery = new Query("trip-location").setAncestor(parentTripKey);
+    Iterable<Entity> tripLocationEntityIterable = datastore.prepare(tripLocationsQuery).asIterable();
+    datastore.delete(parentTripKey);
+
+    for (Entity tripLocationEntity : tripLocationEntityIterable) {
+      datastore.delete(tripLocationEntity.getKey());
+    }
+    response.setStatus(HttpServletResponse.SC_OK);
   }
 
   /**
