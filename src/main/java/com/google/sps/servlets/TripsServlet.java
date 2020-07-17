@@ -6,7 +6,6 @@ import com.google.appengine.api.datastore.PreparedQuery;
 import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query.FilterPredicate;
-import com.google.appengine.api.datastore.Query.SortDirection;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
 import com.google.appengine.api.datastore.Entity;
@@ -86,28 +85,44 @@ public class TripsServlet extends HttpServlet {
   }
 
   @Override
-  public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    response.setContentType("application/json;");
+  public void doPut(HttpServletRequest request, HttpServletResponse response) throws IOException {
     UserService userService = UserServiceFactory.getUserService();
-    if (userService.isUserLoggedIn()) {
-      String userEmail = userService.getCurrentUser().getEmail();
-      long timestamp = System.currentTimeMillis();
-      
-      String requestBody = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
-      JsonObject jsonObject = JsonParser.parseString(requestBody).getAsJsonObject();
-      
-      Trip trip = Trip.builder()
-                    .setTitle(jsonObject.getAsJsonPrimitive(Trip.ENTITY_PROPERTY_TITLE).getAsString())
-                    .setHotelID(jsonObject.getAsJsonPrimitive(Trip.ENTITY_PROPERTY_HOTEL_ID).getAsString())
-                    .setHotelName(jsonObject.getAsJsonPrimitive(Trip.ENTITY_PROPERTY_HOTEL_NAME).getAsString())
-                    .setHotelImage(jsonObject.getAsJsonPrimitive(Trip.ENTITY_PROPERTY_HOTEL_IMAGE).getAsString())
-                    .setRating(jsonObject.getAsJsonPrimitive(Trip.ENTITY_PROPERTY_RATING).getAsDouble())
-                    .setOwner(userEmail)
-                    .setTimestamp(timestamp)
-                    .build();
-      Entity tripEntity = convertTripToEntity(trip);
+    if (!userService.isUserLoggedIn()) {
+      response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+    }
+    String userEmail = userService.getCurrentUser().getEmail();
+    
+    
+    String requestBody = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+    JsonObject jsonObject = JsonParser.parseString(requestBody).getAsJsonObject();
 
-      DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+    // true if the client is attempting to do an update, false if insert
+    boolean isUpdating = jsonObject.has("timestamp");
+    long timestamp = isUpdating ? jsonObject.getAsJsonPrimitive(Trip.ENTITY_PROPERTY_TIMESTAMP).getAsLong() : System.currentTimeMillis();
+    Trip trip = Trip.builder()
+      .setTitle(jsonObject.getAsJsonPrimitive(Trip.ENTITY_PROPERTY_TITLE).getAsString())
+      .setHotelID(jsonObject.getAsJsonPrimitive(Trip.ENTITY_PROPERTY_HOTEL_ID).getAsString())
+      .setHotelName(jsonObject.getAsJsonPrimitive(Trip.ENTITY_PROPERTY_HOTEL_NAME).getAsString())
+      .setHotelImage(jsonObject.getAsJsonPrimitive(Trip.ENTITY_PROPERTY_HOTEL_IMAGE).getAsString())
+      .setRating(jsonObject.getAsJsonPrimitive(Trip.ENTITY_PROPERTY_RATING).getAsDouble())
+      .setOwner(userEmail)
+      .setTimestamp(timestamp)
+      .build();
+    Entity tripEntity = convertTripToEntity(trip);
+    DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+    if(isUpdating) {
+      Query tripQuery = new Query("trip")
+                          .setFilter(new FilterPredicate(Trip.ENTITY_PROPERTY_OWNER, FilterOperator.EQUAL, userEmail))
+                          .setFilter(new FilterPredicate(Trip.ENTITY_PROPERTY_TIMESTAMP, FilterOperator.EQUAL, timestamp));
+      Query tripLocationsQuery = new Query("trip-location")
+                                    .setFilter(new FilterPredicate(TripLocation.ENTITY_PROPERTY_OWNER, FilterOperator.EQUAL, userEmail));
+      PreparedQuery tripResults = datastore.prepare(tripQuery);
+      PreparedQuery tripLocationResults = datastore.prepare(tripLocationsQuery);
+      Iterable<Entity> tripEntityIterable = tripResults.asIterable();
+      Iterable<Entity> tripLocationEntityIterable = tripLocationResults.asIterable();
+      
+      response.setStatus(HttpServletResponse.SC_OK);
+    } else {
       datastore.put(tripEntity);
 
       // build TripLocation objects from request data and put them in Datastore
@@ -123,10 +138,7 @@ public class TripsServlet extends HttpServlet {
         datastore.put(convertTripLocationToEntity(location, tripEntity));
       }
 
-      response.setStatus(HttpServletResponse.SC_OK);
-    } else {
-      // send error code 401 if user is not authenticated and tries to access data
-      response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+      response.setStatus(HttpServletResponse.SC_CREATED);
     }
   }
 
