@@ -17,6 +17,10 @@ function displayMap() {
 
 }
 
+/**
+ * Fetches that data from the TripsServlet and stores the hotel PlaceID and the locations PlaceID as variables to use
+ * in the call for geocodePlaceID()
+ */
 
 async function getTripData(){
     const response = await fetch("/trip-data");
@@ -30,19 +34,24 @@ async function getTripData(){
     for (let key of keys){
         const{hotel} = parseSerializedJson(key);
         hotelID = hotel;
-        locationsArray = JSON.stringify(results[key])
+        locationsArray = (results[key])
     }
 
     console.log("Hotel ID: " + hotelID)
     console.log("Locations A: " + locationsArray)
 
     for(let i = 0; i < locationsArray.length; i++){
-        console.log("Place ID: " + locationsArray[i][0]);
+        console.log("Place ID: " + JSON.stringify(locationsArray[i]));
     }
 
-    calculateRoute()
+    geocodePlaceId(hotelID, locationsArray)
+    // calculateRoute()
 }
 
+/**
+ * Takes the hotel PlaceID and the locationsPlaceID Array from getTripData and works to convert them from placeID's to
+ * addresses that will be used in calculateRoute()
+ */
 function geocodePlaceId(hotelID, placeIDArray) {
     console.log("Converting Place ID's to Address")
     let waypointsArray = [];
@@ -75,15 +84,18 @@ function geocodePlaceId(hotelID, placeIDArray) {
         }
     });
 
+    // console.log("Hotel: " + hotel)
     console.log("Done Converting Place ID's")
     calculateRoute(hotel, waypointsArray)
 }
 
 /**
- * Takes the locations and hotel that was determined from the my trips class and organizes it into a start, midpoints
- * which are placed into a Array in travel order and an end point.
+ * Takes the locations and hotel addresses that were given by the geoCodingPlaceID() function
+ * and organizes it into a start, waypoints which are placed into a Array in travel order and an end point
+ * which are used for the displayRoute() function
  */
-//Hard coded for test
+
+//Hard coded for test (Gonna make minor changes for final product)
 async function calculateRoute(hotel, waypointsArray) {
     console.log("Calculating Optimal Route")
 
