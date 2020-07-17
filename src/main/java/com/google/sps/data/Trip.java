@@ -27,6 +27,7 @@ public abstract class Trip {
 
   public abstract String hotelName();
 
+  // Photo reference String from Places API (not a binary object)
   public abstract String hotelImage();
 
   // [1, 5], scale=0.5

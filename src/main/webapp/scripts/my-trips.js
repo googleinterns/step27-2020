@@ -247,14 +247,12 @@ async function parseAndRenderHotelResults(json, centerPoint) {
           ? obj.photos[0].photo_reference
           : undefined;
       if (photoRef) {
-        const photoResponse = await fetch(
-          `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/photo?maxwidth=500&photoreference=${photoRef}&key=${GOOGLE_API_KEY}`
-        );
-        const blob = await photoResponse.blob();
-        const photoUrl = await URL.createObjectURL(blob);
+        const photoUrl = await imageURLFromPhotoRef(photoRef);
         obj.photo_url = photoUrl;
+        obj.photo_ref = photoRef;
       } else {
         obj.photo_url = undefined;
+        obj.photo_ref = "";
       }
       return await obj;
     });
@@ -266,7 +264,7 @@ async function parseAndRenderHotelResults(json, centerPoint) {
     hotelsMapElem.style.marginBottom = "2em";
     modalContent.innerHTML = json
       .map(
-        ({ name, formatted_address, rating, place_id, photo_url }) =>
+        ({ name, formatted_address, rating, place_id, photo_url, photo_ref }) =>
           `
           <div class="row">
             <div class="col s12 m6">
@@ -285,7 +283,7 @@ async function parseAndRenderHotelResults(json, centerPoint) {
                 <div class="card-action center">
                   <button 
                     class="btn indigo" 
-                    onClick="saveTrip('${place_id}', '${photo_url}', '${name}')"
+                    onClick="saveTrip('${place_id}', '${photo_ref}', '${name}')"
                   >
                     CHOOSE
                   </button>
@@ -306,6 +304,20 @@ async function parseAndRenderHotelResults(json, centerPoint) {
       )
       .join("");
   }
+}
+
+/**
+ * Fetches image and gets temp URL of image from Google Place Photos
+ * @param {string} photoRef a Place Photos photo_reference
+ * @returns {string} String containing object url of the resulting image
+ */
+async function imageURLFromPhotoRef(photoRef) {
+  const photoResponse = await fetch(
+    `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/photo?maxwidth=500&photoreference=${photoRef}&key=${GOOGLE_API_KEY}`
+  );
+  const blob = await photoResponse.blob();
+  const photoUrl = await URL.createObjectURL(blob);
+  return photoUrl;
 }
 
 /**
@@ -341,8 +353,11 @@ function degToRad(angle) {
 /**
  * Saves the current trip the user is editing to My Trips, through a POST request
  * to the backend. Then rerenders the trips based on DB data.
+ * @param {string} hotelID  the Place ID for the hotel
+ * @param {string} hotelRef the photo reference in Google Place Photos for the hotel.
+ * @param {string} hotelName the name of the hotel
  */
-async function saveTrip(hotelID, hotelImg, hotelName) {
+async function saveTrip(hotelID, hotelRef, hotelName) {
   const elem = document.getElementById("hotel-modal");
   const instance = M.Modal.getInstance(elem);
   instance.close();
@@ -361,7 +376,7 @@ async function saveTrip(hotelID, hotelImg, hotelName) {
   const requestBody = {
     title: document.getElementById("trip-title").value,
     hotel_id: hotelID,
-    hotel_img: hotelImg,
+    hotel_img: hotelRef,
     hotel_name: hotelName,
     rating: -1,
     locations: locationData,
@@ -453,7 +468,7 @@ async function fetchAndRenderTripsFromDB() {
         <div class="col m4">
           <div class="card large">
             <div class="card-image">
-              <img src="${hotelImage}">
+              <img src="${await imageURLFromPhotoRef(hotelImage)}">
             </div>
             <div class="card-content">
               <span class="card-title">${hotelName}</span>
