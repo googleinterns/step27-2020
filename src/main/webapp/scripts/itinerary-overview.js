@@ -2,9 +2,6 @@ let start;
 let waypoints;
 let end;
 
-let hotel;
-let waypointsArray;
-
 document.addEventListener('DOMContentLoaded', function() {
     const elems = document.querySelectorAll('select');
     const instances = M.FormSelect.init(elems, undefined);
@@ -27,19 +24,29 @@ async function getTripData(){
     console.log(results);
     const keys = Object.keys(results)
 
+    let hotelID;
+    let locationsArray;
+
     for (let key of keys){
-        const{title, hotel} = parseSerializedJson(key);
-        console.log("Trip Title: " + title)
-        console.log("Hotel Place ID:" + hotel)
-        console.log("Locations: " + JSON.stringify(results[key]))
+        const{hotel} = parseSerializedJson(key);
+        hotelID = hotel;
+        locationsArray = JSON.stringify(results[key])
     }
+
+    console.log("Hotel ID: " + hotelID)
+    console.log("Locations A: " + locationsArray)
+
+    for(let i = 0; i < locationsArray.length; i++){
+        console.log("Place ID: " + locationsArray[i][0]);
+    }
+
     calculateRoute()
 }
 
 function geocodePlaceId(hotelID, placeIDArray) {
     console.log("Converting Place ID's to Address")
-     waypointsArray = [];
-     hotel = "";
+    let waypointsArray = [];
+    let hotel = "";
 
     const geocoder = new google.maps.Geocoder();
     for(let place of placeIDArray){
@@ -131,7 +138,6 @@ function displayRoute(start, waypoints, end) {
     const waypointArray = [];
 
     for(let i = 0; i < waypoints.length; i++){
-        console.log("Dis Waypoint: " + waypoints[i])
         waypointArray.push({
             location: waypoints[i],
             stopover: true
