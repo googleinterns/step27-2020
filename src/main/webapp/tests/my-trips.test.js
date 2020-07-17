@@ -1,10 +1,10 @@
-describe("Test center of mass function", () => {
-  it("Computes a singleton point correctly", () => {
+describe('Test center of mass function', () => {
+  it('Computes a singleton point correctly', () => {
     const singletonPointArray = [{ lat: 0, lng: 0, weight: 1 }];
     expectToBeCloseToArray(centerOfMass(singletonPointArray), [0, 0]);
   });
 
-  it("Computes an example set of points with weights correctly", () => {
+  it('Computes an example set of points with weights correctly', () => {
     const example1 = [
       {
         lat: 54.1,
