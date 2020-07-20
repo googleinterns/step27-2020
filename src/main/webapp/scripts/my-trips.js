@@ -275,15 +275,15 @@ async function parseAndRenderHotelResults(json, centerPoint) {
                   <img src="${photo_url}" alt="photo of ${name} from Google" loading="lazy" />
                 </div> `
             : '') +
-          `
+              `
                 <div class="card-content black-text">
                   <span class="card-title"><strong>${name}</strong></span>
                   <p>${formatted_address}</p>
                 </div>
                 <div class="card-action center">
-                  <button 
+                  <button
                     class="btn indigo" 
-                    onClick="saveTrip('${place_id}', '${photo_ref}', '${name}')"
+                    onClick="saveTrip('${place_id}', '${photo_ref}', '${name.replace(/'/g, "\\'")}')"
                   >
                     CHOOSE
                   </button>
