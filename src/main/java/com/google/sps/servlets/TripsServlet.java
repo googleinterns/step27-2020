@@ -4,6 +4,7 @@ import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.PreparedQuery;
 import com.google.appengine.api.datastore.Query;
+import com.google.appengine.api.datastore.AdminDatastoreService.EntityBuilder;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query.FilterPredicate;
 import com.google.appengine.api.users.UserService;
@@ -110,35 +111,48 @@ public class TripsServlet extends HttpServlet {
       .setTimestamp(timestamp)
       .build();
     Entity tripEntity = convertTripToEntity(trip);
+
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-    if(isUpdating) {
+    if (isUpdating) {
       Query tripQuery = new Query("trip")
                           .setFilter(new FilterPredicate(Trip.ENTITY_PROPERTY_OWNER, FilterOperator.EQUAL, userEmail))
                           .setFilter(new FilterPredicate(Trip.ENTITY_PROPERTY_TIMESTAMP, FilterOperator.EQUAL, timestamp));
-      Query tripLocationsQuery = new Query("trip-location")
-                                    .setFilter(new FilterPredicate(TripLocation.ENTITY_PROPERTY_OWNER, FilterOperator.EQUAL, userEmail));
-      PreparedQuery tripResults = datastore.prepare(tripQuery);
-      PreparedQuery tripLocationResults = datastore.prepare(tripLocationsQuery);
-      Iterable<Entity> tripEntityIterable = tripResults.asIterable();
-      Iterable<Entity> tripLocationEntityIterable = tripLocationResults.asIterable();
       
+      Iterable<Entity> tripEntityIterable = datastore.prepare(tripQuery).asIterable();
+      if (Iterables.size(tripEntityIterable) == 0) {
+        /* If we reach this breakpoint, that means no Trip matches the timestamp 
+           to be updated. Send back an error code 404. */
+        response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        return;
+      }
+      Entity existingTrip = tripEntityIterable.iterator().next();
+      Query tripLocationsQuery = new Query("trip-location")
+                                  .setAncestor(existingTrip.getKey());
+      Iterable<Entity> tripLocationEntityIterable = datastore.prepare(tripLocationsQuery).asIterable();
+      
+      // delete current data relating to Trip
+      datastore.delete(existingTrip.getKey());
+      for (Entity tripLocationEntity : tripLocationEntityIterable) {
+        datastore.delete(tripLocationEntity.getKey());
+      }
+    }
+
+    // build TripLocation objects from request data and put them in Datastore
+    JsonArray locationData = jsonObject.getAsJsonArray("locations");
+    Iterator<JsonElement> locationIterator = locationData.iterator();
+    
+    while(locationIterator.hasNext()) {
+      JsonObject curr = locationIterator.next().getAsJsonObject();
+      String placeID = curr.getAsJsonPrimitive("id").getAsString();
+      String placeName = curr.getAsJsonPrimitive("name").getAsString();
+      int weight = curr.getAsJsonPrimitive("weight").getAsInt();
+      TripLocation location = TripLocation.create(placeID, placeName, weight, userEmail);
+      datastore.put(convertTripLocationToEntity(location, tripEntity));
+    }
+
+    if (isUpdating) {
       response.setStatus(HttpServletResponse.SC_OK);
     } else {
-      datastore.put(tripEntity);
-
-      // build TripLocation objects from request data and put them in Datastore
-      JsonArray locationData = jsonObject.getAsJsonArray("locations");
-      Iterator<JsonElement> locationIterator = locationData.iterator();
-      
-      while(locationIterator.hasNext()) {
-        JsonObject curr = locationIterator.next().getAsJsonObject();
-        String placeID = curr.getAsJsonPrimitive("id").getAsString();
-        String placeName = curr.getAsJsonPrimitive("name").getAsString();
-        int weight = curr.getAsJsonPrimitive("weight").getAsInt();
-        TripLocation location = TripLocation.create(placeID, placeName, weight, userEmail);
-        datastore.put(convertTripLocationToEntity(location, tripEntity));
-      }
-
       response.setStatus(HttpServletResponse.SC_CREATED);
     }
   }
@@ -160,8 +174,8 @@ public class TripsServlet extends HttpServlet {
     Iterable<Entity> tripEntityIterable =  datastore.prepare(tripQuery).asIterable();
 
     if (Iterables.size(tripEntityIterable) == 0) {
-      // If we reach this breakpoint, that means no Trip matches the timestamp 
-      // to be deleted. Send back an error code 404.
+      /* If we reach this breakpoint, that means no Trip matches the timestamp 
+         to be deleted. Send back an error code 404. */
       response.setStatus(HttpServletResponse.SC_NOT_FOUND);
       return;
     }
@@ -212,6 +226,27 @@ public class TripsServlet extends HttpServlet {
             .build();
   }
 
+   /**
+   * Converts a certain Trip object to a corresponding Entity object.
+   * 
+   * @param trip the Trip object to be converted
+   * @return Entity object with matching property values
+   */
+  public static Entity convertTripToEntity(Trip trip) {
+    Entity tripEntity = new Entity("trip");
+    tripEntity.setProperty(Trip.ENTITY_PROPERTY_TITLE, trip.title());
+    tripEntity.setProperty(Trip.ENTITY_PROPERTY_HOTEL_ID, trip.hotelID());
+    tripEntity.setProperty(Trip.ENTITY_PROPERTY_HOTEL_NAME, trip.hotelName());
+    tripEntity.setProperty(Trip.ENTITY_PROPERTY_HOTEL_IMAGE, trip.hotelImage());
+    tripEntity.setProperty(Trip.ENTITY_PROPERTY_RATING, trip.rating());
+    tripEntity.setProperty(Trip.ENTITY_PROPERTY_DESCRIPTION, trip.description());
+    tripEntity.setProperty(Trip.ENTITY_PROPERTY_OWNER, trip.owner());
+    tripEntity.setProperty(Trip.ENTITY_PROPERTY_PAST_TRIP, trip.isPastTrip());
+    tripEntity.setProperty(Trip.ENTITY_PROPERTY_PUBLIC, trip.isPublic());
+    tripEntity.setProperty(Trip.ENTITY_PROPERTY_TIMESTAMP, trip.timestamp());
+    return tripEntity;
+  }
+
   /**
    * Converts an Entity of kind "trip-location" to the value class type.
    * 
@@ -240,26 +275,5 @@ public class TripsServlet extends HttpServlet {
     tripLocationEntity.setProperty(TripLocation.ENTITY_PROPERTY_WEIGHT, location.weight());
     tripLocationEntity.setProperty(TripLocation.ENTITY_PROPERTY_OWNER, location.owner());
     return tripLocationEntity;
-  }
-
-  /**
-   * Converts a certain Trip object to a corresponding Entity object.
-   * 
-   * @param trip the Trip object to be converted
-   * @return Entity object with matching property values
-   */
-  public static Entity convertTripToEntity(Trip trip) {
-    Entity tripEntity = new Entity("trip");
-    tripEntity.setProperty(Trip.ENTITY_PROPERTY_TITLE, trip.title());
-    tripEntity.setProperty(Trip.ENTITY_PROPERTY_HOTEL_ID, trip.hotelID());
-    tripEntity.setProperty(Trip.ENTITY_PROPERTY_HOTEL_NAME, trip.hotelName());
-    tripEntity.setProperty(Trip.ENTITY_PROPERTY_HOTEL_IMAGE, trip.hotelImage());
-    tripEntity.setProperty(Trip.ENTITY_PROPERTY_RATING, trip.rating());
-    tripEntity.setProperty(Trip.ENTITY_PROPERTY_DESCRIPTION, trip.description());
-    tripEntity.setProperty(Trip.ENTITY_PROPERTY_OWNER, trip.owner());
-    tripEntity.setProperty(Trip.ENTITY_PROPERTY_PAST_TRIP, trip.isPastTrip());
-    tripEntity.setProperty(Trip.ENTITY_PROPERTY_PUBLIC, trip.isPublic());
-    tripEntity.setProperty(Trip.ENTITY_PROPERTY_TIMESTAMP, trip.timestamp());
-    return tripEntity;
   }
 }
