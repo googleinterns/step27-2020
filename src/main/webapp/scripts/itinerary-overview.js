@@ -8,8 +8,8 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 
-function displayMap() {
-    getTripData().then()
+async function displayMap() {
+     await getTripData();
 
     document.getElementById("mode").addEventListener("change", function() {
         displayRoute(start, waypoints, end);
@@ -26,26 +26,25 @@ async function getTripData(){
     const response = await fetch("/trip-data");
     const results = await response.json();
     console.log(results);
-    const keys = Object.keys(results)
+    const keys = Object.keys(results);
 
     let hotelID;
     let locationsArray;
 
-    for (let key of keys){
+    for (const key of keys){
         const{hotel} = parseSerializedJson(key);
         hotelID = hotel;
-        locationsArray = (results[key])
+        locationsArray = (results[key]);
     }
 
-    console.log("Hotel ID: " + hotelID)
-    console.log("Locations A: " + locationsArray)
+    console.log("Hotel ID: " + hotelID);
+    console.log("Locations A: " + locationsArray);
 
     for(let i = 0; i < locationsArray.length; i++){
         console.log("Place ID: " + JSON.stringify(locationsArray[i]));
     }
 
-    geocodePlaceId(hotelID, locationsArray)
-    // calculateRoute()
+    geocodePlaceId(hotelID, locationsArray);
 }
 
 /**
@@ -53,7 +52,7 @@ async function getTripData(){
  * addresses that will be used in calculateRoute()
  */
 function geocodePlaceId(hotelID, placeIDArray) {
-    console.log("Converting Place ID's to Address")
+    console.log("Converting Place ID's to Address");
     let waypointsArray = [];
     let hotel = "";
 
@@ -84,9 +83,8 @@ function geocodePlaceId(hotelID, placeIDArray) {
         }
     });
 
-    // console.log("Hotel: " + hotel)
-    console.log("Done Converting Place ID's")
-    calculateRoute(hotel, waypointsArray)
+    console.log("Done Converting Place ID's");
+    calculateRoute(hotel, waypointsArray);
 }
 
 /**
@@ -97,9 +95,9 @@ function geocodePlaceId(hotelID, placeIDArray) {
 
 //Hard coded for test (Gonna make minor changes for final product)
 async function calculateRoute(hotel, waypointsArray) {
-    console.log("Calculating Optimal Route")
+    console.log("Calculating Optimal Route");
 
-    start = "5902 N President George Bush Hwy, Garland, TX 75044, USA"
+    start = "5902 N President George Bush Hwy, Garland, TX 75044, USA";
 
     let rawWaypoints = ["525 Talbert Dr, Plano, TX 75093, USA",
         "2134 Zurek Ln, Heath, TX 75126, USA",
@@ -119,9 +117,9 @@ async function calculateRoute(hotel, waypointsArray) {
         }
     }
 
-    end += rawWaypoints.pop(0)
+    end += rawWaypoints.pop(0);
 
-    console.log("Done Calculating Optimal Route")
+    console.log("Done Calculating Optimal Route");
 
     displayRoute(start,waypoints,end);
 }
@@ -173,15 +171,15 @@ function displayRoute(start, waypoints, end) {
             }
         }
     );
-    console.log("Done displaying route")
+    console.log("Done displaying route");
 }
 
 /**
  * Takes a latitude and longitude pair as parameters and centers the map on that specific
  * Location
  */
-function setCenter(LatLng) {
-    map.setCenter(LatLng)
+function setCenter(coords) {
+    map.setCenter(coords);
 }
 
 
