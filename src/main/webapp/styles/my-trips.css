@@ -11,7 +11,15 @@
   font-size: 18px;
 }
 
+.trip-title-section {
+  margin-left: 0 !important;
+}
+
 .trip-map {
   min-height: 300px;
   width: 100%;
+}
+
+.update-button {
+  margin: 0 0.25em 0 0.25em;
 }

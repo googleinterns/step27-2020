@@ -382,15 +382,58 @@ async function saveTrip(hotelID, hotelRef, hotelName) {
     locations: locationData,
   };
 
-  await fetch('/trip-data', {
-    method: 'POST',
+  const response = await fetch('/trip-data', {
+    method: 'PUT',
     headers: {
       'content-type': 'application/json',
     },
     body: JSON.stringify(requestBody),
   });
-  cancelTripCreation();
-  fetchAndRenderTripsFromDB();
+  if (response.ok) {
+    cancelTripCreation();
+    fetchAndRenderTripsFromDB();
+  } else {
+    M.toast({
+      html: 'There was an error when saving your trip. Please try again.',
+    });
+  }
+}
+
+/**
+ * Deletes a trip and its corresponding locations from the DB using
+ * its timestamp as the identifier.
+ * @param {string} timestamp The timestamp string for the trip to delete.
+ */
+async function deleteTrip(timestamp) {
+  const response = await fetch(`/trip-data?timestamp=${timestamp}`, {
+    method: 'DELETE',
+    headers: {
+      'content-type': 'application/json',
+    },
+  });
+  if (response.ok) {
+    M.toast({
+      html: 'Trip successfully deleted.',
+    });
+    fetchAndRenderTripsFromDB();
+  } else {
+    M.toast({
+      html: 'There was a problem when attempting to delete your trip. Please try again.',
+    });
+  }
+}
+
+/**
+ * Opens the delete confirmation modal and sets the onclick function
+ * that gets called when the user confirms the deletion.
+ * @param {string} timestamp The timestamp string for the trip to delete.
+ */
+function openDeleteModal(timestamp) {
+  const deleteConfirmElem = document.getElementById('modal-delete-btn');
+  deleteConfirmElem.onclick = () => deleteTrip(timestamp);
+  const elem = document.getElementById('delete-modal');
+  const instance = M.Modal.getInstance(elem);
+  instance.open();
 }
 
 /**
@@ -430,7 +473,6 @@ async function fetchAndRenderTripsFromDB() {
   );
   plannedTripsHTMLElement.innerHTML = '';
   pastTripsHTMLElement.innerHTML = '';
-  console.log(tripsData);
   let isPlannedTripsEmpty = true;
   let isPastTripsEmpty = true;
   for (key of keys) {
@@ -456,16 +498,35 @@ async function fetchAndRenderTripsFromDB() {
     }
     HTMLElementToUpdate.innerHTML += `
       <div class="row">
-        <div class="col m8">
+        <div class="col s12 m8">
           <div class="card">
             <div class="card-content">
-              <span class="card-title">${title}</span>
+              <div class="row trip-title-section"> 
+                <div class="left">
+                  <span class="card-title">${title}</span>
+                </div>
+                <div class="right">
+                  <button 
+                    type="button"
+                    onclick="openDeleteModal('${timestamp}')"
+                    class="btn-floating btn-large indigo update-button waves-effect waves-light"
+                  >
+                    <i class="large material-icons">delete</i>
+                  </button>
+                  <button 
+                    type="button"
+                    class="btn-floating btn-large indigo update-button waves-effect waves-light"
+                  >
+                    <i class="large material-icons">mode_edit</i>
+                  </button>
+                </div>
+              </div>
               <div id="trip-${timestamp}-locations"></div>
               <div id="trip-${timestamp}-map" class="trip-map"></div>
             </div>
           </div>
         </div>
-        <div class="col m4">
+        <div class="col s12 m4">
           <div class="card large">
             <div class="card-image">
               <img src="${await imageURLFromPhotoRef(hotelImage)}">

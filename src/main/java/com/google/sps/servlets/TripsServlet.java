@@ -129,14 +129,14 @@ public class TripsServlet extends HttpServlet {
       Query tripLocationsQuery = new Query("trip-location")
                                   .setAncestor(existingTrip.getKey());
       Iterable<Entity> tripLocationEntityIterable = datastore.prepare(tripLocationsQuery).asIterable();
-      
+ 
       // delete current data relating to Trip
       datastore.delete(existingTrip.getKey());
       for (Entity tripLocationEntity : tripLocationEntityIterable) {
         datastore.delete(tripLocationEntity.getKey());
       }
     }
-
+    datastore.put(tripEntity);
     // build TripLocation objects from request data and put them in Datastore
     JsonArray locationData = jsonObject.getAsJsonArray("locations");
     Iterator<JsonElement> locationIterator = locationData.iterator();
