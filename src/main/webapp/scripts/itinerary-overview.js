@@ -28,23 +28,26 @@ async function getTripData(){
     console.log(results);
     const keys = Object.keys(results);
 
-    let hotelID;
+    let ID;
+    let name
     let locationsArray;
 
     for (const key of keys){
-        const{hotel} = parseSerializedJson(key);
-        hotelID = hotel;
+        const{hotelID, hotelName} = parseSerializedJson(key);
+        ID = hotelID;
+        name = hotelName;
         locationsArray = (results[key]);
     }
 
-    console.log("Hotel ID: " + hotelID);
+    console.log("Hotel ID: " + ID);
+    console.log("Hotel Name:  " + name);
     console.log("Locations A: " + locationsArray);
 
     for(let i = 0; i < locationsArray.length; i++){
         console.log("Place ID: " + JSON.stringify(locationsArray[i]));
     }
 
-    geocodePlaceId(hotelID, locationsArray);
+    geocodePlaceId(ID, locationsArray);
 }
 
 /**
