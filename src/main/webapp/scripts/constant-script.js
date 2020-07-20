@@ -14,11 +14,11 @@
 
 // This file contains all the constant scripts to be loaded on each page.
 
-const GOOGLE_API_KEY = "AIzaSyDlLtx69Y4-65_dCK67ZX3lzKTYpyc5CWI";
+const GOOGLE_API_KEY = 'AIzaSyDlLtx69Y4-65_dCK67ZX3lzKTYpyc5CWI';
 
 // Initialize Materialize JS elements when DOM content is fully loaded
-document.addEventListener("DOMContentLoaded", () => {
-  const sidenavElems = document.querySelectorAll(".sidenav");
+document.addEventListener('DOMContentLoaded', () => {
+  const sidenavElems = document.querySelectorAll('.sidenav');
   const sideNavInstances = M.Sidenav.init(sidenavElems, undefined);
   const modalElems = document.querySelectorAll('.modal');
   const modalInstances = M.Modal.init(modalElems, undefined);
@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
  * they are not logged in. For use on auth-walled pages.
  */
 function authReload() {
-  fetch("/login")
+  fetch('/login')
     .then((response) => response.json())
     .then(({ isLoggedIn, loginUrl, logoutUrl }) => {
       if (isLoggedIn) {
@@ -62,8 +62,8 @@ const LOADING_ANIMATION_HTML = `
  * @param {string} logoutUrl
  */
 function showLogoutButton(logoutUrl) {
-  const mobileSidenav = document.getElementById("mobile-demo");
-  const defaultNav = document.getElementById("menu-links");
+  const mobileSidenav = document.getElementById('mobile-demo');
+  const defaultNav = document.getElementById('menu-links');
   mobileSidenav.innerHTML += `
           <li>
             <a class="waves-effect btn white black-text" href="${logoutUrl}">Logout</a>
@@ -85,34 +85,45 @@ function showLogoutButton(logoutUrl) {
  */
 function parseSerializedJson(json) {
   const charArray = [...json];
-  const startIndex = charArray.indexOf("{");
+  const startIndex = charArray.indexOf('{');
 
   // Build JS object by iterating through
   let obj = {};
   let isField = true;
-  let [currField, currValue] = ["", ""];
+  let [currField, currValue] = ['', ''];
   for (let i = startIndex + 1; i < charArray.length; i++) {
     const currChar = charArray[i];
     if (isField) {
-      if (currChar === " ") {
+      if (currChar === ' ') {
         continue;
       }
-      if (currChar !== "=") {
+      if (currChar !== '=') {
         currField += currChar;
       } else {
         isField = false;
       }
     } else {
-      if (currChar !== "," && currChar !== "}") {
+      if (currChar !== ',' && currChar !== '}') {
         currValue += currChar;
       } else {
         isField = true;
         // add field to obj and reset field and value strings
         obj[currField] = currValue;
-        [currField, currValue] = ["", ""];
+        [currField, currValue] = ['', ''];
       }
     }
   }
 
   return obj;
+}
+
+/**
+ * Converts Unix epoch time number to a string of the form MM/DD/YYYY.
+ * Uses the client timezone to calculate the string; behavior can differ
+ * on different devices.
+ * @param {number} timestamp
+ * @returns {string} date corresponding to timestamp in MM/DD/YYYY form.
+ */
+function unixTimestampToString(timestamp) {
+  return new Date(timestamp).toLocaleDateString();
 }

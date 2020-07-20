@@ -16,10 +16,10 @@ let markers;
  */
 function openTripEditor() {
   numLocations = 1;
-  locationPlaceObjects = [""];
+  locationPlaceObjects = [''];
   mapInitialized = false;
-  markers = [""];
-  document.getElementById("open-close-button-area").innerHTML = `
+  markers = [''];
+  document.getElementById('open-close-button-area').innerHTML = `
     <button
       onclick="cancelTripCreation()"
       class="btn-large add-trip-button waves-effect red darken-1"
@@ -27,7 +27,7 @@ function openTripEditor() {
       CANCEL
     </button>
   `;
-  document.getElementById("trip-editor-container").innerHTML = `
+  document.getElementById('trip-editor-container').innerHTML = `
     <div class="row">
       <div class="col s12 m8">
         <div class="card">
@@ -100,15 +100,15 @@ function openTripEditor() {
     </div>
   `;
   // initialize tooltip for Add Location button
-  const tooltipElems = document.querySelectorAll(".tooltipped");
+  const tooltipElems = document.querySelectorAll('.tooltipped');
   const tooltipInstances = M.Tooltip.init(tooltipElems, undefined);
 
   // prevent page reload on form submit
-  const form = document.getElementById("trip-editor-form");
-  form.addEventListener("submit", (e) => e.preventDefault());
+  const form = document.getElementById('trip-editor-form');
+  form.addEventListener('submit', (e) => e.preventDefault());
 
   // add autocomplete through Places API for first location
-  const location1 = document.getElementById("location-1");
+  const location1 = document.getElementById('location-1');
   const autocomplete = new google.maps.places.Autocomplete(location1);
   createPlaceHandler(autocomplete, 1);
 }
@@ -119,8 +119,8 @@ function openTripEditor() {
  */
 function addLocation() {
   numLocations++;
-  document.getElementById("trip-locations-container").insertAdjacentHTML(
-    "beforeend",
+  document.getElementById('trip-locations-container').insertAdjacentHTML(
+    'beforeend',
     `<div class="row">
       <div class="col s6">
         <label for="location-${numLocations}">Location ${numLocations}</label>
@@ -144,8 +144,8 @@ function addLocation() {
   const location = document.getElementById(`location-${numLocations}`);
   const autocomplete = new google.maps.places.Autocomplete(location);
   createPlaceHandler(autocomplete, numLocations);
-  markers.push("");
-  locationPlaceObjects.push("");
+  markers.push('');
+  locationPlaceObjects.push('');
 }
 
 /**
@@ -153,8 +153,8 @@ function addLocation() {
  * view.
  */
 function cancelTripCreation() {
-  document.getElementById("trip-editor-container").innerHTML = "";
-  document.getElementById("open-close-button-area").innerHTML = `
+  document.getElementById('trip-editor-container').innerHTML = '';
+  document.getElementById('open-close-button-area').innerHTML = `
     <button
       onclick="openTripEditor()"
       class="btn-large add-trip-button waves-effect green darken-1"
@@ -168,15 +168,15 @@ function cancelTripCreation() {
  * Opens modal with results for user to confirm and save trip.
  */
 async function findHotel() {
-  document.getElementById("hotel-results").innerHTML = LOADING_ANIMATION_HTML;
+  document.getElementById('hotel-results').innerHTML = LOADING_ANIMATION_HTML;
   if (numLocations !== getNumPlaceObjectsInArray(locationPlaceObjects)) {
     M.Toast.dismissAll();
     M.toast({
-      html: "Not all of your places are selected through autocomplete.",
+      html: 'Not all of your places are selected through autocomplete.',
     });
     return;
   }
-  const elem = document.getElementById("hotel-modal");
+  const elem = document.getElementById('hotel-modal');
   const instance = M.Modal.getInstance(elem);
   instance.open();
 
@@ -197,17 +197,20 @@ async function findHotel() {
  *                      Places API for the centerpoint.
  */
 async function parseAndRenderHotelResults(json, centerPoint) {
-  const modalContent = document.getElementById("hotel-results");
-  if (!json) {
-    modalContent.innerText = "No hotels nearby. Sorry.";
+  const modalContent = document.getElementById('hotel-results');
+  const hotelsMapElem = document.getElementById('hotels-map');
+  hotelsMapElem.style.height = '';
+  hotelsMapElem.innerHTML = '';
+  if (!json || json.length === 0) {
+    modalContent.innerText =
+      "We couldn't find any hotels nearby. Sorry about that.";
   } else {
-    const hotelsMapElem = document.getElementById("hotels-map");
     json = json.slice(0, 10);
     const hotelMap = new google.maps.Map(
-      document.getElementById("hotels-map"),
+      document.getElementById('hotels-map'),
       {
         center: centerPoint,
-        zoom: 12
+        zoom: 12,
       }
     );
     // Add existing locations to the map
@@ -230,38 +233,38 @@ async function parseAndRenderHotelResults(json, centerPoint) {
         map: hotelMap,
         title: obj.name,
         label: {
-          fontFamily: "Material Icons",
-          text: "hotel",
+          fontFamily: 'Material Icons',
+          text: 'hotel',
         },
       });
       const infoWindow = new google.maps.InfoWindow({
         content: `<h5 class="infowindow-text">${obj.name}</h5>`,
       });
-      marker.addListener("click", () => infoWindow.open(hotelMap, marker));
+      marker.addListener('click', () => infoWindow.open(hotelMap, marker));
       obj.distance_center = distanceBetween(location, centerPoint);
-      const photoRef = obj.photos[0]
-        ? obj.photos[0].photo_reference
-        : undefined;
+      const photoRef =
+        obj.photos && Array.isArray(obj.photos)
+          ? obj.photos[0].photo_reference
+          : undefined;
       if (photoRef) {
-        const photoResponse = await fetch(
-          `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/photo?maxwidth=500&photoreference=${photoRef}&key=${GOOGLE_API_KEY}`
-        );
-        const blob = await photoResponse.blob();
-        const photoUrl = await URL.createObjectURL(blob);
+        const photoUrl = await imageURLFromPhotoRef(photoRef);
         obj.photo_url = photoUrl;
+        obj.photo_ref = photoRef;
       } else {
         obj.photo_url = undefined;
+        obj.photo_ref = '';
       }
       return await obj;
     });
     json = await Promise.all(json);
     json.sort((a, b) => a.distance_center - b.distance_center);
-    hotelsMapElem.style.width = "100%";
-    hotelsMapElem.style.height = "400px";
-    hotelsMapElem.style.marginBottom = "2em";
+
+    hotelsMapElem.style.width = '100%';
+    hotelsMapElem.style.height = '400px';
+    hotelsMapElem.style.marginBottom = '2em';
     modalContent.innerHTML = json
       .map(
-        ({ name, formatted_address, rating, place_id, photo_url }) =>
+        ({ name, formatted_address, rating, place_id, photo_url, photo_ref }) =>
           `
           <div class="row">
             <div class="col s12 m6">
@@ -271,14 +274,19 @@ async function parseAndRenderHotelResults(json, centerPoint) {
                 <div class="card-image">
                   <img src="${photo_url}" alt="photo of ${name} from Google" loading="lazy" />
                 </div> `
-            : "") +
+            : '') +
           `
                 <div class="card-content black-text">
                   <span class="card-title"><strong>${name}</strong></span>
                   <p>${formatted_address}</p>
                 </div>
                 <div class="card-action center">
-                  <button id="${place_id}" class="btn indigo" onClick="saveTrip(this.id)">CHOOSE</button>
+                  <button 
+                    class="btn indigo" 
+                    onClick="saveTrip('${place_id}', '${photo_ref}', '${name}')"
+                  >
+                    CHOOSE
+                  </button>
                 </div>
               </div>
             </div>
@@ -294,8 +302,22 @@ async function parseAndRenderHotelResults(json, centerPoint) {
           </div>
         `
       )
-      .join("");
+      .join('');
   }
+}
+
+/**
+ * Fetches image and gets temp URL of image from Google Place Photos
+ * @param {string} photoRef a Place Photos photo_reference
+ * @returns {string} String containing object url of the resulting image
+ */
+async function imageURLFromPhotoRef(photoRef) {
+  const photoResponse = await fetch(
+    `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/photo?maxwidth=500&photoreference=${photoRef}&key=${GOOGLE_API_KEY}`
+  );
+  const blob = await photoResponse.blob();
+  const photoUrl = await URL.createObjectURL(blob);
+  return photoUrl;
 }
 
 /**
@@ -331,9 +353,12 @@ function degToRad(angle) {
 /**
  * Saves the current trip the user is editing to My Trips, through a POST request
  * to the backend. Then rerenders the trips based on DB data.
+ * @param {string} hotelID  the Place ID for the hotel
+ * @param {string} hotelRef the photo reference in Google Place Photos for the hotel.
+ * @param {string} hotelName the name of the hotel
  */
-async function saveTrip(hotelID) {
-  const elem = document.getElementById("hotel-modal");
+async function saveTrip(hotelID, hotelRef, hotelName) {
+  const elem = document.getElementById('hotel-modal');
   const instance = M.Modal.getInstance(elem);
   instance.close();
 
@@ -343,21 +368,24 @@ async function saveTrip(hotelID) {
   for (let i = 1; i <= numLocations; i++) {
     locationData.push({
       id: locationPlaceObjects[i - 1].place_id,
+      name: locationPlaceObjects[i - 1].name,
       weight: document.getElementById(`location-${i}-weight`).value,
     });
   }
 
   const requestBody = {
-    title: document.getElementById("trip-title").value,
-    hotel: hotelID,
+    title: document.getElementById('trip-title').value,
+    hotel_id: hotelID,
+    hotel_img: hotelRef,
+    hotel_name: hotelName,
     rating: -1,
     locations: locationData,
   };
 
-  await fetch("/trip-data", {
-    method: "POST",
+  await fetch('/trip-data', {
+    method: 'POST',
     headers: {
-      "content-type": "application/json",
+      'content-type': 'application/json',
     },
     body: JSON.stringify(requestBody),
   });
@@ -369,55 +397,94 @@ async function saveTrip(hotelID) {
  * Fetches trip data from the DB and renders each trip to the page.
  */
 async function fetchAndRenderTripsFromDB() {
+  const EMPTY_PLANNED_TRIPS_HTML = `
+    <div class="row"><div class="col s12">
+    <p class="placeholder-text">No planned trips to show. Let's go somewhere!</p>
+    </div></div>
+  `;
+  const EMPTY_PAST_TRIPS_HTML = `
+    <div class="row"><div class="col s12">
+    <p class="placeholder-text">No past trips to show.</p>
+    </div></div>
+  `;
+
   const plannedTripsHTMLElement = document.getElementById(
-    "planned-trips-container"
+    'planned-trips-container'
   );
+  const pastTripsHTMLElement = document.getElementById('past-trips-container');
   plannedTripsHTMLElement.innerHTML = LOADING_ANIMATION_HTML;
-  const response = await fetch("/trip-data", {
-    method: "GET",
+  pastTripsHTMLElement.innerHTML = LOADING_ANIMATION_HTML;
+  const response = await fetch('/trip-data', {
+    method: 'GET',
   });
   const tripsData = await response.json();
-  const geocoder = new google.maps.Geocoder();
   const keys = Object.keys(tripsData);
   if (keys.length === 0) {
-    plannedTripsHTMLElement.innerHTML = `
-      <div class="row"><div class="col s12">
-      <p class="placeholder-text">No trips to show. Let's go somewhere!</p>
-      </div></div>
-    `;
+    plannedTripsHTMLElement.innerHTML = EMPTY_PLANNED_TRIPS_HTML;
+    pastTripsHTMLElement.innerHTML = EMPTY_PAST_TRIPS_HTML;
     return;
   }
   keys.sort(
     (a, b) =>
       parseSerializedJson(b).timestamp - parseSerializedJson(a).timestamp
   );
-  plannedTripsHTMLElement.innerHTML = "";
+  plannedTripsHTMLElement.innerHTML = '';
+  pastTripsHTMLElement.innerHTML = '';
+  console.log(tripsData);
+  let isPlannedTripsEmpty = true;
+  let isPastTripsEmpty = true;
   for (key of keys) {
     // Fields of tripsData are currently in string format.
     // Deserialize using parseSerializedJson.
-    const { title, hotel, timestamp } = parseSerializedJson(key);
+    const {
+      title,
+      hotelName,
+      hotelImage,
+      isPastTrip,
+      timestamp,
+      hotelID,
+      isPublic,
+    } = parseSerializedJson(key);
     const locations = tripsData[key];
-    plannedTripsHTMLElement.innerHTML += `
+    let HTMLElementToUpdate;
+    if (isPastTrip === 'true') {
+      isPastTripsEmpty = false;
+      HTMLElementToUpdate = pastTripsHTMLElement;
+    } else {
+      isPlannedTripsEmpty = false;
+      HTMLElementToUpdate = plannedTripsHTMLElement;
+    }
+    HTMLElementToUpdate.innerHTML += `
       <div class="row">
         <div class="col m8">
           <div class="card">
             <div class="card-content">
               <span class="card-title">${title}</span>
-              <p>Hotel Place ID: ${hotel}</p>
-              <form>
-                <div id="trip-${timestamp}-locations"></div>
-              </form>
+              <div id="trip-${timestamp}-locations"></div>
+              <div id="trip-${timestamp}-map" class="trip-map"></div>
+            </div>
+          </div>
+        </div>
+        <div class="col m4">
+          <div class="card large">
+            <div class="card-image">
+              <img src="${await imageURLFromPhotoRef(hotelImage)}">
+            </div>
+            <div class="card-content">
+              <span class="card-title">${hotelName}</span>
+              <div id="trip-${timestamp}-hotel-info"></div>
             </div>
           </div>
         </div>
       </div>
     `;
+
     document.getElementById(`trip-${timestamp}-locations`).innerHTML = locations
-      .map(({ weight }, index) => {
+      .map(({ weight, placeName }) => {
         return `
           <div class="row">
             <div class="col s6">
-              <span id="location-${timestamp}-${index}"></span>
+              <span><strong>${placeName}</strong></span>
             </div>
             <div class="col s6">
               <span>Weight: ${weight}</span>
@@ -425,20 +492,84 @@ async function fetchAndRenderTripsFromDB() {
           </div>
         `;
       })
-      .join("");
+      .join('');
+  }
 
-    locations.forEach(({ placeID }, index) => {
-      geocoder.geocode({ placeId: placeID }, (results, status) => {
-        if (status === "OK") {
-          if (results[0]) {
-            placeName = results[0].formatted_address;
-            document.getElementById(
-              `location-${timestamp}-${index}`
-            ).innerText = placeName;
-          }
+  // Iterate through keys again to load the map for each trip
+  for (key of keys) {
+    const tripMarkers = [];
+    const { timestamp, hotelID } = parseSerializedJson(key);
+    // Get coords of all locations in this trip and the hotel to add to the Google map
+    const tripMap = new google.maps.Map(
+      document.getElementById(`trip-${timestamp}-map`),
+      {
+        zoom: 13,
+      }
+    );
+    const service = new google.maps.places.PlacesService(tripMap);
+
+    // Get hotel location and add it as a marker first
+    service.getDetails({ placeId: hotelID }, (place, status) => {
+      if (status === google.maps.places.PlacesServiceStatus.OK) {
+        const { geometry, name, formatted_address, website } = place;
+        const { location, viewport } = geometry;
+        const marker = new google.maps.Marker({
+          map: tripMap,
+          position: location,
+          label: {
+            fontFamily: 'Material Icons',
+            text: 'hotel',
+          },
+        });
+        tripMarkers.push(marker);
+        tripMap.setCenter(location);
+        const infoWindow = new google.maps.InfoWindow({
+          content: `<h5 class="infowindow-text">${name}</h5>
+              <p class="infowindow-text">Hotel for Trip</p>`,
+        });
+        google.maps.event.addListener(marker, 'click', () => {
+          infoWindow.open(tripMap, marker);
+        });
+        tripMap.fitBounds(viewport);
+        document.getElementById(`trip-${timestamp}-hotel-info`).innerHTML =
+          `
+          <p>${formatted_address}</p>` +
+          (website != undefined
+            ? `<div class="card-action center"><a class="btn indigo waves-effect" href="${website}" target="_blank">Website</a></div>`
+            : '');
+      }
+    });
+
+    // Get location coords for each location in the trip and add to map
+    const locations = tripsData[key];
+    locations.forEach(({ placeID, placeName }) => {
+      service.getDetails({ placeId: placeID }, (place, status) => {
+        if (status === google.maps.places.PlacesServiceStatus.OK) {
+          const { geometry, name } = place;
+          const { location, viewport } = geometry;
+          const placeMarker = new google.maps.Marker({
+            map: tripMap,
+            position: location,
+          });
+          tripMarkers.push(placeMarker);
+          const infoWindow = new google.maps.InfoWindow({
+            content: `<h5 class="infowindow-text">${placeName}</h5>`,
+          });
+          google.maps.event.addListener(placeMarker, 'click', () => {
+            infoWindow.open(tripMap, placeMarker);
+          });
+          tripMap.fitBounds(viewport);
+          fitMapToMarkers(tripMap, tripMarkers);
         }
       });
     });
+  }
+
+  if (isPastTripsEmpty) {
+    pastTripsHTMLElement.innerHTML = EMPTY_PAST_TRIPS_HTML;
+  }
+  if (isPlannedTripsEmpty) {
+    plannedTripsHTMLElement.innerHTML = EMPTY_PLANNED_TRIPS_HTML;
   }
 }
 
@@ -449,22 +580,25 @@ async function fetchAndRenderTripsFromDB() {
  * @param {number} locationNum the number identifying the field
  */
 function createPlaceHandler(element, locationNum) {
-  google.maps.event.addListener(element, "place_changed", () => {
+  google.maps.event.addListener(element, 'place_changed', () => {
     const obj = element.getPlace();
     obj.locationNum = locationNum;
     locationPlaceObjects[locationNum - 1] = obj;
+    const { geometry, name } = obj;
+    const { location } = geometry;
+    const { lat, lng } = location;
     const coords = {
-      lat: obj.geometry.location.lat(),
-      lng: obj.geometry.location.lng(),
+      lat: lat(),
+      lng: lng(),
     };
     if (!mapInitialized || locationNum === 1) {
-      map = new google.maps.Map(document.getElementById("editor-map"), {
+      map = new google.maps.Map(document.getElementById('editor-map'), {
         center: coords,
         zoom: 13,
       });
       mapInitialized = true;
     }
-    if(markers[locationNum - 1] !== "") {
+    if (markers[locationNum - 1] !== '') {
       const currMarkerForLocation = markers[locationNum - 1];
       currMarkerForLocation.setMap(null);
     }
@@ -472,13 +606,13 @@ function createPlaceHandler(element, locationNum) {
     const marker = new google.maps.Marker({
       position: coords,
       map: map,
-      title: obj.name,
+      title: name,
     });
     const infoWindow = new google.maps.InfoWindow({
       content: `<h5 class="infowindow-text">${obj.name}</h5>
           <p class="infowindow-text">Location ${locationNum}</p>`,
     });
-    marker.addListener("click", () => infoWindow.open(map, marker));
+    marker.addListener('click', () => infoWindow.open(map, marker));
     markers[locationNum - 1] = marker;
     if (locationNum !== 1) {
       fitMapToMarkers(map, markers);
@@ -495,7 +629,7 @@ function createPlaceHandler(element, locationNum) {
 function fitMapToMarkers(mapRef, markers) {
   const bounds = new google.maps.LatLngBounds(null);
   for (marker of markers) {
-    if (marker !== "") {
+    if (marker !== '') {
       bounds.extend(marker.getPosition());
     }
   }
