@@ -13,12 +13,13 @@ let mapInitialized;
 let markers;
 /**
  * Adds a trip editor interface to the DOM, which the user can use to add a trip.
+ * @param {string|null} timestamp timestamp string of the trip to be updated.
+ *                                Null if this is a new trip.
+ * @param {Array} locationData Array containing location objects with
+ *                             placeID, placeName, and weight fields.
+ *                             Null if this is a new trip.
  */
-function openTripEditor() {
-  numLocations = 1;
-  locationPlaceObjects = [''];
-  mapInitialized = false;
-  markers = [''];
+function openTripEditor(timestamp, locationData) {
   document.getElementById('open-close-button-area').innerHTML = `
     <button
       onclick="cancelTripCreation()"
@@ -27,6 +28,7 @@ function openTripEditor() {
       CANCEL
     </button>
   `;
+
   document.getElementById('trip-editor-container').innerHTML = `
     <div class="row">
       <div class="col s12 m8">
@@ -77,6 +79,7 @@ function openTripEditor() {
                   <button
                     type="button"
                     onclick="findHotel()"
+                    id="find-hotel-button"
                     class="btn-large waves-effect indigo darken-2"
                   >
                     Next
@@ -99,6 +102,61 @@ function openTripEditor() {
       </div>
     </div>
   `;
+  if (timestamp === null) {
+    numLocations = 1;
+    locationPlaceObjects = [''];
+    mapInitialized = false;
+    markers = [''];
+
+    // add autocomplete through Places API for first location
+    const location1 = document.getElementById('location-1');
+    const autocomplete = new google.maps.places.Autocomplete(location1);
+    createPlaceHandler(autocomplete, 1);
+  } else {
+    numLocations = locationData.length;
+
+    // Populate frontend fields with existing data
+    document.getElementById('location-1').value = locationData[0].placeName;
+    document.getElementById('location-1-weight').value = locationData[0].weight;
+    const location = document.getElementById('location-1');
+    const autocomplete = new google.maps.places.Autocomplete(location);
+    createPlaceHandler(autocomplete, 1);
+    for (let i = 2; i <= numLocations; i++) {
+      document.getElementById('trip-locations-container').insertAdjacentHTML(
+        'beforeend',
+        `<div class="row">
+          <div class="col s6">
+            <label for="location-${numLocations}">Location ${numLocations}</label>
+            <input 
+              id="location-${numLocations}" 
+              type="text" 
+              value="${locationData[i - 1].placeName}"
+            />
+          </div>
+          <div class="col s6">
+            <p class="range-field weight-slider">
+              <label for="location-${numLocations}-weight">Weight</label>
+              <input
+                type="range"
+                name="location-${numLocations}-weight"
+                id="location-${numLocations}-weight"
+                min="1"
+                value="${locationData[i - 1].weight}
+                max="5"
+              />
+            </p>
+          </div>
+        </div>`
+      );
+      // add autocomplete through Places API for new location
+      const location = document.getElementById(`location-${i}`);
+      const autocomplete = new google.maps.places.Autocomplete(location);
+      createPlaceHandler(autocomplete, i);
+    }
+    locationPlaceObjects = [''];
+    mapInitialized = false;
+    markers = [''];
+  }
   // initialize tooltip for Add Location button
   const tooltipElems = document.querySelectorAll('.tooltipped');
   const tooltipInstances = M.Tooltip.init(tooltipElems, undefined);
@@ -106,11 +164,6 @@ function openTripEditor() {
   // prevent page reload on form submit
   const form = document.getElementById('trip-editor-form');
   form.addEventListener('submit', (e) => e.preventDefault());
-
-  // add autocomplete through Places API for first location
-  const location1 = document.getElementById('location-1');
-  const autocomplete = new google.maps.places.Autocomplete(location1);
-  createPlaceHandler(autocomplete, 1);
 }
 
 /**
@@ -275,7 +328,7 @@ async function parseAndRenderHotelResults(json, centerPoint) {
                   <img src="${photo_url}" alt="photo of ${name} from Google" loading="lazy" />
                 </div> `
             : '') +
-              `
+          `
                 <div class="card-content black-text">
                   <span class="card-title"><strong>${name}</strong></span>
                   <p>${formatted_address}</p>
@@ -283,7 +336,9 @@ async function parseAndRenderHotelResults(json, centerPoint) {
                 <div class="card-action center">
                   <button
                     class="btn indigo" 
-                    onClick="saveTrip('${place_id}', '${photo_ref}', '${name.replace(/'/g, "\\'")}')"
+                    onClick="saveTrip('${place_id}', 
+                                      '${photo_ref}', 
+                                      '${name.replace(/'/g, "\\'")}')"
                   >
                     CHOOSE
                   </button>
@@ -418,7 +473,8 @@ async function deleteTrip(timestamp) {
     fetchAndRenderTripsFromDB();
   } else {
     M.toast({
-      html: 'There was a problem when attempting to delete your trip. Please try again.',
+      html:
+        'There was a problem when attempting to delete your trip. Please try again.',
     });
   }
 }
@@ -438,6 +494,7 @@ function openDeleteModal(timestamp) {
 
 /**
  * Fetches trip data from the DB and renders each trip to the page.
+ * Calls to this function are idempotent to the DOM.
  */
 async function fetchAndRenderTripsFromDB() {
   const EMPTY_PLANNED_TRIPS_HTML = `
@@ -484,7 +541,6 @@ async function fetchAndRenderTripsFromDB() {
       hotelImage,
       isPastTrip,
       timestamp,
-      hotelID,
       isPublic,
     } = parseSerializedJson(key);
     const locations = tripsData[key];
@@ -503,7 +559,7 @@ async function fetchAndRenderTripsFromDB() {
             <div class="card-content">
               <div class="row trip-title-section"> 
                 <div class="left">
-                  <span class="card-title">${title}</span>
+                  <span class="card-title" id="trip-${timestamp}-title">${title}</span>
                 </div>
                 <div class="right">
                   <button 
@@ -515,6 +571,7 @@ async function fetchAndRenderTripsFromDB() {
                   </button>
                   <button 
                     type="button"
+                    onclick="openTripEditor('${timestamp}',${locations.length})"
                     class="btn-floating btn-large indigo update-button waves-effect waves-light"
                   >
                     <i class="large material-icons">mode_edit</i>
@@ -526,7 +583,7 @@ async function fetchAndRenderTripsFromDB() {
             </div>
           </div>
         </div>
-        <div class="col s12 m4">
+        <div class="col s12 m4" id="trip-${timestamp}-hotel-card">
           <div class="card large">
             <div class="card-image">
               <img src="${await imageURLFromPhotoRef(hotelImage)}">
@@ -541,14 +598,18 @@ async function fetchAndRenderTripsFromDB() {
     `;
 
     document.getElementById(`trip-${timestamp}-locations`).innerHTML = locations
-      .map(({ weight, placeName }) => {
+      .map(({ weight, placeName }, index) => {
         return `
           <div class="row">
             <div class="col s6">
-              <span><strong>${placeName}</strong></span>
+              <span id="trip-${timestamp}-location-${index + 1}">
+                <strong>${placeName}</strong>
+              </span>
             </div>
             <div class="col s6">
-              <span>Weight: ${weight}</span>
+              <span id="trip-${timestamp}-weight-${index + 1}">
+                Weight: ${weight}
+              </span>
             </div>
           </div>
         `;

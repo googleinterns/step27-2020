@@ -78,11 +78,19 @@
       <div id="delete-modal" class="modal">
         <div class="modal-content">
           <h4>Confirm Trip Deletion</h4>
-          <p>This will delete this trip and saved information about it <strong>permanently.</strong></p>
+          <p>
+            This will delete this trip and saved information about it
+            <strong>permanently.</strong>
+          </p>
         </div>
         <div class="modal-footer">
           <a href="#!" class="modal-close waves-effect btn-flat">Cancel</a>
-          <a href="#!" id="modal-delete-btn" class="modal-close waves-effect btn-flat">Delete</a>
+          <a
+            href="#!"
+            id="modal-delete-btn"
+            class="modal-close waves-effect btn-flat"
+            >Delete</a
+          >
         </div>
       </div>
       <div class="row">
@@ -91,7 +99,7 @@
         </div>
         <div class="col m2" id="open-close-button-area">
           <button
-            onclick="openTripEditor()"
+            onclick="openTripEditor(null, null)"
             class="btn-large add-trip-button waves-effect green darken-1"
           >
             ADD TRIP
