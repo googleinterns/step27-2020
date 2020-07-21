@@ -15,7 +15,7 @@ function addCityAutocomplete() {
   const autocomplete = new google.maps.places.Autocomplete(cityInputField, options);
   google.maps.event.addListener(autocomplete, 'place_changed', () => {
     city = autocomplete.getPlace();
-    if(typeof filter !== 'undefined') {
+    if(filter) {
       findPlacesInCity(city, filter);
     }
   });
@@ -25,14 +25,14 @@ function addFilterHandler() {
   const filterForm = document.getElementById('filters');
   filterForm.addEventListener('change', () => {
     filter = filterForm.value;
-    if(typeof city !== 'undefined') {
+    if(city) {
       findPlacesInCity(city, filter);
     }
   });
 }
 
 function findPlacesInCity(city, filter) {
-  if (city.hasOwnProperty('place_id') === false) {
+  if (!city.hasOwnProperty('place_id')) {
     M.Toast.dismissAll();
     M.toast({
       html: "Your city wasn't selected with autocomplete",
