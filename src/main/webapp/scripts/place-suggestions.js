@@ -9,7 +9,10 @@ function init() {
 
 function addCityAutocomplete() {
   const cityInputField = document.getElementById('city-input')
-  const autocomplete = new google.maps.places.Autocomplete(cityInputField);
+  const options = {
+    types: ['(cities)'],
+  }
+  const autocomplete = new google.maps.places.Autocomplete(cityInputField, options);
   google.maps.event.addListener(autocomplete, 'place_changed', () => {
     city = autocomplete.getPlace();
     if(typeof filter !== 'undefined') {
