@@ -154,7 +154,6 @@ function openTripEditor(timestamp, locationData) {
       createPlaceHandler(autocomplete, i);
     }
     locationPlaceObjects = [''];
-    mapInitialized = false;
     markers = [''];
   }
   // initialize tooltip for Add Location button
