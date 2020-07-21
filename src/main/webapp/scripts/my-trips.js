@@ -15,11 +15,13 @@ let markers;
  * Adds a trip editor interface to the DOM, which the user can use to add a trip.
  * @param {string|null} timestamp timestamp string of the trip to be updated.
  *                                Null if this is a new trip.
- * @param {Array} locationData Array containing location objects with
- *                             placeID, placeName, and weight fields.
- *                             Null if this is a new trip.
+ * @param {Array} locationData    Array containing location objects with
+ *                                placeID, placeName, and weight fields.
+ *                                Null if this is a new trip.
+ * @param {string} title          The current title of the trip. Null
+ *                                if this is a new trip.
  */
-function openTripEditor(timestamp, locationData) {
+function openTripEditor(timestamp, locationData, title) {
   document.getElementById('open-close-button-area').innerHTML = `
     <button
       onclick="cancelTripCreation()"
@@ -36,7 +38,7 @@ function openTripEditor(timestamp, locationData) {
           <div class="card-content">
           <div class="card-title">
             <div class="row">
-              <div class="input-field col s12">
+              <div class="col s12">
                 <label for="trip-title">Trip Name</label>  
                 <input id="trip-title" type="text" required />
               </div>
@@ -113,9 +115,13 @@ function openTripEditor(timestamp, locationData) {
     const autocomplete = new google.maps.places.Autocomplete(location1);
     createPlaceHandler(autocomplete, 1);
   } else {
+    locationPlaceObjects = [];
+    markers = [];
     numLocations = locationData.length;
-
+    
+    mapInitialized = false;
     // Populate frontend fields with existing data
+    document.getElementById('trip-title').value = title;
     document.getElementById('location-1').value = locationData[0].placeName;
     document.getElementById('location-1-weight').value = locationData[0].weight;
     const location = document.getElementById('location-1');
@@ -153,8 +159,38 @@ function openTripEditor(timestamp, locationData) {
       const autocomplete = new google.maps.places.Autocomplete(location);
       createPlaceHandler(autocomplete, i);
     }
-    locationPlaceObjects = [''];
-    markers = [''];
+    // Use PlacesService to populate locationPlaceObjects and markers, adding them to the map
+    const service = new google.maps.places.PlacesService(map);
+    locationData.map(({ placeID, placeName }, index) => {
+      service.getDetails({ placeId: placeID }, (place, status) => {
+        if (status === google.maps.places.PlacesServiceStatus.OK) {
+          const { geometry, name } = place;
+          const { location, viewport } = geometry;
+          if (!mapInitialized) {
+            map = new google.maps.Map(document.getElementById('editor-map'), {
+              center: location,
+              zoom: 15,
+            });
+            mapInitialized = true;
+          }
+          const marker = new google.maps.Marker({
+            map: map,
+            position: location,
+          });
+          locationPlaceObjects.push(place);
+          markers.push(marker);
+          const infoWindow = new google.maps.InfoWindow({
+            content: `<h5 class="infowindow-text">${name}</h5>
+                <p class="infowindow-text">Location ${index + 1}</p>`,
+          });
+          google.maps.event.addListener(marker, 'click', () => {
+            infoWindow.open(map, marker);
+          });
+          fitMapToMarkers(map, markers);
+        }
+      });
+    });
+    
   }
   // initialize tooltip for Add Location button
   const tooltipElems = document.querySelectorAll('.tooltipped');
@@ -208,7 +244,7 @@ function cancelTripCreation() {
   document.getElementById('trip-editor-container').innerHTML = '';
   document.getElementById('open-close-button-area').innerHTML = `
     <button
-      onclick="openTripEditor()"
+      onclick="openTripEditor(null, null, null)"
       class="btn-large add-trip-button waves-effect green darken-1"
     >
       ADD TRIP
@@ -570,7 +606,7 @@ async function fetchAndRenderTripsFromDB() {
                   </button>
                   <button 
                     type="button"
-                    onclick="openTripEditor('${timestamp}',${locations.length})"
+                    id="edit-button-${timestamp}"
                     class="btn-floating btn-large indigo update-button waves-effect waves-light"
                   >
                     <i class="large material-icons">mode_edit</i>
@@ -595,7 +631,7 @@ async function fetchAndRenderTripsFromDB() {
         </div>
       </div>
     `;
-
+    
     document.getElementById(`trip-${timestamp}-locations`).innerHTML = locations
       .map(({ weight, placeName }, index) => {
         return `
@@ -616,10 +652,10 @@ async function fetchAndRenderTripsFromDB() {
       .join('');
   }
 
-  // Iterate through keys again to load the map for each trip
+  // Iterate through keys again to load the map for each trip and load edit button functionality
   for (key of keys) {
     const tripMarkers = [];
-    const { timestamp, hotelID } = parseSerializedJson(key);
+    const { timestamp, hotelID, title } = parseSerializedJson(key);
     // Get coords of all locations in this trip and the hotel to add to the Google map
     const tripMap = new google.maps.Map(
       document.getElementById(`trip-${timestamp}-map`),
@@ -684,6 +720,12 @@ async function fetchAndRenderTripsFromDB() {
         }
       });
     });
+    
+    // Give edit buttons for each trip functionality
+    document.getElementById(`edit-button-${timestamp}`).onclick = () => {
+      openTripEditor(`${timestamp}`, locations, `${title}`);
+      window.scrollTo(0, 0); 
+    };
   }
 
   if (isPastTripsEmpty) {
@@ -739,6 +781,8 @@ function createPlaceHandler(element, locationNum) {
       fitMapToMarkers(map, markers);
       map.setZoom(map.getZoom() - 0.3);
     }
+    console.log(markers);
+    console.log(locationPlaceObjects);
   });
 }
 
