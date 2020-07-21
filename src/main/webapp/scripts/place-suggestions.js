@@ -1,38 +1,49 @@
-let map;
-let service;
+let city;
+let filter;
 
-const MTV = new google.maps.LatLng(37.3861,122.0839);
-
-/**
- * Inits map and calls a nearby search of prominent restaurants in 5000m 
- * radius of MTV
- */
-function findNearbyPlaces() {
-  map = new google.maps.Map(document.getElementById('map'), {
-      center: MTV,
-      zoom: 15
-    });
-
-  let request = {
-    location: MTV,
-    radius: '5000',
-    type: ['restaurant']
-  };
-
-  service = new google.maps.places.PlacesService(map);
-  service.nearbySearch(request, callback);
+function init() {
+  authReload();
+  addCityAutocomplete();
+  addFilterHandler();
 }
 
-/**
- * Logs the name of each place returned by nearby search in findNearbyPlaces()
- * to browser console
- * @param {Object} results array of PlaceResults objects
- * @param {Object} status status of Places API call
- */
-function callback(results, status) {
-  if (status === google.maps.places.PlacesServiceStatus.OK) {
-    for (let i = 0; i < results.length; i++) {
-      console.log(results[i].name);
-    }
+function addCityAutocomplete() {
+  const cityInputField = document.getElementById('city-input')
+  const options = {
+    types: ['(cities)'],
   }
+  const autocomplete = new google.maps.places.Autocomplete(cityInputField, options);
+  google.maps.event.addListener(autocomplete, 'place_changed', () => {
+    city = autocomplete.getPlace();
+    if(filter) {
+      findPlacesInCity(city, filter);
+    }
+  });
 }
+
+function addFilterHandler() {
+  const filterForm = document.getElementById('filters');
+  filterForm.addEventListener('change', () => {
+    filter = filterForm.value;
+    if(city) {
+      findPlacesInCity(city, filter);
+    }
+  });
+}
+
+function findPlacesInCity(city, filter) {
+  if (!city.hasOwnProperty('place_id')) {
+    M.Toast.dismissAll();
+    M.toast({
+      html: "Your city wasn't selected with autocomplete",
+    });
+    return;
+  }
+  
+  console.log(city);
+  console.log(filter);
+} 
+
+
+
+
