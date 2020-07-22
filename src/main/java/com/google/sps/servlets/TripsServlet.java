@@ -5,6 +5,7 @@ import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.PreparedQuery;
 import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Transaction;
+import com.google.appengine.api.datastore.TransactionOptions;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query.FilterPredicate;
 import com.google.appengine.api.users.UserService;
@@ -98,7 +99,8 @@ public class TripsServlet extends HttpServlet {
     Entity tripEntity = convertTripToEntity(trip);
 
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-    Transaction txn = datastore.beginTransaction();
+    TransactionOptions options = TransactionOptions.Builder.withXG(true);
+    Transaction txn = datastore.beginTransaction(options);
     try {
       datastore.put(txn, tripEntity);
 
@@ -135,7 +137,8 @@ public class TripsServlet extends HttpServlet {
     Entity tripEntity = convertTripToEntity(trip);
 
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-    Transaction txn = datastore.beginTransaction();
+    TransactionOptions options = TransactionOptions.Builder.withXG(true);
+    Transaction txn = datastore.beginTransaction(options);
     try {
       Query tripQuery = new Query("trip")
                         .setFilter(new FilterPredicate(Trip.ENTITY_PROPERTY_OWNER, FilterOperator.EQUAL, userEmail))
