@@ -136,9 +136,9 @@ function openTripEditor(timestamp, locationData, title) {
         'beforeend',
         `<div class="row">
           <div class="col s6">
-            <label for="location-${numLocations}">Location ${numLocations}</label>
+            <label for="location-${i}">Location ${i}</label>
             <input 
-              id="location-${numLocations}" 
+              id="location-${i}" 
               type="text" 
               value="${locationData[i - 1].placeName}"
             />
@@ -280,6 +280,9 @@ async function findHotel(timestamp) {
   // Get center point from which to start searching for hotels
   const coords = placesToCoordsWeightArray(locationPlaceObjects);
   const [lat, lng] = centerOfMass(coords);
+  document.getElementById('hotels-map').innerHTML = '';
+  document.getElementById('hotels-map').style.display = 'none';
+
   const response = await fetch(
     `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/textsearch/json?type=lodging&location=${lat},${lng}&radius=10000&key=${GOOGLE_API_KEY}&output=json`
   );
@@ -299,7 +302,7 @@ async function parseAndRenderHotelResults(json, centerPoint, timestamp) {
   const modalContent = document.getElementById('hotel-results');
   const hotelsMapElem = document.getElementById('hotels-map');
   hotelsMapElem.style.height = '';
-  hotelsMapElem.innerHTML = '';
+ 
   if (!json || json.length === 0) {
     modalContent.innerText =
       "We couldn't find any hotels nearby. Sorry about that.";
@@ -357,7 +360,8 @@ async function parseAndRenderHotelResults(json, centerPoint, timestamp) {
     });
     json = await Promise.all(json);
     json.sort((a, b) => a.distance_center - b.distance_center);
-
+    
+    hotelsMapElem.style.width = '100%';
     hotelsMapElem.style.width = '100%';
     hotelsMapElem.style.height = '400px';
     hotelsMapElem.style.marginBottom = '2em';
@@ -782,10 +786,11 @@ function createPlaceHandler(element, locationNum) {
       lat: lat(),
       lng: lng(),
     };
-    if (!mapInitialized || locationNum === 1) {
+    if (!mapInitialized) {
       map = new google.maps.Map(document.getElementById('editor-map'), {
         center: coords,
         zoom: 13,
+        disableDefaultUI: true,
       });
       mapInitialized = true;
     }
