@@ -122,7 +122,7 @@ function openTripEditor(timestamp, locationData, title) {
     locationPlaceObjects = [];
     markers = [];
     numLocations = locationData.length;
-    
+
     mapInitialized = false;
     // Populate frontend fields with existing data
     document.getElementById('trip-title').value = title;
@@ -198,7 +198,6 @@ function openTripEditor(timestamp, locationData, title) {
       });
     });
   }
-
 
   // initialize tooltip for Add Location button
   const tooltipElems = document.querySelectorAll('.tooltipped');
@@ -751,11 +750,11 @@ async function fetchAndRenderTripsFromDB() {
         }
       });
     });
-    
+
     // Give edit buttons for each trip functionality
     document.getElementById(`edit-button-${timestamp}`).onclick = () => {
       openTripEditor(`${timestamp}`, locations, `${title}`);
-      window.scrollTo(0, 0); 
+      window.scrollTo(0, 0);
     };
   }
 
