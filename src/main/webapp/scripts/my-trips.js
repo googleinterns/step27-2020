@@ -60,6 +60,7 @@ function openTripEditor(timestamp, locationData, title) {
                         id="location-1-weight"
                         min="1"
                         max="5"
+                        step="1"
                       />
                     </p>
                   </div>
@@ -115,6 +116,9 @@ function openTripEditor(timestamp, locationData, title) {
     const autocomplete = new google.maps.places.Autocomplete(location1);
     createPlaceHandler(autocomplete, 1);
   } else {
+    const findHotelButton = document.getElementById('find-hotel-button');
+    findHotelButton.onclick = () => findHotel(timestamp);
+    findHotelButton.innerText = 'Update';
     locationPlaceObjects = [];
     markers = [];
     numLocations = locationData.length;
@@ -147,12 +151,14 @@ function openTripEditor(timestamp, locationData, title) {
                 name="location-${i}-weight"
                 id="location-${i}-weight"
                 min="1"
-                value="${locationData[i - 1].weight}
+                value="${locationData[i - 1].weight}"
                 max="5"
+                step="1"
               />
             </p>
           </div>
-        </div>`
+        </div>
+        `
       );
       // add autocomplete through Places API for new location
       const location = document.getElementById(`location-${i}`);
@@ -191,10 +197,9 @@ function openTripEditor(timestamp, locationData, title) {
         }
       });
     });
-    
   }
-  console.log(locationPlaceObjects);
-  console.log(markers);
+
+
   // initialize tooltip for Add Location button
   const tooltipElems = document.querySelectorAll('.tooltipped');
   const tooltipInstances = M.Tooltip.init(tooltipElems, undefined);
@@ -257,8 +262,10 @@ function cancelTripCreation() {
 
 /**
  * Opens modal with results for user to confirm and save trip.
+ * @param {string|null} timestamp timestamp string of the trip to be updated.
+ *                                Null if this is a new trip.
  */
-async function findHotel() {
+async function findHotel(timestamp) {
   document.getElementById('hotel-results').innerHTML = LOADING_ANIMATION_HTML;
   if (numLocations !== getNumPlaceObjectsInArray(locationPlaceObjects)) {
     M.Toast.dismissAll();
@@ -278,7 +285,7 @@ async function findHotel() {
     `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/textsearch/json?type=lodging&location=${lat},${lng}&radius=10000&key=${GOOGLE_API_KEY}&output=json`
   );
   const { results } = await response.json();
-  parseAndRenderHotelResults(results, { lat: lat, lng: lng });
+  parseAndRenderHotelResults(results, { lat: lat, lng: lng }, timestamp);
 }
 
 /**
@@ -286,8 +293,10 @@ async function findHotel() {
  * cards to the hotel results modal.
  * @param {Object} json the resulting JS object from calling the
  *                      Places API for the centerpoint.
+ * @param {string|null} timestamp timestamp string of the trip to be updated.
+ *                                Null if this is a new trip.
  */
-async function parseAndRenderHotelResults(json, centerPoint) {
+async function parseAndRenderHotelResults(json, centerPoint, timestamp) {
   const modalContent = document.getElementById('hotel-results');
   const hotelsMapElem = document.getElementById('hotels-map');
   hotelsMapElem.style.height = '';
@@ -376,7 +385,8 @@ async function parseAndRenderHotelResults(json, centerPoint) {
                     class="btn indigo" 
                     onClick="saveTrip('${place_id}', 
                                       '${photo_ref}', 
-                                      '${name.replace(/'/g, "\\'")}')"
+                                      '${name.replace(/'/g, "\\'")}',
+                                      '${timestamp}')"
                   >
                     CHOOSE
                   </button>
@@ -449,8 +459,10 @@ function degToRad(angle) {
  * @param {string} hotelID  the Place ID for the hotel
  * @param {string} hotelRef the photo reference in Google Place Photos for the hotel.
  * @param {string} hotelName the name of the hotel
+ * @param {string|null} timestamp timestamp string of the trip to be updated.
+ *                                Null if this is a new trip.
  */
-async function saveTrip(hotelID, hotelRef, hotelName) {
+async function saveTrip(hotelID, hotelRef, hotelName, timestamp) {
   const elem = document.getElementById('hotel-modal');
   const instance = M.Modal.getInstance(elem);
   instance.close();
@@ -466,14 +478,19 @@ async function saveTrip(hotelID, hotelRef, hotelName) {
     });
   }
 
+  const tripTitle = document.getElementById('trip-title').value;
   const requestBody = {
-    title: document.getElementById('trip-title').value,
+    title: tripTitle,
     hotel_id: hotelID,
     hotel_img: hotelRef,
     hotel_name: hotelName,
     rating: -1,
     locations: locationData,
   };
+
+  if (timestamp !== null) {
+    requestBody.timestamp = timestamp;
+  }
 
   const response = await fetch('/trip-data', {
     method: 'PUT',
@@ -483,6 +500,11 @@ async function saveTrip(hotelID, hotelRef, hotelName) {
     body: JSON.stringify(requestBody),
   });
   if (response.ok) {
+    if (timestamp !== null) {
+      M.toast({
+        html: `Successfully updated ${tripTitle}.`,
+      });
+    }
     cancelTripCreation();
     fetchAndRenderTripsFromDB();
   } else {
