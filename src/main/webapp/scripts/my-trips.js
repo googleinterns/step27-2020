@@ -141,11 +141,11 @@ function openTripEditor(timestamp, locationData, title) {
           </div>
           <div class="col s6">
             <p class="range-field weight-slider">
-              <label for="location-${numLocations}-weight">Weight</label>
+              <label for="location-${i}-weight">Weight</label>
               <input
                 type="range"
-                name="location-${numLocations}-weight"
-                id="location-${numLocations}-weight"
+                name="location-${i}-weight"
+                id="location-${i}-weight"
                 min="1"
                 value="${locationData[i - 1].weight}
                 max="5"
@@ -169,7 +169,7 @@ function openTripEditor(timestamp, locationData, title) {
           if (!mapInitialized) {
             map = new google.maps.Map(document.getElementById('editor-map'), {
               center: location,
-              zoom: 15,
+              zoom: 13,
             });
             mapInitialized = true;
           }
@@ -177,6 +177,7 @@ function openTripEditor(timestamp, locationData, title) {
             map: map,
             position: location,
           });
+          place.locationNum = index + 1;
           locationPlaceObjects.push(place);
           markers.push(marker);
           const infoWindow = new google.maps.InfoWindow({
@@ -192,6 +193,8 @@ function openTripEditor(timestamp, locationData, title) {
     });
     
   }
+  console.log(locationPlaceObjects);
+  console.log(markers);
   // initialize tooltip for Add Location button
   const tooltipElems = document.querySelectorAll('.tooltipped');
   const tooltipInstances = M.Tooltip.init(tooltipElems, undefined);
@@ -781,8 +784,6 @@ function createPlaceHandler(element, locationNum) {
       fitMapToMarkers(map, markers);
       map.setZoom(map.getZoom() - 0.3);
     }
-    console.log(markers);
-    console.log(locationPlaceObjects);
   });
 }
 
