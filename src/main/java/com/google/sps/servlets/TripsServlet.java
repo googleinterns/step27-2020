@@ -19,6 +19,7 @@ import com.google.gson.JsonParser;
 import com.google.sps.data.TripLocation;
 import com.google.sps.data.Trip;
 import com.google.sps.util.BodyParser;
+import com.google.sps.util.AuthChecker;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,59 +42,54 @@ import javax.servlet.http.HttpServletResponse;
 public class TripsServlet extends HttpServlet {
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    UserService userService = UserServiceFactory.getUserService();
-    if (userService.isUserLoggedIn()) {
-      String userEmail = userService.getCurrentUser().getEmail();
-      Query tripQuery = new Query("trip")
-                        .setFilter(new FilterPredicate(Trip.ENTITY_PROPERTY_OWNER, FilterOperator.EQUAL, userEmail));
-      Query tripLocationsQuery = new Query("trip-location")
-                                  .setFilter(new FilterPredicate(TripLocation.ENTITY_PROPERTY_OWNER, FilterOperator.EQUAL, userEmail));
-      DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-      PreparedQuery tripResults = datastore.prepare(tripQuery);
-      PreparedQuery tripLocationResults = datastore.prepare(tripLocationsQuery);
-      Iterable<Entity> tripEntityIterable = tripResults.asIterable();
-      Iterable<Entity> tripLocationEntityIterable = tripLocationResults.asIterable();
-      
-      // Convert trip location iterable to HashMap with mapping from timestamp to TripLocation object
-      // Provides easy O(1) lookup of locations for a certain trip.
-      Map<Key, List<TripLocation>> tripLocationMap = new HashMap<>();
-      for(Entity entity : tripLocationEntityIterable) {
-        TripLocation location = convertEntityToTripLocation(entity);
-        if(tripLocationMap.containsKey(entity.getParent())) {
-          List<TripLocation> locationsUnderCurrTrip = tripLocationMap.get(entity.getParent());
-          locationsUnderCurrTrip.add(location);
-          tripLocationMap.replace(entity.getParent(), locationsUnderCurrTrip);
-        } else {
-          tripLocationMap.put(entity.getParent(), new ArrayList<>(Arrays.asList(location)));
-        }
-      }
-
-      // Get list of trips without their corresponding locations
-      Map<Trip, List<TripLocation>> userTripsDataResponse = new HashMap<>();
-      for (Entity entity : tripEntityIterable) {
-        Trip trip = convertEntityToTrip(entity);
-        userTripsDataResponse.put(trip, tripLocationMap.get(entity.getKey()));
-      }
-
-      response.setContentType("application/json;");
-      Gson gson = new Gson();
-      String serializedJSON = gson.toJson(userTripsDataResponse);
-      response.getWriter().println(serializedJSON);
-      response.setStatus(HttpServletResponse.SC_OK);
-    } else {
-      // send error code 401 if user is not authenticated and tries to access data
-      response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+    String userEmail = AuthChecker.getUserEmail(response);
+    if (userEmail == null) {
+      return;
     }
+    Query tripQuery = new Query("trip")
+                      .setFilter(new FilterPredicate(Trip.ENTITY_PROPERTY_OWNER, FilterOperator.EQUAL, userEmail));
+    Query tripLocationsQuery = new Query("trip-location")
+                                .setFilter(new FilterPredicate(TripLocation.ENTITY_PROPERTY_OWNER, FilterOperator.EQUAL, userEmail));
+    DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+    PreparedQuery tripResults = datastore.prepare(tripQuery);
+    PreparedQuery tripLocationResults = datastore.prepare(tripLocationsQuery);
+    Iterable<Entity> tripEntityIterable = tripResults.asIterable();
+    Iterable<Entity> tripLocationEntityIterable = tripLocationResults.asIterable();
+    
+    // Convert trip location iterable to HashMap with mapping from timestamp to TripLocation object
+    // Provides easy O(1) lookup of locations for a certain trip.
+    Map<Key, List<TripLocation>> tripLocationMap = new HashMap<>();
+    for(Entity entity : tripLocationEntityIterable) {
+      TripLocation location = convertEntityToTripLocation(entity);
+      if(tripLocationMap.containsKey(entity.getParent())) {
+        List<TripLocation> locationsUnderCurrTrip = tripLocationMap.get(entity.getParent());
+        locationsUnderCurrTrip.add(location);
+        tripLocationMap.replace(entity.getParent(), locationsUnderCurrTrip);
+      } else {
+        tripLocationMap.put(entity.getParent(), new ArrayList<>(Arrays.asList(location)));
+      }
+    }
+
+    // Get list of trips without their corresponding locations
+    Map<Trip, List<TripLocation>> userTripsDataResponse = new HashMap<>();
+    for (Entity entity : tripEntityIterable) {
+      Trip trip = convertEntityToTrip(entity);
+      userTripsDataResponse.put(trip, tripLocationMap.get(entity.getKey()));
+    }
+
+    response.setContentType("application/json;");
+    Gson gson = new Gson();
+    String serializedJSON = gson.toJson(userTripsDataResponse);
+    response.getWriter().println(serializedJSON);
+    response.setStatus(HttpServletResponse.SC_OK); 
   }
 
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    UserService userService = UserServiceFactory.getUserService();
-    if (!userService.isUserLoggedIn()) {
-      response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+    String userEmail = AuthChecker.getUserEmail(response);
+    if (userEmail == null) {
       return;
     }
-    String userEmail = userService.getCurrentUser().getEmail();
     JsonObject jsonObject = BodyParser.parseJsonObjectFromRequest(request);
     long timestamp = System.currentTimeMillis();
     
@@ -116,12 +112,11 @@ public class TripsServlet extends HttpServlet {
 
   @Override
   public void doPut(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    UserService userService = UserServiceFactory.getUserService();
-    if (!userService.isUserLoggedIn()) {
-      response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+    String userEmail = AuthChecker.getUserEmail(response);
+    if (userEmail == null) {
       return;
     }
-    String userEmail = userService.getCurrentUser().getEmail();
+    
     JsonObject jsonObject = BodyParser.parseJsonObjectFromRequest(request);
     long timestamp = jsonObject.getAsJsonPrimitive(Trip.ENTITY_PROPERTY_TIMESTAMP).getAsLong();
     
@@ -167,12 +162,10 @@ public class TripsServlet extends HttpServlet {
 
   @Override
   public void doDelete(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    UserService userService = UserServiceFactory.getUserService();
-    if (!userService.isUserLoggedIn()) {
-      response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+    String userEmail = AuthChecker.getUserEmail(response);
+    if (userEmail == null) {
       return;
     }
-    String userEmail = userService.getCurrentUser().getEmail();
     long timestamp = Long.parseLong(request.getParameter("timestamp"));
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
