@@ -486,15 +486,13 @@ async function saveTrip(hotelID, hotelRef, hotelName, timestamp) {
     rating: -1,
     locations: locationData,
   };
-  console.log(timestamp);
 
   if (timestamp) {
     requestBody.timestamp = timestamp;
   }
-  console.log(requestBody);
 
   const response = await fetch('/trip-data', {
-    method: 'PUT',
+    method: timestamp ? 'PUT' : 'POST',
     headers: {
       'content-type': 'application/json',
     },
