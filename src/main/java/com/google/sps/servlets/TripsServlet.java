@@ -4,6 +4,7 @@ import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.PreparedQuery;
 import com.google.appengine.api.datastore.Query;
+import com.google.appengine.api.datastore.Transaction;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query.FilterPredicate;
 import com.google.appengine.api.users.UserService;
@@ -97,17 +98,27 @@ public class TripsServlet extends HttpServlet {
     Entity tripEntity = convertTripToEntity(trip);
 
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-    datastore.put(tripEntity);
+    Transaction txn = datastore.beginTransaction();
+    try {
+      datastore.put(txn, tripEntity);
 
-    JsonArray locationData = jsonObject.getAsJsonArray("locations");
-    Iterator<JsonElement> locationIterator = locationData.iterator();
+      JsonArray locationData = jsonObject.getAsJsonArray("locations");
+      Iterator<JsonElement> locationIterator = locationData.iterator();
 
-    while(locationIterator.hasNext()) {
-      TripLocation location = convertJsonObjectToTripLocation(locationIterator.next().getAsJsonObject(), userEmail);
-      datastore.put(convertTripLocationToEntity(location, tripEntity));
+      while(locationIterator.hasNext()) {
+        TripLocation location = convertJsonObjectToTripLocation(locationIterator.next().getAsJsonObject(), userEmail);
+        datastore.put(txn, convertTripLocationToEntity(location, tripEntity));
+      };
+    
+      txn.commit();
+    } finally {
+      if (txn.isActive()) {
+        txn.rollback();
+        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+      } else {
+        response.setStatus(HttpServletResponse.SC_CREATED);
+      }
     }
-
-    response.setStatus(HttpServletResponse.SC_CREATED);
   }
 
   @Override
@@ -124,40 +135,49 @@ public class TripsServlet extends HttpServlet {
     Entity tripEntity = convertTripToEntity(trip);
 
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-
-    Query tripQuery = new Query("trip")
+    Transaction txn = datastore.beginTransaction();
+    try {
+      Query tripQuery = new Query("trip")
                         .setFilter(new FilterPredicate(Trip.ENTITY_PROPERTY_OWNER, FilterOperator.EQUAL, userEmail))
                         .setFilter(new FilterPredicate(Trip.ENTITY_PROPERTY_TIMESTAMP, FilterOperator.EQUAL, timestamp));
+      
+      Iterable<Entity> tripEntityIterable = datastore.prepare(tripQuery).asIterable();
+      if (Iterables.size(tripEntityIterable) == 0) {
+        /* If we reach this breakpoint, that means no Trip matches the timestamp 
+            to be updated. Send back an error code 404. */
+        response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        return;
+      }
+      Entity existingTrip = tripEntityIterable.iterator().next();
+      Query tripLocationsQuery = new Query("trip-location")
+                                  .setAncestor(existingTrip.getKey());
+      Iterable<Entity> tripLocationEntityIterable = datastore.prepare(tripLocationsQuery).asIterable();
+
+      // delete current data relating to Trip
+      datastore.delete(txn, existingTrip.getKey());
+      for (Entity tripLocationEntity : tripLocationEntityIterable) {
+        datastore.delete(txn, tripLocationEntity.getKey());
+      }
+
+      datastore.put(txn, tripEntity);
+      // build TripLocation objects from request data and put them in Datastore
+      JsonArray locationData = jsonObject.getAsJsonArray("locations");
+      Iterator<JsonElement> locationIterator = locationData.iterator();
+      
+      while(locationIterator.hasNext()) {
+        TripLocation location = convertJsonObjectToTripLocation(locationIterator.next().getAsJsonObject(), userEmail);
+        datastore.put(txn, convertTripLocationToEntity(location, tripEntity));
+      }
     
-    Iterable<Entity> tripEntityIterable = datastore.prepare(tripQuery).asIterable();
-    if (Iterables.size(tripEntityIterable) == 0) {
-      /* If we reach this breakpoint, that means no Trip matches the timestamp 
-          to be updated. Send back an error code 404. */
-      response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-      return;
+      txn.commit();
+    } finally {
+      if (txn.isActive()) {
+        txn.rollback();
+        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+      } else {
+        response.setStatus(HttpServletResponse.SC_OK);
+      }
     }
-    Entity existingTrip = tripEntityIterable.iterator().next();
-    Query tripLocationsQuery = new Query("trip-location")
-                                .setAncestor(existingTrip.getKey());
-    Iterable<Entity> tripLocationEntityIterable = datastore.prepare(tripLocationsQuery).asIterable();
-
-    // delete current data relating to Trip
-    datastore.delete(existingTrip.getKey());
-    for (Entity tripLocationEntity : tripLocationEntityIterable) {
-      datastore.delete(tripLocationEntity.getKey());
-    }
-
-    datastore.put(tripEntity);
-    // build TripLocation objects from request data and put them in Datastore
-    JsonArray locationData = jsonObject.getAsJsonArray("locations");
-    Iterator<JsonElement> locationIterator = locationData.iterator();
-    
-    while(locationIterator.hasNext()) {
-      TripLocation location = convertJsonObjectToTripLocation(locationIterator.next().getAsJsonObject(), userEmail);
-      datastore.put(convertTripLocationToEntity(location, tripEntity));
-    }
-
-    response.setStatus(HttpServletResponse.SC_OK);
   }
 
   @Override
