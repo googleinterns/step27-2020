@@ -386,7 +386,7 @@ async function parseAndRenderHotelResults(json, centerPoint, timestamp) {
                     onClick="saveTrip('${place_id}', 
                                       '${photo_ref}', 
                                       '${name.replace(/'/g, "\\'")}',
-                                      '${timestamp}')"
+                                       ${timestamp})"
                   >
                     CHOOSE
                   </button>
@@ -459,8 +459,8 @@ function degToRad(angle) {
  * @param {string} hotelID  the Place ID for the hotel
  * @param {string} hotelRef the photo reference in Google Place Photos for the hotel.
  * @param {string} hotelName the name of the hotel
- * @param {string|null} timestamp timestamp string of the trip to be updated.
- *                                Null if this is a new trip.
+ * @param {string|null|undefined} timestamp timestamp string of the trip to be updated.
+ *                                          Null/undefined if this is a new trip.
  */
 async function saveTrip(hotelID, hotelRef, hotelName, timestamp) {
   const elem = document.getElementById('hotel-modal');
@@ -487,10 +487,12 @@ async function saveTrip(hotelID, hotelRef, hotelName, timestamp) {
     rating: -1,
     locations: locationData,
   };
+  console.log(timestamp);
 
-  if (timestamp !== null) {
+  if (timestamp) {
     requestBody.timestamp = timestamp;
   }
+  console.log(requestBody);
 
   const response = await fetch('/trip-data', {
     method: 'PUT',
@@ -500,7 +502,7 @@ async function saveTrip(hotelID, hotelRef, hotelName, timestamp) {
     body: JSON.stringify(requestBody),
   });
   if (response.ok) {
-    if (timestamp !== null) {
+    if (timestamp) {
       M.toast({
         html: `Successfully updated ${tripTitle}.`,
       });
@@ -625,14 +627,16 @@ async function fetchAndRenderTripsFromDB() {
                   <button 
                     type="button"
                     onclick="openDeleteModal('${timestamp}')"
-                    class="btn-floating btn-large indigo update-button waves-effect waves-light"
+                    class="btn-floating btn-large indigo update-button waves-effect waves-light tooltipped"
+                    data-tooltip="Delete trip"
                   >
                     <i class="large material-icons">delete</i>
                   </button>
                   <button 
                     type="button"
                     id="edit-button-${timestamp}"
-                    class="btn-floating btn-large indigo update-button waves-effect waves-light"
+                    class="btn-floating btn-large indigo update-button waves-effect waves-light tooltipped"
+                    data-tooltip="Edit trip info"
                   >
                     <i class="large material-icons">mode_edit</i>
                   </button>
@@ -656,7 +660,9 @@ async function fetchAndRenderTripsFromDB() {
         </div>
       </div>
     `;
-    
+    // initialize tooltips for edit and delete trip buttons
+    const tooltipElems = document.querySelectorAll('.tooltipped');
+    const tooltipInstances = M.Tooltip.init(tooltipElems, undefined);
     document.getElementById(`trip-${timestamp}-locations`).innerHTML = locations
       .map(({ weight, placeName }, index) => {
         return `
