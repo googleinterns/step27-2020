@@ -5,7 +5,6 @@ function init() {
   document.getElementById('my-trips-link').classList.add('active');
   document.getElementById('my-trips-link-m').classList.add('active');
   authReload();
-  findNearbyPlaces();
   fetchAndRenderTripsFromDB();
 }
 
@@ -363,7 +362,7 @@ async function parseAndRenderHotelResults(json, centerPoint, timestamp) {
     json = await Promise.all(json);
     json.sort((a, b) => a.distance_center - b.distance_center);
 
-    hotelsMapElem.style.width = '100%';
+    hotelsMapElem.style.display = 'block';
     hotelsMapElem.style.width = '100%';
     hotelsMapElem.style.height = '400px';
     hotelsMapElem.style.marginBottom = '2em';
