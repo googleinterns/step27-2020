@@ -14,7 +14,8 @@
 
 // This file contains all the constant scripts to be loaded on each page.
 
-const GOOGLE_API_KEY = 'AIzaSyDlLtx69Y4-65_dCK67ZX3lzKTYpyc5CWI';
+renderNavbar();
+renderFooter();
 
 // Initialize Materialize JS elements when DOM content is fully loaded
 document.addEventListener('DOMContentLoaded', () => {
@@ -25,6 +26,50 @@ document.addEventListener('DOMContentLoaded', () => {
   const formSelectElems = document.querySelectorAll('select');
   const formSelectInstances = M.FormSelect.init(formSelectElems, undefined);
 });
+
+/**
+ * Renders the footer code shared across all pages to the div with id "footer-section"
+ */
+function renderFooter() {
+  document.getElementById('footer-section').innerHTML = `
+    <footer class="page-footer blue lighten-1">
+      <div class="footer-copyright">
+        <div class="container">
+          Created by Peter Wu, Joshua Lewis, and Miguel Fabrigas
+        </div>
+      </div>
+    </footer>
+  `;
+}
+
+/**
+ * Renders the footer code shared across all pages to the <nav> tag with id
+ * "
+ */
+function renderNavbar() {
+  document.getElementById('navbar-section').innerHTML = `
+    <div class="nav-wrapper container">
+      <a href="index.html" class="brand-logo">Overnightly</a>
+      <a href="#" data-target="mobile-demo" class="sidenav-trigger">
+        <i class="material-icons">menu</i>
+      </a>
+      <ul class="right hide-on-med-and-down" id="menu-links">
+        <li id="index-link"><a href="index.html">Home</a></li>
+        <li id="my-trips-link"><a href="my-trips.html">My Trips</a></li>
+        <li id="plan-for-me-link"><a href="place-suggestions.html">Plan For Me</a></li>
+        <li id="trips-network-link"><a href="trips-network.html">Trips Network</a></li>
+        <li id="itinerary-link"><a href="itinerary-overview.html">Itinerary</a></li>
+      </ul>
+    </div>
+  `;
+  document.getElementById('mobile-demo').innerHTML = `
+    <li id="index-link-m"><a href="index.html">Home</a></li>
+    <li id="my-trips-link-m"><a href="my-trips.html">My Trips</a></li>
+    <li id="plan-for-me-link-m"><a href="place-suggestions.html">Plan For Me</a></li>
+    <li id="trips-network-link-m"><a href="trips-network.html">Trips Network</a></li>
+    <li id="itinerary-link-m"><a href="itinerary-overview.html">Itinerary</a></li>
+  `;
+}
 
 /**
  * Checks auth status of user and redirects to auth page if

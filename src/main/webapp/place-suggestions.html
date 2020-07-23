@@ -45,27 +45,8 @@
     <meta name="theme-color" content="#ffffff" />
   </head>
   <body onload="init();">
-    <nav class="blue darken-2" role="navigation">
-      <div class="nav-wrapper container">
-        <a href="index.html" class="brand-logo">Overnightly</a>
-        <a href="#" data-target="mobile-demo" class="sidenav-trigger">
-          <i class="material-icons">menu</i>
-        </a>
-        <ul class="right hide-on-med-and-down" id="menu-links">
-          <li><a href="index.html">Home</a></li>
-          <li><a href="my-trips.html">My Trips</a></li>
-          <li class="active"><a href="#">Plan For Me</a></li>
-          <li><a href="trips-network.html">Trips Network</a></li>
-        </ul>
-      </div>
-    </nav>
-
-    <ul class="sidenav" id="mobile-demo">
-      <li><a href="index.html">Home</a></li>
-      <li><a href="my-trips.html">My Trips</a></li>
-      <li class="active"><a href="#">Plan For Me</a></li>
-      <li><a href="trips-network.html">Trips Network</a></li>
-    </ul>
+    <nav class="blue darken-2" role="navigation" id="navbar-section"></nav>
+    <ul class="sidenav" id="mobile-demo"></ul>
 
     <div id="map"></div>
 
@@ -76,7 +57,7 @@
             What city do you want to visit?
           </h5>
           <div id="city-input-field" class="input-field col s12 m5">
-            <input placeholder="Enter a city" id="city-input" type="text">
+            <input placeholder="Enter a city" id="city-input" type="text" />
           </div>
         </div>
 
@@ -115,17 +96,12 @@
       <div id="place-cards-container" class="row"></div>
     </div>
 
-    <footer class="page-footer blue lighten-1">
-      <div class="footer-copyright">
-        <div class="container">
-          Created by Peter Wu, Joshua Lewis, and Miguel Fabrigas
-        </div>
-      </div>
-    </footer>
+    <div id="footer-section"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-    <script src="scripts/constant-script.js"></script>
+    <script src="scripts/common.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDlLtx69Y4-65_dCK67ZX3lzKTYpyc5CWI&libraries=places"></script>
     <script src="scripts/place-suggestions.js"></script>
+    <script src="scripts/service-account.js"></script>
   </body>
 </html>

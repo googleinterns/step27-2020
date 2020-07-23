@@ -1,4 +1,13 @@
 /**
+ * Function run on page load for index.html.
+ */
+function init() {
+  document.getElementById('index-link').classList.add('active');
+  document.getElementById('index-link-m').classList.add('active');
+  authUser();
+}
+
+/**
  * Check if user is logged in and performs respective behavior to the DOM of the homepage:
  * if user logged in, show navbar options for auth-walled pages and hide sign-in button
  * if user logged out, hide navbar options for auth-walled pages and show sign-in button

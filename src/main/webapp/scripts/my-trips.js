@@ -2,8 +2,9 @@
  * Function run on page load that runs auth checking and other functions
  */
 function init() {
+  document.getElementById('my-trips-link').classList.add('active');
+  document.getElementById('my-trips-link-m').classList.add('active');
   authReload();
-  findNearbyPlaces();
   fetchAndRenderTripsFromDB();
 }
 
@@ -302,7 +303,7 @@ async function parseAndRenderHotelResults(json, centerPoint, timestamp) {
   const modalContent = document.getElementById('hotel-results');
   const hotelsMapElem = document.getElementById('hotels-map');
   hotelsMapElem.style.height = '';
- 
+
   if (!json || json.length === 0) {
     modalContent.innerText =
       "We couldn't find any hotels nearby. Sorry about that.";
@@ -360,8 +361,8 @@ async function parseAndRenderHotelResults(json, centerPoint, timestamp) {
     });
     json = await Promise.all(json);
     json.sort((a, b) => a.distance_center - b.distance_center);
-    
-    hotelsMapElem.style.width = '100%';
+
+    hotelsMapElem.style.display = 'block';
     hotelsMapElem.style.width = '100%';
     hotelsMapElem.style.height = '400px';
     hotelsMapElem.style.marginBottom = '2em';
