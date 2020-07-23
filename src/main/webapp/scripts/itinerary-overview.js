@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 async function displayMap() {
-     await getTripData();
+    await getTripData();
 
     document.getElementById("mode").addEventListener("change", function() {
         displayRoute(start, waypoints, end);
@@ -23,71 +23,59 @@ async function displayMap() {
  */
 
 async function getTripData(){
-    const response = await fetch("/trip-data");
-    const results = await response.json();
-    console.log(results);
-    const keys = Object.keys(results);
 
-    let ID;
-    let name
-    let locationsArray;
+    const response = await fetch('/trip-data', {
+        method: 'GET',
+    });
+    const tripsData = await response.json();
+    const keys = Object.keys(tripsData);
 
-    for (const key of keys){
-        const{hotelID, hotelName} = parseSerializedJson(key);
-        ID = hotelID;
-        name = hotelName;
-        locationsArray = (results[key]);
+    //Hotel
+    let hotel_ID;
+    let hotel_name;
+
+    //Locations
+    let locationArray;
+    let waypointNames = [];
+    let waypointIDs = [];
+
+    for (let key of keys) {
+        // Fields of tripsData are currently in string format.
+        // Deserialize using parseSerializedJson.
+        const {
+            hotelID,
+            hotelName,
+        } = parseSerializedJson(key);
+        const locations = tripsData[key];
+
+        hotel_ID = hotelID;
+        hotel_name = hotelName;
+        locationArray = locations;
     }
 
-    console.log("Hotel ID: " + ID);
-    console.log("Hotel Name:  " + name);
-    console.log("Locations A: " + locationsArray);
-
-    for(let i = 0; i < locationsArray.length; i++){
-        console.log("Place ID: " + JSON.stringify(locationsArray[i]));
+    for(let object of Object.values(locationArray)){
+        for (let key of Object.keys(object)){
+            if(key === "placeID"){
+                waypointIDs.push(object[key]);
+            }else if(key === "placeName"){
+                waypointNames.push(object[key]);
+            }
+        }
     }
 
-    geocodePlaceId(ID, locationsArray);
+    console.log("Names: " + waypointNames);
+    console.log("ID's: " + waypointIDs);
+
+    calculateRoute(hotel_name,waypointNames)
+    geocodePlaceId(hotel_ID, waypointIDs);
 }
 
 /**
  * Takes the hotel PlaceID and the locationsPlaceID Array from getTripData and works to convert them from placeID's to
  * addresses that will be used in calculateRoute()
  */
-function geocodePlaceId(hotelID, placeIDArray) {
-    console.log("Converting Place ID's to Address");
-    let waypointsArray = [];
-    let hotel = "";
+function geocodePlaceId(hotelID, waypointIDs) {
 
-    const geocoder = new google.maps.Geocoder();
-    for(let place of placeIDArray){
-        geocoder.geocode({placeId: place}, function(results, status) {
-            if (status === "OK") {
-                if (results[0]) {
-                    waypointsArray.push(results[0].geometry.location);
-                } else {
-                    window.alert("No results found");
-                }
-            } else {
-                window.alert("Geocoder failed due to: " + status);
-            }
-        });
-    }
-
-    geocoder.geocode({placeId: hotelID}, function(results, status) {
-        if (status === "OK") {
-            if (results[0]) {
-                hotel += (results[0].geometry.location);
-            } else {
-                window.alert("No results found");
-            }
-        } else {
-            window.alert("Geocoder failed due to: " + status);
-        }
-    });
-
-    console.log("Done Converting Place ID's");
-    calculateRoute(hotel, waypointsArray);
 }
 
 /**
@@ -98,13 +86,12 @@ function geocodePlaceId(hotelID, placeIDArray) {
 
 //Hard coded for test (Gonna make minor changes for final product)
 async function calculateRoute(hotel, waypointsArray) {
-    console.log("Calculating Optimal Route");
-
     start = "5902 N President George Bush Hwy, Garland, TX 75044, USA";
 
     let rawWaypoints = ["525 Talbert Dr, Plano, TX 75093, USA",
         "2134 Zurek Ln, Heath, TX 75126, USA",
-        "4234 Maple Ave #2403, Dallas, TX 75219, USA",]
+        "4234 Maple Ave #2403, Dallas, TX 75219, USA",
+        "1904 Oates Dr, Mesquite, TX 75150"];
 
     waypoints = [];
     end = "";
@@ -122,8 +109,6 @@ async function calculateRoute(hotel, waypointsArray) {
 
     end += rawWaypoints.pop(0);
 
-    console.log("Done Calculating Optimal Route");
-
     displayRoute(start,waypoints,end);
 }
 
@@ -134,7 +119,6 @@ async function calculateRoute(hotel, waypointsArray) {
  * @param end - the "destination" or the last point in the users route.
  */
 function displayRoute(start, waypoints, end) {
-    console.log("Starting to Display Route")
 
     const directionsRenderer = new google.maps.DirectionsRenderer();
     const directionsService = new google.maps.DirectionsService();
@@ -174,7 +158,6 @@ function displayRoute(start, waypoints, end) {
             }
         }
     );
-    console.log("Done displaying route");
 }
 
 /**
