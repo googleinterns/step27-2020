@@ -45,34 +45,9 @@
     <meta name="theme-color" content="#ffffff" />
     <script src="scripts/index.js"></script>
   </head>
-  <body onload="authUser();">
-    <nav class="blue darken-2" role="navigation">
-      <div class="nav-wrapper container">
-        <a href="#" class="brand-logo">Overnightly</a>
-        <a href="#" data-target="mobile-demo" class="sidenav-trigger">
-          <i class="material-icons">menu</i>
-        </a>
-
-        <ul class="right hide-on-med-and-down" id="menu-links">
-          <li class="active"><a href="#">Home</a></li>
-          <li><a class="auth-required" href="my-trips.html">My Trips</a></li>
-          <li><a class="auth-required" href="place-suggestions.html">Plan For Me</a></li>
-          <li>
-            <a class="auth-required" href="trips-network.html">Trips Network</a>
-          </li>
-          <li><a href="itinerary-overview.html">Itinerary</a></li> <!-- Temporary Button to test map on server -->
-        </ul>
-      </div>
-    </nav>
-    <ul class="sidenav" id="mobile-demo">
-      <li class="active"><a href="#">Home</a></li>
-      <li><a class="auth-required" href="my-trips.html">My Trips</a></li>
-      <li><a class="auth-required" href="place-suggestions.html">Plan For Me</a></li>
-      <li>
-        <a class="auth-required" href="trips-network.html">Trips Network</a>
-      </li>
-      <li><a href="itinerary-overview.html">Itinerary</a></li> <!-- Temporary Button to test map on server -->
-    </ul>
+  <body onload="init();">
+    <nav class="blue darken-2" role="navigation" id="navbar-section"></nav>
+    <ul class="sidenav" id="mobile-demo"></ul>
 
     <div class="hero-container">
       <div class="container">
@@ -156,6 +131,6 @@
     </footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-    <script src="scripts/constant-script.js"></script>
+    <script src="scripts/common.js"></script>
   </body>
 </html>

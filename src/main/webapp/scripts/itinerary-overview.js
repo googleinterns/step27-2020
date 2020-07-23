@@ -2,6 +2,11 @@ let start;
 let waypoints;
 let end;
 
+function init() {
+    document.getElementById('itinerary-link').classList.add('active');
+    document.getElementById('itinerary-link-m').classList.add('active');
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const elems = document.querySelectorAll('select');
     const instances = M.FormSelect.init(elems, undefined);

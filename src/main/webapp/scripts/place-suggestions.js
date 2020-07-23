@@ -2,6 +2,8 @@ let city;
 let filter;
 
 function init() {
+  document.getElementById('plan-for-me-link').classList.add('active');
+  document.getElementById('plan-for-me-link-m').classList.add('active');
   authReload();
   addCityAutocomplete();
   addFilterHandler();

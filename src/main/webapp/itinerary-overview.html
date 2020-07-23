@@ -19,8 +19,9 @@
             href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
     />
 </head>
-<body onload="displayMap()">
-
+<body onload="init(); displayMap()">
+    <nav class="blue darken-2" role="navigation" id="navbar-section"></nav>
+    <ul class="sidenav" id="mobile-demo"></ul>
 <div id="map"></div>
 
 <div class="row">
@@ -48,7 +49,8 @@
         ></script>
 
         <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-        <script src="scripts/constant-script.js"></script>
+        <script src="scripts/common.js"></script>
         <script src="scripts/itinerary-overview.js"></script>
+        <script src="scripts/service-account.js"></script>
     </body>
 </html>
