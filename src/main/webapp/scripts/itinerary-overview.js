@@ -23,7 +23,6 @@ async function displayMap() {
  */
 
 async function getTripData(){
-
     const response = await fetch('/trip-data', {
         method: 'GET',
     });
@@ -66,7 +65,6 @@ async function getTripData(){
     console.log("Names: " + waypointNames);
     console.log("ID's: " + waypointIDs);
 
-    calculateRoute(hotel_name,waypointNames)
     geocodePlaceId(hotel_ID, waypointIDs);
 }
 
@@ -76,6 +74,43 @@ async function getTripData(){
  */
 function geocodePlaceId(hotelID, waypointIDs) {
 
+    const geocoder = new google.maps.Geocoder();
+
+    let hotelAddress = "";
+    let waypointAddresses = [];
+
+    for(let placeId of waypointIDs){
+        geocoder.geocode({ placeId: placeId }, (results, status) => {
+            if (status === "OK") {
+                if (results[0]) {
+                    console.log("Valid Address: " + results[0].formatted_address)
+                    waypointAddresses.push(results[0].formatted_address);
+                } else {
+                    window.alert("No results found");
+                }
+            } else {
+                window.alert("Geocoder failed due to: " + status);
+            }
+        });
+    }
+
+    geocoder.geocode({ placeId: hotelID }, (results, status) => {
+        if (status === "OK") {
+            if (results[0]) {
+                console.log("Hotel Address: " + results[0].formatted_address)
+                hotelAddress += results[0].formatted_address;
+            } else {
+                window.alert("No results found");
+            }
+        } else {
+            window.alert("Geocoder failed due to: " + status);
+        }
+    });
+
+    console.log("Hotel Address: " + hotelAddress)
+    console.log("Waypoints Addresses: " + waypointAddresses)
+
+    calculateRoute(hotelAddress, waypointAddresses)
 }
 
 /**
@@ -85,11 +120,10 @@ function geocodePlaceId(hotelID, waypointIDs) {
  */
 
 //Hard coded for test (Gonna make minor changes for final product)
-async function calculateRoute(hotel, waypointsArray) {
+function calculateRoute(hotel, waypointsArray) {
     start = "5902 N President George Bush Hwy, Garland, TX 75044, USA";
 
     let rawWaypoints = ["525 Talbert Dr, Plano, TX 75093, USA",
-        "2134 Zurek Ln, Heath, TX 75126, USA",
         "4234 Maple Ave #2403, Dallas, TX 75219, USA",
         "1904 Oates Dr, Mesquite, TX 75150"];
 
@@ -107,7 +141,13 @@ async function calculateRoute(hotel, waypointsArray) {
         }
     }
 
+    for (let waypoint of waypoints){
+        console.log("Waypoint: " + waypoint)
+    }
+
     end += rawWaypoints.pop(0);
+
+    console.log("End: " + end)
 
     displayRoute(start,waypoints,end);
 }
