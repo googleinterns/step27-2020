@@ -163,7 +163,8 @@ function openTripEditor(timestamp, locationData, title) {
            <div class="col s3 m1">
             <a 
               id="location-${i}-delete"
-              class="btn-floating indigo waves-effect" 
+              class="btn-floating indigo waves-effect tooltipped" 
+              data-tooltip="Delete this location"
               onclick="deleteLocation(${i})"
             >
               <i class="material-icons">remove_circle</i>
@@ -235,7 +236,14 @@ function addLocation() {
       </div>
       <div class="col s9 m5">
         <p class="range-field weight-slider">
-          <label for="location-${numLocations}-weight" id="location-${numLocations}-weight-label">Weight</label>
+          <label 
+            for="location-${numLocations}-weight" 
+            id="location-${numLocations}-weight-label"
+            class="tooltipped"
+            data-tooltip="Assign how close you want to be to this location"
+          >
+            Weight
+          </label>
           <input
             type="range"
             name="location-${numLocations}-weight"
@@ -248,7 +256,8 @@ function addLocation() {
       <div class="col s3 m1">
         <a 
           id="location-${numLocations}-delete"
-          class="btn-floating indigo waves-effect" 
+          class="btn-floating indigo waves-effect tooltipped"
+          data-tooltip="Delete this location" 
           onclick="deleteLocation(${numLocations})"
         >
           <i class="material-icons">remove_circle</i>
@@ -270,11 +279,15 @@ function addLocation() {
  * @throws Will throw an error if the locationNum is invalid.
  */
 function deleteLocation(locationNum) {
-  console.log(markers);
   if (locationNum > markers.length || locationNum < 1) {
     throw new Error("Cannot delete invalid location");
   }
   const index = locationNum - 1;
+  // Close current tooltip
+  const currDeleteButton = document.getElementById(`location-${locationNum}-delete`);
+  const instance = M.Tooltip.getInstance(currDeleteButton);
+  instance.close();
+  
   // Remove trip from DOM and shift following trip location nums down 1
   const elem = document.getElementById(`location-${locationNum}-container`);
   elem.parentElement.removeChild(elem);
@@ -286,7 +299,7 @@ function deleteLocation(locationNum) {
     const weight = document.getElementById(`location-${i}-weight`);
     const deleteButton = document.getElementById(`location-${i}-delete`);
     const locationShift = `location-${i - 1}`;
-   
+ 
     locationContainer.id = `${locationShift}-container`;
     locationLabel.id = `${locationShift}-label`;
     location.id = `${locationShift}`;
