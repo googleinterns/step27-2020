@@ -1,5 +1,6 @@
 let city;
 let filter;
+const placeCardsContainer = document.getElementById('place-cards-container');
 
 function init() {
   authReload();
@@ -52,6 +53,7 @@ async function findPlacesInCity(city, filter) {
 }
 
 async function getPlaceCardInformation(places) {
+  placeCardsContainer.innerHTML = LOADING_ANIMATION_HTML;
   let placeDetailsArr = [];
   for(let i = 0; i < places.length; i++) {
     const { place_id } = places[i];
@@ -64,8 +66,7 @@ async function getPlaceCardInformation(places) {
 }
 
 function renderPlaceCards(places) {
-  const placeCardContainer = document.getElementById('place-cards-container');
-  placeCardContainer.innerHTML = places
+  placeCardsContainer.innerHTML = places
     .map(
       ({ phoneNumber, name, photoUrl, priceLevel, rating, address, website }) => 
         `
