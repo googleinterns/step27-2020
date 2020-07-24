@@ -147,7 +147,7 @@ function isReady(){
         console.log("Ready");
         console.log("Finished Array: " + waypointAddresses);
         console.log("Hotel Address: " + hotelAddress);
-        calculateRoute(waypointAddresses, hotelAddress);
+        calculateRoute(hotelAddress, waypointAddresses);
     }else{
         console.log("Not Ready");
     }
@@ -161,22 +161,18 @@ function isReady(){
 
 //Hard coded for test (Gonna make minor changes for final product)
 function calculateRoute(hotel, waypointsArray) {
-    start = "5902 N President George Bush Hwy, Garland, TX 75044, USA";
-
-    let rawWaypoints = ["525 Talbert Dr, Plano, TX 75093, USA",
-        "4234 Maple Ave #2403, Dallas, TX 75219, USA",
-        "1904 Oates Dr, Mesquite, TX 75150"];
+    start = hotel; //"5902 N President George Bush Hwy, Garland, TX 75044, USA";
 
     waypoints = [];
     end = "";
 
-    let length = rawWaypoints.length;
+    let length = waypointsArray.length;
 
-    while(rawWaypoints.length > 1){
-        for(let i = 0; i < rawWaypoints.length; i++){
+    while(waypointsArray.length > 1){
+        for(let i = 0; i < waypointsArray.length; i++){
             if(waypoints.length !== (length - 1)){
-                waypoints.push(rawWaypoints[0]);
-                rawWaypoints.splice(0, 1);
+                waypoints.push(waypointsArray[0]);
+                waypointsArray.splice(0, 1);
             }
         }
     }
@@ -185,7 +181,7 @@ function calculateRoute(hotel, waypointsArray) {
         console.log("Waypoint: " + waypoint);
     }
 
-    end += rawWaypoints.pop(0);
+    end += waypointsArray.pop(0);
 
     console.log("End: " + end);
 
