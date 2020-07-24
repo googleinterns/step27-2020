@@ -3,6 +3,8 @@ let filter;
 const placeCardsContainer = document.getElementById('place-cards-container');
 
 function init() {
+  document.getElementById('plan-for-me-link').classList.add('active');
+  document.getElementById('plan-for-me-link-m').classList.add('active');
   authReload();
   addCityAutocomplete();
   addFilterHandler();

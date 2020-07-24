@@ -2,8 +2,9 @@
  * Function run on page load that runs auth checking and other functions
  */
 function init() {
+  document.getElementById('my-trips-link').classList.add('active');
+  document.getElementById('my-trips-link-m').classList.add('active');
   authReload();
-  findNearbyPlaces();
   fetchAndRenderTripsFromDB();
 }
 
@@ -13,12 +14,15 @@ let mapInitialized;
 let markers;
 /**
  * Adds a trip editor interface to the DOM, which the user can use to add a trip.
+ * @param {string|null} timestamp timestamp string of the trip to be updated.
+ *                                Null if this is a new trip.
+ * @param {Array} locationData    Array containing location objects with
+ *                                placeID, placeName, and weight fields.
+ *                                Null if this is a new trip.
+ * @param {string} title          The current title of the trip. Null
+ *                                if this is a new trip.
  */
-function openTripEditor() {
-  numLocations = 1;
-  locationPlaceObjects = [''];
-  mapInitialized = false;
-  markers = [''];
+function openTripEditor(timestamp, locationData, title) {
   document.getElementById('open-close-button-area').innerHTML = `
     <button
       onclick="cancelTripCreation()"
@@ -27,6 +31,7 @@ function openTripEditor() {
       CANCEL
     </button>
   `;
+
   document.getElementById('trip-editor-container').innerHTML = `
     <div class="row">
       <div class="col s12 m8">
@@ -34,7 +39,7 @@ function openTripEditor() {
           <div class="card-content">
           <div class="card-title">
             <div class="row">
-              <div class="input-field col s12">
+              <div class="col s12">
                 <label for="trip-title">Trip Name</label>  
                 <input id="trip-title" type="text" required />
               </div>
@@ -56,6 +61,7 @@ function openTripEditor() {
                         id="location-1-weight"
                         min="1"
                         max="5"
+                        step="1"
                       />
                     </p>
                   </div>
@@ -77,6 +83,7 @@ function openTripEditor() {
                   <button
                     type="button"
                     onclick="findHotel()"
+                    id="find-hotel-button"
                     class="btn-large waves-effect indigo darken-2"
                   >
                     Next
@@ -99,6 +106,100 @@ function openTripEditor() {
       </div>
     </div>
   `;
+  if (timestamp === null) {
+    numLocations = 1;
+    locationPlaceObjects = [''];
+    mapInitialized = false;
+    markers = [''];
+
+    // add autocomplete through Places API for first location
+    const location1 = document.getElementById('location-1');
+    const autocomplete = new google.maps.places.Autocomplete(location1);
+    createPlaceHandler(autocomplete, 1);
+  } else {
+    const findHotelButton = document.getElementById('find-hotel-button');
+    findHotelButton.onclick = () => findHotel(timestamp);
+    findHotelButton.innerText = 'Update';
+    locationPlaceObjects = [];
+    markers = [];
+    numLocations = locationData.length;
+
+    mapInitialized = false;
+    // Populate frontend fields with existing data
+    document.getElementById('trip-title').value = title;
+    document.getElementById('location-1').value = locationData[0].placeName;
+    document.getElementById('location-1-weight').value = locationData[0].weight;
+    const location = document.getElementById('location-1');
+    const autocomplete = new google.maps.places.Autocomplete(location);
+    createPlaceHandler(autocomplete, 1);
+    for (let i = 2; i <= numLocations; i++) {
+      document.getElementById('trip-locations-container').insertAdjacentHTML(
+        'beforeend',
+        `<div class="row">
+          <div class="col s6">
+            <label for="location-${i}">Location ${i}</label>
+            <input 
+              id="location-${i}" 
+              type="text" 
+              value="${locationData[i - 1].placeName}"
+            />
+          </div>
+          <div class="col s6">
+            <p class="range-field weight-slider">
+              <label for="location-${i}-weight">Weight</label>
+              <input
+                type="range"
+                name="location-${i}-weight"
+                id="location-${i}-weight"
+                min="1"
+                value="${locationData[i - 1].weight}"
+                max="5"
+                step="1"
+              />
+            </p>
+          </div>
+        </div>
+        `
+      );
+      // add autocomplete through Places API for new location
+      const location = document.getElementById(`location-${i}`);
+      const autocomplete = new google.maps.places.Autocomplete(location);
+      createPlaceHandler(autocomplete, i);
+    }
+    // Use PlacesService to populate locationPlaceObjects and markers, adding them to the map
+    const service = new google.maps.places.PlacesService(map);
+    locationData.map(({ placeID, placeName }, index) => {
+      service.getDetails({ placeId: placeID }, (place, status) => {
+        if (status === google.maps.places.PlacesServiceStatus.OK) {
+          const { geometry, name } = place;
+          const { location, viewport } = geometry;
+          if (!mapInitialized) {
+            map = new google.maps.Map(document.getElementById('editor-map'), {
+              center: location,
+              zoom: 13,
+            });
+            mapInitialized = true;
+          }
+          const marker = new google.maps.Marker({
+            map: map,
+            position: location,
+          });
+          place.locationNum = index + 1;
+          locationPlaceObjects.push(place);
+          markers.push(marker);
+          const infoWindow = new google.maps.InfoWindow({
+            content: `<h5 class="infowindow-text">${name}</h5>
+                <p class="infowindow-text">Location ${index + 1}</p>`,
+          });
+          google.maps.event.addListener(marker, 'click', () => {
+            infoWindow.open(map, marker);
+          });
+          fitMapToMarkers(map, markers);
+        }
+      });
+    });
+  }
+
   // initialize tooltip for Add Location button
   const tooltipElems = document.querySelectorAll('.tooltipped');
   const tooltipInstances = M.Tooltip.init(tooltipElems, undefined);
@@ -106,11 +207,6 @@ function openTripEditor() {
   // prevent page reload on form submit
   const form = document.getElementById('trip-editor-form');
   form.addEventListener('submit', (e) => e.preventDefault());
-
-  // add autocomplete through Places API for first location
-  const location1 = document.getElementById('location-1');
-  const autocomplete = new google.maps.places.Autocomplete(location1);
-  createPlaceHandler(autocomplete, 1);
 }
 
 /**
@@ -156,7 +252,7 @@ function cancelTripCreation() {
   document.getElementById('trip-editor-container').innerHTML = '';
   document.getElementById('open-close-button-area').innerHTML = `
     <button
-      onclick="openTripEditor()"
+      onclick="openTripEditor(null, null, null)"
       class="btn-large add-trip-button waves-effect green darken-1"
     >
       ADD TRIP
@@ -166,8 +262,10 @@ function cancelTripCreation() {
 
 /**
  * Opens modal with results for user to confirm and save trip.
+ * @param {string|null} timestamp timestamp string of the trip to be updated.
+ *                                Null if this is a new trip.
  */
-async function findHotel() {
+async function findHotel(timestamp) {
   document.getElementById('hotel-results').innerHTML = LOADING_ANIMATION_HTML;
   if (numLocations !== getNumPlaceObjectsInArray(locationPlaceObjects)) {
     M.Toast.dismissAll();
@@ -183,11 +281,14 @@ async function findHotel() {
   // Get center point from which to start searching for hotels
   const coords = placesToCoordsWeightArray(locationPlaceObjects);
   const [lat, lng] = centerOfMass(coords);
+  document.getElementById('hotels-map').innerHTML = '';
+  document.getElementById('hotels-map').style.display = 'none';
+
   const response = await fetch(
     `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/textsearch/json?type=lodging&location=${lat},${lng}&radius=10000&key=${GOOGLE_API_KEY}&output=json`
   );
   const { results } = await response.json();
-  parseAndRenderHotelResults(results, { lat: lat, lng: lng });
+  parseAndRenderHotelResults(results, { lat: lat, lng: lng }, timestamp);
 }
 
 /**
@@ -195,12 +296,14 @@ async function findHotel() {
  * cards to the hotel results modal.
  * @param {Object} json the resulting JS object from calling the
  *                      Places API for the centerpoint.
+ * @param {string|null} timestamp timestamp string of the trip to be updated.
+ *                                Null if this is a new trip.
  */
-async function parseAndRenderHotelResults(json, centerPoint) {
+async function parseAndRenderHotelResults(json, centerPoint, timestamp) {
   const modalContent = document.getElementById('hotel-results');
   const hotelsMapElem = document.getElementById('hotels-map');
   hotelsMapElem.style.height = '';
-  hotelsMapElem.innerHTML = '';
+
   if (!json || json.length === 0) {
     modalContent.innerText =
       "We couldn't find any hotels nearby. Sorry about that.";
@@ -259,6 +362,7 @@ async function parseAndRenderHotelResults(json, centerPoint) {
     json = await Promise.all(json);
     json.sort((a, b) => a.distance_center - b.distance_center);
 
+    hotelsMapElem.style.display = 'block';
     hotelsMapElem.style.width = '100%';
     hotelsMapElem.style.height = '400px';
     hotelsMapElem.style.marginBottom = '2em';
@@ -281,9 +385,12 @@ async function parseAndRenderHotelResults(json, centerPoint) {
                   <p>${formatted_address}</p>
                 </div>
                 <div class="card-action center">
-                  <button 
+                  <button
                     class="btn indigo" 
-                    onClick="saveTrip('${place_id}', '${photo_ref}', '${name}')"
+                    onClick="saveTrip('${place_id}', 
+                                      '${photo_ref}', 
+                                      '${name.replace(/'/g, "\\'")}',
+                                       ${timestamp})"
                   >
                     CHOOSE
                   </button>
@@ -356,8 +463,10 @@ function degToRad(angle) {
  * @param {string} hotelID  the Place ID for the hotel
  * @param {string} hotelRef the photo reference in Google Place Photos for the hotel.
  * @param {string} hotelName the name of the hotel
+ * @param {string|null|undefined} timestamp timestamp string of the trip to be updated.
+ *                                          Null/undefined if this is a new trip.
  */
-async function saveTrip(hotelID, hotelRef, hotelName) {
+async function saveTrip(hotelID, hotelRef, hotelName, timestamp) {
   const elem = document.getElementById('hotel-modal');
   const instance = M.Modal.getInstance(elem);
   instance.close();
@@ -373,8 +482,9 @@ async function saveTrip(hotelID, hotelRef, hotelName) {
     });
   }
 
+  const tripTitle = document.getElementById('trip-title').value;
   const requestBody = {
-    title: document.getElementById('trip-title').value,
+    title: tripTitle,
     hotel_id: hotelID,
     hotel_img: hotelRef,
     hotel_name: hotelName,
@@ -382,19 +492,73 @@ async function saveTrip(hotelID, hotelRef, hotelName) {
     locations: locationData,
   };
 
-  await fetch('/trip-data', {
-    method: 'POST',
+  if (timestamp) {
+    requestBody.timestamp = timestamp;
+  }
+
+  const response = await fetch('/trip-data', {
+    method: timestamp ? 'PUT' : 'POST',
     headers: {
       'content-type': 'application/json',
     },
     body: JSON.stringify(requestBody),
   });
-  cancelTripCreation();
-  fetchAndRenderTripsFromDB();
+  if (response.ok) {
+    if (timestamp) {
+      M.toast({
+        html: `Successfully updated ${tripTitle}.`,
+      });
+    }
+    cancelTripCreation();
+    fetchAndRenderTripsFromDB();
+  } else {
+    M.toast({
+      html: 'There was an error when saving your trip. Please try again.',
+    });
+  }
+}
+
+/**
+ * Deletes a trip and its corresponding locations from the DB using
+ * its timestamp as the identifier.
+ * @param {string} timestamp The timestamp string for the trip to delete.
+ */
+async function deleteTrip(timestamp) {
+  const response = await fetch(`/trip-data?timestamp=${timestamp}`, {
+    method: 'DELETE',
+    headers: {
+      'content-type': 'application/json',
+    },
+  });
+  if (response.ok) {
+    M.toast({
+      html: 'Trip successfully deleted.',
+    });
+    fetchAndRenderTripsFromDB();
+  } else {
+    M.toast({
+      html:
+        'There was a problem when attempting to delete your trip. Please try again.',
+    });
+  }
+}
+
+/**
+ * Opens the delete confirmation modal and sets the onclick function
+ * that gets called when the user confirms the deletion.
+ * @param {string} timestamp The timestamp string for the trip to delete.
+ */
+function openDeleteModal(timestamp) {
+  const deleteConfirmElem = document.getElementById('modal-delete-btn');
+  deleteConfirmElem.onclick = () => deleteTrip(timestamp);
+  const elem = document.getElementById('delete-modal');
+  const instance = M.Modal.getInstance(elem);
+  instance.open();
 }
 
 /**
  * Fetches trip data from the DB and renders each trip to the page.
+ * Calls to this function are idempotent to the DOM.
  */
 async function fetchAndRenderTripsFromDB() {
   const EMPTY_PLANNED_TRIPS_HTML = `
@@ -430,7 +594,6 @@ async function fetchAndRenderTripsFromDB() {
   );
   plannedTripsHTMLElement.innerHTML = '';
   pastTripsHTMLElement.innerHTML = '';
-  console.log(tripsData);
   let isPlannedTripsEmpty = true;
   let isPastTripsEmpty = true;
   for (key of keys) {
@@ -442,7 +605,6 @@ async function fetchAndRenderTripsFromDB() {
       hotelImage,
       isPastTrip,
       timestamp,
-      hotelID,
       isPublic,
     } = parseSerializedJson(key);
     const locations = tripsData[key];
@@ -456,16 +618,38 @@ async function fetchAndRenderTripsFromDB() {
     }
     HTMLElementToUpdate.innerHTML += `
       <div class="row">
-        <div class="col m8">
+        <div class="col s12 m8">
           <div class="card">
             <div class="card-content">
-              <span class="card-title">${title}</span>
+              <div class="row trip-title-section"> 
+                <div class="left">
+                  <span class="card-title" id="trip-${timestamp}-title">${title}</span>
+                </div>
+                <div class="right">
+                  <button 
+                    type="button"
+                    onclick="openDeleteModal('${timestamp}')"
+                    class="btn-floating btn-large indigo update-button waves-effect waves-light tooltipped"
+                    data-tooltip="Delete trip"
+                  >
+                    <i class="large material-icons">delete</i>
+                  </button>
+                  <button 
+                    type="button"
+                    id="edit-button-${timestamp}"
+                    class="btn-floating btn-large indigo update-button waves-effect waves-light tooltipped"
+                    data-tooltip="Edit trip info"
+                  >
+                    <i class="large material-icons">mode_edit</i>
+                  </button>
+                </div>
+              </div>
               <div id="trip-${timestamp}-locations"></div>
               <div id="trip-${timestamp}-map" class="trip-map"></div>
             </div>
           </div>
         </div>
-        <div class="col m4">
+        <div class="col s12 m4" id="trip-${timestamp}-hotel-card">
           <div class="card large">
             <div class="card-image">
               <img src="${await imageURLFromPhotoRef(hotelImage)}">
@@ -478,16 +662,22 @@ async function fetchAndRenderTripsFromDB() {
         </div>
       </div>
     `;
-
+    // initialize tooltips for edit and delete trip buttons
+    const tooltipElems = document.querySelectorAll('.tooltipped');
+    const tooltipInstances = M.Tooltip.init(tooltipElems, undefined);
     document.getElementById(`trip-${timestamp}-locations`).innerHTML = locations
-      .map(({ weight, placeName }) => {
+      .map(({ weight, placeName }, index) => {
         return `
           <div class="row">
             <div class="col s6">
-              <span><strong>${placeName}</strong></span>
+              <span id="trip-${timestamp}-location-${index + 1}">
+                <strong>${placeName}</strong>
+              </span>
             </div>
             <div class="col s6">
-              <span>Weight: ${weight}</span>
+              <span id="trip-${timestamp}-weight-${index + 1}">
+                Weight: ${weight}
+              </span>
             </div>
           </div>
         `;
@@ -495,10 +685,10 @@ async function fetchAndRenderTripsFromDB() {
       .join('');
   }
 
-  // Iterate through keys again to load the map for each trip
+  // Iterate through keys again to load the map for each trip and load edit button functionality
   for (key of keys) {
     const tripMarkers = [];
-    const { timestamp, hotelID } = parseSerializedJson(key);
+    const { timestamp, hotelID, title } = parseSerializedJson(key);
     // Get coords of all locations in this trip and the hotel to add to the Google map
     const tripMap = new google.maps.Map(
       document.getElementById(`trip-${timestamp}-map`),
@@ -563,6 +753,12 @@ async function fetchAndRenderTripsFromDB() {
         }
       });
     });
+
+    // Give edit buttons for each trip functionality
+    document.getElementById(`edit-button-${timestamp}`).onclick = () => {
+      openTripEditor(`${timestamp}`, locations, `${title}`);
+      window.scrollTo(0, 0);
+    };
   }
 
   if (isPastTripsEmpty) {
@@ -591,10 +787,11 @@ function createPlaceHandler(element, locationNum) {
       lat: lat(),
       lng: lng(),
     };
-    if (!mapInitialized || locationNum === 1) {
+    if (!mapInitialized) {
       map = new google.maps.Map(document.getElementById('editor-map'), {
         center: coords,
         zoom: 13,
+        disableDefaultUI: true,
       });
       mapInitialized = true;
     }

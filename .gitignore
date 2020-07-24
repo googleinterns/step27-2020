@@ -1,3 +1,4 @@
 target/
 .idea
 *.iml
+src/main/webapp/scripts/service-account.js
