@@ -161,7 +161,11 @@ function openTripEditor(timestamp, locationData, title) {
             </p>
           </div>
            <div class="col s3 m1">
-            <a class="btn-floating indigo waves-effect" onclick="deleteLocation(${i})">
+            <a 
+              id="location-${i}-delete"
+              class="btn-floating indigo waves-effect" 
+              onclick="deleteLocation(${i})"
+            >
               <i class="material-icons">remove_circle</i>
             </a>
           </div>
@@ -242,7 +246,11 @@ function addLocation() {
         </p>
       </div>
       <div class="col s3 m1">
-        <a class="btn-floating indigo waves-effect" onclick="deleteLocation(${numLocations})">
+        <a 
+          id="location-${numLocations}-delete"
+          class="btn-floating indigo waves-effect" 
+          onclick="deleteLocation(${numLocations})"
+        >
           <i class="material-icons">remove_circle</i>
         </a>
       </div>
@@ -263,26 +271,42 @@ function addLocation() {
  */
 function deleteLocation(locationNum) {
   console.log(markers);
-  console.log("yeet " + locationNum);
   if (locationNum > markers.length || locationNum < 1) {
     throw new Error("Cannot delete invalid location");
   }
   const index = locationNum - 1;
   // Remove trip from DOM and shift following trip location nums down 1
-  const elem = document.querySelector(`trip-${locationNum}-container`);
-  elem.parentNode.removeChild(elem);
+  const elem = document.getElementById(`location-${locationNum}-container`);
+  elem.parentElement.removeChild(elem);
   for (let i = locationNum + 1; i <= numLocations; i++) {
-    const label = document.getElementById(`location-${i}-label`);
+    const locationContainer = document.getElementById(`location-${i}-container`);
+    const locationLabel = document.getElementById(`location-${i}-label`);
+    const location = document.getElementById(`location-${i}`);
     const weightLabel = document.getElementById(`location-${i}-weight-label`);
-    
+    const weight = document.getElementById(`location-${i}-weight`);
+    const deleteButton = document.getElementById(`location-${i}-delete`);
+    const locationShift = `location-${i - 1}`;
+   
+    locationContainer.id = `${locationShift}-container`;
+    locationLabel.id = `${locationShift}-label`;
+    location.id = `${locationShift}`;
+    weightLabel.id = `${locationShift}-weight-label`;
+    weight.id = `${locationShift}-weight`;
+    deleteButton.id = `${locationShift}-delete`;
+    locationLabel.innerText = `Location ${i - 1}`;
+    locationLabel.htmlFor = `${locationShift}`;
+    deleteButton.onclick = () => deleteLocation(i - 1);
   }
 
   // Remove marker from map and also the array
-  markers[index].setMap(null);
+  if (markers[index] !== '') {
+    markers[index].setMap(null);
+  }
+  numLocations--;
   markers.splice(index, 1);
   fitMapToMarkers(map, markers);
   locationPlaceObjects.splice(index, 1);
-  numLocations--;
+  console.log(markers);
 }
 
 /**
