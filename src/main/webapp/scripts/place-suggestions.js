@@ -1,6 +1,7 @@
 let city;
 let filter;
 const placeCardsContainer = document.getElementById('place-cards-container');
+const defaultPlaceImage = '../assets/img/jason-dent-blue.jpg'
 
 function init() {
   document.getElementById('plan-for-me-link').classList.add('active');
@@ -131,6 +132,6 @@ async function imageURLFromPhotos(photos) {
     const photoUrl = await URL.createObjectURL(blob);
     return photoUrl;
   } else {
-    return '';
+    return defaultPlaceImage;
   }
 }
