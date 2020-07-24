@@ -70,23 +70,21 @@ function renderPlaceCards(places) {
     .map(
       ({ phoneNumber, name, photoUrl, priceLevel, rating, address, website }) => 
         `
-          <div class="row">
-            <div class="col s12 m6">
-              <div class="card">
-                <div class="card-image">
-                  <img src="${photoUrl}" alt="${name}" loading="lazy">
-                  <span class="card-title">${name}</span>
-                  <a class="btn-floating halfway-fab waves-effect waves-light blue"><i class="material-icons">add</i></a>
-                </div>
-                <div class="card-content">
-                  <p>${address}</p>
-                  <p>${phoneNumber}</p>
-                  <p>Rating: ${rating}</p>
-                  <p>Price Level: ${priceLevel}</p>
-                </div>
-                <div class="card-action">
-                  <a href="${website}">Website</a>
-                </div>
+          <div class="col s12 m6">
+            <div class="card">
+              <div class="card-image">
+                <img src="${photoUrl}" alt="${name}" loading="lazy">
+                <span class="card-title">${name}</span>
+                <a class="btn-floating halfway-fab waves-effect waves-light blue"><i class="material-icons">add</i></a>
+              </div>
+              <div class="card-content">
+                <p>${address}</p>
+                <p>${phoneNumber}</p>
+                <p>Rating: ${rating}</p>
+                <p>Price Level: ${priceLevel}</p>
+              </div>
+              <div class="card-action">
+                <a href="${website}">Website</a>
               </div>
             </div>
           </div>
