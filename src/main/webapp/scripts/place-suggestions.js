@@ -73,7 +73,7 @@ function renderPlaceCards(places) {
       ({ phoneNumber, name, photoUrl, priceLevel, rating, address, website }) => 
         `
           <div class="col s12 m6">
-            <div class="card">
+            <div class="card medium">
               <div class="card-image">
                 <img src="${photoUrl}" alt="${name}" loading="lazy">
                 <span class="card-title">${name}</span>
