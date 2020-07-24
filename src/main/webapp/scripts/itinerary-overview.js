@@ -2,6 +2,11 @@ let start;
 let waypoints;
 let end;
 
+let hotelAddress = "";
+let waypointAddresses = [];
+let waypointsLength = 0;
+let addressLength = 0;
+
 document.addEventListener('DOMContentLoaded', function() {
     const elems = document.querySelectorAll('select');
     const instances = M.FormSelect.init(elems, undefined);
@@ -62,6 +67,10 @@ async function getTripData(){
         }
     }
 
+    for(let waypoint in waypointIDs){
+        waypointsLength++;
+    }
+
     console.log("Names: " + waypointNames);
     console.log("ID's: " + waypointIDs);
 
@@ -69,22 +78,19 @@ async function getTripData(){
 }
 
 /**
- * Takes the hotel PlaceID and the locationsPlaceID Array from getTripData and works to convert them from placeID's to
+ * Takes the hotel PlaceID and the waypoints PlaceID Array from getTripData and works to convert them from placeID's to
  * addresses that will be used in calculateRoute()
  */
 function geocodePlaceId(hotelID, waypointIDs) {
 
     const geocoder = new google.maps.Geocoder();
 
-    let hotelAddress = "";
-    let waypointAddresses = [];
-
     for(let placeId of waypointIDs){
         geocoder.geocode({ placeId: placeId }, (results, status) => {
             if (status === "OK") {
                 if (results[0]) {
                     console.log("Valid Address: " + results[0].formatted_address)
-                    waypointAddresses.push(results[0].formatted_address);
+                    storeWaypointsAddress(results[0].formatted_address)
                 } else {
                     window.alert("No results found");
                 }
@@ -98,7 +104,7 @@ function geocodePlaceId(hotelID, waypointIDs) {
         if (status === "OK") {
             if (results[0]) {
                 console.log("Hotel Address: " + results[0].formatted_address)
-                hotelAddress += results[0].formatted_address;
+                storeHotelAddress(results[0].formatted_address)
             } else {
                 window.alert("No results found");
             }
@@ -106,11 +112,45 @@ function geocodePlaceId(hotelID, waypointIDs) {
             window.alert("Geocoder failed due to: " + status);
         }
     });
+}
 
-    console.log("Hotel Address: " + hotelAddress)
-    console.log("Waypoints Addresses: " + waypointAddresses)
 
-    calculateRoute(hotelAddress, waypointAddresses)
+/**
+Used to store the waypoint addresses given from geocodePlaceID()  in an Array to avoid from unordered execution
+ within the geocode function. Calls isReady() to test if the Array is set up to be used in calculateRoute() .
+ */
+function storeWaypointsAddress(waypointAddress){
+    waypointAddresses.push(waypointAddress);
+    addressLength++;
+    console.log("Stored Waypoint");
+    console.log("Waypoints: " +  waypointAddresses);
+    isReady();
+}
+
+/**
+ Used to store the hotel address given from geocodePlaceID() in the global string to avoid from unordered execution
+ within the geocode function. Calls isReady() to test if the string is set up to be used in calculateRoute().
+ */
+function storeHotelAddress(address) {
+    hotelAddress += address;
+    console.log("Stored Hotel");
+    console.log("Hotel Address: " + hotelAddress);
+    isReady();
+}
+
+/**
+This functions purpose is the make sure the both the waypoints Array and hotel Address have the expected amount of
+ values in them to be used in route calculation to prevent from unexpected actions.
+ */
+function isReady(){
+    if(waypointsLength === addressLength && hotelAddress !== ""){
+        console.log("Ready");
+        console.log("Finished Array: " + waypointAddresses);
+        console.log("Hotel Address: " + hotelAddress);
+        calculateRoute(waypointAddresses, hotelAddress);
+    }else{
+        console.log("Not Ready");
+    }
 }
 
 /**
@@ -135,19 +175,19 @@ function calculateRoute(hotel, waypointsArray) {
     while(rawWaypoints.length > 1){
         for(let i = 0; i < rawWaypoints.length; i++){
             if(waypoints.length !== (length - 1)){
-                waypoints.push(rawWaypoints[0])
-                rawWaypoints.splice(0, 1)
+                waypoints.push(rawWaypoints[0]);
+                rawWaypoints.splice(0, 1);
             }
         }
     }
 
     for (let waypoint of waypoints){
-        console.log("Waypoint: " + waypoint)
+        console.log("Waypoint: " + waypoint);
     }
 
     end += rawWaypoints.pop(0);
 
-    console.log("End: " + end)
+    console.log("End: " + end);
 
     displayRoute(start,waypoints,end);
 }
