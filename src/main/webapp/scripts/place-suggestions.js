@@ -44,6 +44,7 @@ async function findPlacesInCity(city, filter) {
     return;
   }
   
+  placeCardsContainer.innerHTML = LOADING_ANIMATION_HTML;
   const { geometry } = city;
   const { location } = geometry;
   const { lat, lng } = location;
@@ -51,17 +52,16 @@ async function findPlacesInCity(city, filter) {
     `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/textsearch/json?type=${filter}&location=${lat()},${lng()}&radius=10000&key=${GOOGLE_API_KEY}&output=json`
   )
   const { results } = await placesResponse.json();
-  console.log(results);
+  console.log(results); //DELETE
   getPlaceCardInformation(results);
 }
 
 async function getPlaceCardInformation(places) {
-  placeCardsContainer.innerHTML = LOADING_ANIMATION_HTML;
   let placeDetailsArr = [];
   for(let i = 0; i < places.length; i++) {
     const { place_id } = places[i];
     const placeDetails = await getPlaceDetails(place_id);
-    console.log(placeDetails);
+    console.log(placeDetails); //DELETE
     placeDetailsArr.push(placeDetails);
   }
 
@@ -69,31 +69,48 @@ async function getPlaceCardInformation(places) {
 }
 
 function renderPlaceCards(places) {
-  placeCardsContainer.innerHTML = places
-    .map(
-      ({ phoneNumber, name, photoUrl, priceLevel, rating, address, website }) => 
-        `
-          <div class="col s12 m6">
-            <div class="card medium">
-              <div class="card-image">
-                <img src="${photoUrl}" alt="${name}" loading="lazy">
-                <span class="card-title">${name}</span>
-                <a class="btn-floating halfway-fab waves-effect waves-light blue"><i class="material-icons">add</i></a>
-              </div>
-              <div class="card-content">
-                <p>${address}</p>
-                <p>${phoneNumber}</p>
-                <p>Rating: ${rating}</p>
-                <p>Price Level: ${priceLevel}</p>
-              </div>
-              <div class="card-action">
-                <a href="${website}">Website</a>
-              </div>
+  let placeCards = [];
+  for(obj in places) {
+    const { phoneNumber, name, photoUrl, priceLevel, rating, address, website } = obj;
+    const addressClass = address ? '' : undefined;
+    const phoneNumberClass = phoneNumber ? '' : 'undefined';
+    const ratingClass = rating ? '' : 'undefined';
+    const priceLevelClass = priceLevel ? '' : 'undefined';
+    const websiteClass = website ? '' : 'undefined';
+
+    placeCards.push(
+      `
+        <div class="col s12 m6">
+          <div class="card medium">
+            <div class="card-image">
+              <img class="responsive-img" src="${photoUrl}" alt="${name}" loading="lazy">
+              <span class="card-title"><strong>${name}</strong></span>
+            </div>
+            <div class="card-fab">
+              <a class="btn-floating halfway-fab waves-effect waves-light blue">
+                <i class="material-icons">add</i>
+              </a>
+            </div>
+            <div class="card-content">
+              <p class=${addressClass}>${address}</p>
+              <p class=${phoneNumberClass}>${phoneNumber}</p>
+              <p class=${ratingClass}>Rating: ${rating}</p>
+              <p class=${priceLevelClass}>Price Level: ${priceLevel}</p>
+            </div>
+            <div class="${websiteClass} card-action">
+              <a href="${website}">Website</a>
             </div>
           </div>
-        `
+        </div>
+      `
     )
-    .join('');
+  }
+  placeCardsContainer.innerHTML = placeCards.join('');
+
+  const undefElements = document.querySelectorAll('.undefined');
+  for(let i = 0; i < undefElements.length; i++) {
+    undefElements[i].remove();
+  }
 }
 
 async function getPlaceDetails(placeId) {
