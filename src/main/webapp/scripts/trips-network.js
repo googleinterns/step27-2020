@@ -2,6 +2,8 @@
  * Function run on page load that runs auth checking and other functions
  */
 function init() {
+  document.getElementById('trips-network-link').classList.add('active');
+  document.getElementById('trips-network-link-m').classList.add('active');
   authReload();
   loadSharedTripsData();
 }

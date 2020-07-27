@@ -7,11 +7,15 @@ let waypointAddresses = [];
 let waypointsLength = 0;
 let addressLength = 0;
 
+function init() {
+    document.getElementById('itinerary-link').classList.add('active');
+    document.getElementById('itinerary-link-m').classList.add('active');
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const elems = document.querySelectorAll('select');
     const instances = M.FormSelect.init(elems, undefined);
 });
-
 
 async function displayMap() {
     await getTripData();
