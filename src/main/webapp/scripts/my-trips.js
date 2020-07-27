@@ -55,7 +55,13 @@ function openTripEditor(timestamp, locationData, title) {
                   </div>
                   <div class="col s9 m5">
                     <p class="range-field weight-slider">
-                      <label for="location-1-weight">Weight</label>
+                      <label 
+                        for="location-1-weight"
+                        class="tooltipped"
+                        data-tooltip="Assign how close you want to be to this location"
+                      >
+                        Weight
+                      </label>
                       <input
                         type="range"
                         name="location-1-weight"
@@ -148,7 +154,14 @@ function openTripEditor(timestamp, locationData, title) {
           </div>
           <div class="col s9 m5">
             <p class="range-field weight-slider">
-              <label for="location-${i}-weight" id="location-${i}-weight-label">Weight</label>
+              <label 
+                for="location-${i}-weight" 
+                id="location-${i}-weight-label"
+                class="tooltipped"
+                data-tooltip="Assign how close you want to be to this location"
+              >
+                Weight
+              </label>
               <input
                 type="range"
                 name="location-${i}-weight"
