@@ -52,7 +52,6 @@ async function findPlacesInCity(city, filter) {
     `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/textsearch/json?type=${filter}&location=${lat()},${lng()}&radius=10000&key=${GOOGLE_API_KEY}&output=json`
   )
   const { results } = await placesResponse.json();
-  console.log(results); //DELETE
   getPlaceCardInformation(results);
 }
 
@@ -61,7 +60,6 @@ async function getPlaceCardInformation(places) {
   for(let i = 0; i < places.length; i++) {
     const { place_id } = places[i];
     const placeDetails = await getPlaceDetails(place_id);
-    console.log(placeDetails); //DELETE
     placeDetailsArr.push(placeDetails);
   }
 
