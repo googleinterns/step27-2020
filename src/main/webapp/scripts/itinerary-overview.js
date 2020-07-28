@@ -2,8 +2,19 @@ let start;
 let waypoints;
 let end;
 
+let hotel_name = "";
+let hotel_ID = "";
 let hotelAddress = "";
+let hotelNumber;
+let hotelPhoto = "";
+
+let waypointNames = [];
+let waypointIDs = [];
 let waypointAddresses = [];
+let waypointNumbers = [];
+let waypointPhotos = [];
+
+
 let waypointsLength = 0;
 let addressLength = 0;
 
@@ -23,14 +34,12 @@ async function displayMap() {
     document.getElementById("mode").addEventListener("change", function() {
         displayRoute(start, waypoints, end);
     });
-
 }
 
 /**
  * Fetches that data from the TripsServlet and stores the hotel PlaceID and the locations PlaceID as variables to use
  * in the call for geocodePlaceID()
  */
-
 async function getTripData(){
     const response = await fetch('/trip-data', {
         method: 'GET',
@@ -38,14 +47,8 @@ async function getTripData(){
     const tripsData = await response.json();
     const keys = Object.keys(tripsData);
 
-    //Hotel
-    let hotel_ID;
-    let hotel_name;
-
     //Locations
-    let locationArray;
-    let waypointNames = [];
-    let waypointIDs = [];
+    let waypointArray;
 
     for (let key of keys) {
         // Fields of tripsData are currently in string format.
@@ -58,10 +61,10 @@ async function getTripData(){
 
         hotel_ID = hotelID;
         hotel_name = hotelName;
-        locationArray = locations;
+        waypointArray = locations;
     }
 
-    for(let object of Object.values(locationArray)){
+    for(let object of Object.values(waypointArray)){
         for (let key of Object.keys(object)){
             if(key === "placeID"){
                 waypointIDs.push(object[key]);
@@ -75,15 +78,14 @@ async function getTripData(){
         waypointsLength++;
     }
 
-    console.log("Names: " + waypointNames);
-    console.log("ID's: " + waypointIDs);
-
     geocodePlaceId(hotel_ID, waypointIDs);
 }
 
 /**
  * Takes the hotel PlaceID and the waypoints PlaceID Array from getTripData and works to convert them from placeID's to
  * addresses that will be used in calculateRoute()
+ * @param hotelID - The hotel placeID that was obtained from getTripData()
+ * @param waypointIDs - The waypoint placeID's that are obtained from getTripData()
  */
 function geocodePlaceId(hotelID, waypointIDs) {
 
@@ -93,13 +95,12 @@ function geocodePlaceId(hotelID, waypointIDs) {
         geocoder.geocode({ placeId: placeId }, (results, status) => {
             if (status === "OK") {
                 if (results[0]) {
-                    console.log("Valid Address: " + results[0].formatted_address)
                     storeWaypointsAddress(results[0].formatted_address)
                 } else {
-                    window.alert("No results found");
+                    M.toast({html:"No results found"});
                 }
             } else {
-                window.alert("Geocoder failed due to: " + status);
+                M.toast({html:"Geocoder failed due to: " + status});
             }
         });
     }
@@ -107,53 +108,44 @@ function geocodePlaceId(hotelID, waypointIDs) {
     geocoder.geocode({ placeId: hotelID }, (results, status) => {
         if (status === "OK") {
             if (results[0]) {
-                console.log("Hotel Address: " + results[0].formatted_address)
                 storeHotelAddress(results[0].formatted_address)
             } else {
-                window.alert("No results found");
+                M.toast({html:"No results found"});
             }
         } else {
-            window.alert("Geocoder failed due to: " + status);
+            M.toast({html:"Geocoder failed due to: " + status});
         }
     });
 }
 
-
 /**
-Used to store the waypoint addresses given from geocodePlaceID()  in an Array to avoid from unordered execution
- within the geocode function. Calls isReady() to test if the Array is set up to be used in calculateRoute() .
+ * Used to store the waypoint addresses given from geocodePlaceID()  in an Array to avoid from unordered execution
+ * within the geocode function. Calls isReady() to test if the Array is set up to be used in calculateRoute() .
+ * @param waypointAddress - The address of the waypoint being converted in geocodePlaceID()
  */
 function storeWaypointsAddress(waypointAddress){
     waypointAddresses.push(waypointAddress);
     addressLength++;
-    console.log("Stored Waypoint");
-    console.log("Waypoints: " +  waypointAddresses);
     isReady();
 }
 
 /**
- Used to store the hotel address given from geocodePlaceID() in the global string to avoid from unordered execution
- within the geocode function. Calls isReady() to test if the string is set up to be used in calculateRoute().
+ * Used to store the hotel address given from geocodePlaceID() in the global string to avoid from unordered execution
+ * within the geocode function. Calls isReady() to test if the string is set up to be used in calculateRoute().
+ * @param address - The hotel address from geocodePlaceID()
  */
 function storeHotelAddress(address) {
-    hotelAddress += address;
-    console.log("Stored Hotel");
-    console.log("Hotel Address: " + hotelAddress);
+    hotelAddress = address;
     isReady();
 }
 
 /**
-This functions purpose is the make sure the both the waypoints Array and hotel Address have the expected amount of
- values in them to be used in route calculation to prevent from unexpected actions.
+ * This functions purpose is the make sure the both the waypoints Array and hotel Address have the expected amount of
+ * values in them to be used in route calculation to prevent from unexpected actions.
  */
 function isReady(){
     if(waypointsLength === addressLength && hotelAddress !== ""){
-        console.log("Ready");
-        console.log("Finished Array: " + waypointAddresses);
-        console.log("Hotel Address: " + hotelAddress);
         calculateRoute(hotelAddress, waypointAddresses);
-    }else{
-        console.log("Not Ready");
     }
 }
 
@@ -161,12 +153,11 @@ function isReady(){
  * Takes the locations and hotel addresses that were given by the geoCodingPlaceID() function
  * and organizes it into a start, waypoints which are placed into a Array in travel order and an end point
  * which are used for the displayRoute() function
+ * @param hotel - The address of the hotel received from geocodePlaceID()
+ * @param waypointsArray - The addresses of the waypoints/locations of the users trip received from geocodePlaceID()
  */
-
-//Hard coded for test (Gonna make minor changes for final product)
 function calculateRoute(hotel, waypointsArray) {
-    start = hotel; //"5902 N President George Bush Hwy, Garland, TX 75044, USA";
-
+    start = hotel;
     waypoints = [];
     end = "";
 
@@ -181,13 +172,8 @@ function calculateRoute(hotel, waypointsArray) {
         }
     }
 
-    for (let waypoint of waypoints){
-        console.log("Waypoint: " + waypoint);
-    }
-
     end += waypointsArray.pop(0);
 
-    console.log("End: " + end);
 
     displayRoute(start,waypoints,end);
 }
@@ -234,11 +220,12 @@ function displayRoute(start, waypoints, end) {
             if (status === "OK") {
                 directionsRenderer.setDirections(response);
             } else {
-                window.alert("Directions request failed due to " + status);
+                M.toast({html:"Directions request failed due to " + status});
             }
         }
     );
 }
+
 
 /**
  * Takes a latitude and longitude pair as parameters and centers the map on that specific
