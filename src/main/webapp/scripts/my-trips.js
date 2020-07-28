@@ -220,6 +220,12 @@ function openTripEditor(timestamp, locationData, title) {
             infoWindow.open(map, marker);
           });
           fitMapToMarkers(map, markers);
+        } else {
+          M.Toast.dismissAll();
+          M.toast({
+            html:
+              "There was an error while loading one of your locations. Please try again.",
+          });
         }
       });
     });
@@ -281,6 +287,10 @@ function addLocation() {
   // add autocomplete through Places API for new location
   const location = document.getElementById(`location-${numLocations}`);
   const autocomplete = new google.maps.places.Autocomplete(location);
+
+  // initialize tooltips for new locations
+  const tooltipElems = document.querySelectorAll('.tooltipped');
+  const tooltipInstances = M.Tooltip.init(tooltipElems, undefined);
   createPlaceHandler(autocomplete, numLocations);
   markers.push('');
   locationPlaceObjects.push('');
@@ -317,9 +327,13 @@ function deleteLocation(locationNum) {
     const deleteButton = document.getElementById(`location-${i}-delete`);
     const locationShift = `location-${i - 1}`;
 
+    const autocomplete = new google.maps.places.Autocomplete(location);
+    google.maps.event.clearInstanceListeners(autocomplete);
+    createPlaceHandler(autocomplete, i - 1);
     locationContainer.id = `${locationShift}-container`;
     locationLabel.id = `${locationShift}-label`;
     location.id = `${locationShift}`;
+    
     weightLabel.id = `${locationShift}-weight-label`;
     weight.id = `${locationShift}-weight`;
     deleteButton.id = `${locationShift}-delete`;
@@ -336,7 +350,6 @@ function deleteLocation(locationNum) {
   markers.splice(index, 1);
   fitMapToMarkers(map, markers);
   locationPlaceObjects.splice(index, 1);
-  console.log(markers);
 }
 
 /**
@@ -363,6 +376,8 @@ function cancelTripCreation() {
 async function findHotel(timestamp) {
   document.getElementById('hotel-results').innerHTML = LOADING_ANIMATION_HTML;
   if (numLocations !== getNumPlaceObjectsInArray(locationPlaceObjects)) {
+    console.log('Num Locations ' + numLocations);
+    console.log('location place obj # ' + getNumPlaceObjectsInArray(locationPlaceObjects));
     M.Toast.dismissAll();
     M.toast({
       html: 'Not all of your places are selected through autocomplete.',
@@ -874,7 +889,7 @@ function createPlaceHandler(element, locationNum) {
   google.maps.event.addListener(element, 'place_changed', () => {
     const obj = element.getPlace();
     obj.locationNum = locationNum;
-    locationPlaceObjects[locationNum - 1] = obj;
+    
     const { geometry, name } = obj;
     const { location } = geometry;
     const { lat, lng } = location;
@@ -892,9 +907,13 @@ function createPlaceHandler(element, locationNum) {
     }
     if (markers[locationNum - 1] !== '') {
       const currMarkerForLocation = markers[locationNum - 1];
+      if (currMarkerForLocation === undefined || locationNum > markers.length) {
+        google.maps.event.clearInstanceListeners(element, 'place_changed');
+        return;
+      }
       currMarkerForLocation.setMap(null);
     }
-
+    
     const marker = new google.maps.Marker({
       position: coords,
       map: map,
@@ -905,8 +924,10 @@ function createPlaceHandler(element, locationNum) {
           <p class="infowindow-text">Location ${locationNum}</p>`,
     });
     marker.addListener('click', () => infoWindow.open(map, marker));
+    locationPlaceObjects[locationNum - 1] = obj;
     markers[locationNum - 1] = marker;
-    if (locationNum !== 1) {
+    
+    if (markers.length !== 1) { 
       fitMapToMarkers(map, markers);
       map.setZoom(map.getZoom() - 0.3);
     }
