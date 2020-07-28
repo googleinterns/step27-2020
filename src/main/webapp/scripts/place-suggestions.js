@@ -1,6 +1,6 @@
 let city;
 let filter;
-let placeSuggestions = new Map();
+let placesMap = new Map();
 
 const PLACE_CARDS_CONTAINER = document.getElementById('place-cards-container');
 const DEFAULT_PLACE_IMAGE = '../assets/img/jason-dent-blue.jpg'
@@ -70,25 +70,25 @@ async function getPlaceCardInformation(places) {
   for(let i = 0; i < places.length; i++) {
     const { place_id } = places[i];
     const placeDetails = await getPlaceDetails(place_id);
-    placeSuggestions.set(place_id, placeDetails);
+    placesMap.set(place_id, placeDetails);
   }
 
-  renderPlaceCards(placeSuggestions);
+  renderPlaceCards(placesMap);
 }
 
 /**
  * Renders information cards to DOM for each place suggestion
  * @param {Array} places array of objects containing information and photo URLs about each place
  */
-function renderPlaceCards(places) {
+function renderPlaceCards(placesMap) {
   let placeCards = [];
-  for(let i = 0; i < places.length; i++) {   
-    const { phoneNumber, name, photoUrl, priceLevel, rating, address, website } = places[i];
+  for(let [placeId, placeDetails] of placesMap.entries()) {   
+    const { phoneNumber, name, photoUrl, priceLevel, rating, address, website } = placeDetails;
 
     placeCards.push(
       `
         <div class="col s12 m6">
-          <div class="card large">
+          <div id="${placeId} "class="card large">
             <div class="card-image">
               <img class="responsive-img" src="${photoUrl}" alt="${name}" loading="lazy">
               <span class="card-title"><strong>${name}</strong></span>
