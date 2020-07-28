@@ -293,26 +293,30 @@ function addLocation() {
  */
 function deleteLocation(locationNum) {
   if (locationNum > markers.length || locationNum < 1) {
-    throw new Error("Cannot delete invalid location");
+    throw new Error('Cannot delete invalid location');
   }
   const index = locationNum - 1;
   // Close current tooltip
-  const currDeleteButton = document.getElementById(`location-${locationNum}-delete`);
+  const currDeleteButton = document.getElementById(
+    `location-${locationNum}-delete`
+  );
   const instance = M.Tooltip.getInstance(currDeleteButton);
   instance.close();
-  
+
   // Remove trip from DOM and shift following trip location nums down 1
   const elem = document.getElementById(`location-${locationNum}-container`);
   elem.parentElement.removeChild(elem);
   for (let i = locationNum + 1; i <= numLocations; i++) {
-    const locationContainer = document.getElementById(`location-${i}-container`);
+    const locationContainer = document.getElementById(
+      `location-${i}-container`
+    );
     const locationLabel = document.getElementById(`location-${i}-label`);
     const location = document.getElementById(`location-${i}`);
     const weightLabel = document.getElementById(`location-${i}-weight-label`);
     const weight = document.getElementById(`location-${i}-weight`);
     const deleteButton = document.getElementById(`location-${i}-delete`);
     const locationShift = `location-${i - 1}`;
- 
+
     locationContainer.id = `${locationShift}-container`;
     locationLabel.id = `${locationShift}-label`;
     location.id = `${locationShift}`;
