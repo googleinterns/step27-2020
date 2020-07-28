@@ -1,7 +1,7 @@
 let city;
 let filter;
-const placeCardsContainer = document.getElementById('place-cards-container');
-const defaultPlaceImage = '../assets/img/jason-dent-blue.jpg'
+const PLACE_CARDS_CONTAINER = document.getElementById('place-cards-container');
+const DEFAULT_PLACE_IMAGE = '../assets/img/jason-dent-blue.jpg'
 
 function init() {
   document.getElementById('plan-for-me-link').classList.add('active');
@@ -44,7 +44,7 @@ async function findPlacesInCity(city, filter) {
     return;
   }
   
-  placeCardsContainer.innerHTML = LOADING_ANIMATION_HTML;
+  PLACE_CARDS_CONTAINER.innerHTML = LOADING_ANIMATION_HTML;
   const { geometry } = city;
   const { location } = geometry;
   const { lat, lng } = location;
@@ -104,9 +104,9 @@ function renderPlaceCards(places) {
     )
   }
 
-  placeCardsContainer.innerHTML = placeCards.join('');
+  PLACE_CARDS_CONTAINER.innerHTML = placeCards.join('');
 
-  let undefElements = placeCardsContainer.querySelectorAll('.undefined');
+  let undefElements = PLACE_CARDS_CONTAINER.querySelectorAll('.undefined');
   for(let i = 0; i < undefElements.length; i++) {
     undefElements[i].remove();
   }
@@ -148,6 +148,6 @@ async function imageURLFromPhotos(photos) {
     const photoUrl = await URL.createObjectURL(blob);
     return photoUrl;
   } else {
-    return defaultPlaceImage;
+    return DEFAULT_PLACE_IMAGE;
   }
 }
