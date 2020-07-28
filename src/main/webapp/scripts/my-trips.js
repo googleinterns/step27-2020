@@ -376,8 +376,6 @@ function cancelTripCreation() {
 async function findHotel(timestamp) {
   document.getElementById('hotel-results').innerHTML = LOADING_ANIMATION_HTML;
   if (numLocations !== getNumPlaceObjectsInArray(locationPlaceObjects)) {
-    console.log('Num Locations ' + numLocations);
-    console.log('location place obj # ' + getNumPlaceObjectsInArray(locationPlaceObjects));
     M.Toast.dismissAll();
     M.toast({
       html: 'Not all of your places are selected through autocomplete.',
