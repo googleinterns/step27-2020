@@ -70,7 +70,7 @@ function renderPlaceCards(places) {
   let placeCards = [];
   for(let i = 0; i < places.length; i++) {   
     const { phoneNumber, name, photoUrl, priceLevel, rating, address, website } = places[i];
-    const addressClass = address ? '' : undefined;
+    const addressClass = address ? '' : 'undefined';
     const phoneNumberClass = phoneNumber ? '' : 'undefined';
     const ratingClass = rating ? '' : 'undefined';
     const priceLevelClass = priceLevel ? '' : 'undefined';
