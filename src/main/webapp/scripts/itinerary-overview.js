@@ -2,6 +2,22 @@ let start;
 let waypoints;
 let end;
 
+let hotel_name = "";
+let hotel_ID = "";
+let hotelAddress = "";
+let hotelNumber;
+let hotelPhoto = "";
+
+let waypointNames = [];
+let waypointIDs = [];
+let waypointAddresses = [];
+let waypointNumbers = [];
+let waypointPhotos = [];
+
+
+let waypointsLength = 0;
+let addressLength = 0;
+
 function init() {
     document.getElementById('itinerary-link').classList.add('active');
     document.getElementById('itinerary-link-m').classList.add('active');
@@ -12,122 +28,152 @@ document.addEventListener('DOMContentLoaded', function() {
     const instances = M.FormSelect.init(elems, undefined);
 });
 
-
 async function displayMap() {
-     await getTripData();
+    await getTripData();
 
     document.getElementById("mode").addEventListener("change", function() {
         displayRoute(start, waypoints, end);
     });
-
 }
 
 /**
  * Fetches that data from the TripsServlet and stores the hotel PlaceID and the locations PlaceID as variables to use
  * in the call for geocodePlaceID()
  */
-
 async function getTripData(){
-    const response = await fetch("/trip-data");
-    const results = await response.json();
-    console.log(results);
-    const keys = Object.keys(results);
+    const response = await fetch('/trip-data', {
+        method: 'GET',
+    });
+    const tripsData = await response.json();
+    const keys = Object.keys(tripsData);
 
-    let ID;
-    let name
-    let locationsArray;
+    //Locations
+    let waypointArray;
 
-    for (const key of keys){
-        const{hotelID, hotelName} = parseSerializedJson(key);
-        ID = hotelID;
-        name = hotelName;
-        locationsArray = (results[key]);
+    for (let key of keys) {
+        // Fields of tripsData are currently in string format.
+        // Deserialize using parseSerializedJson.
+        const {
+            hotelID,
+            hotelName,
+        } = parseSerializedJson(key);
+        const locations = tripsData[key];
+
+        hotel_ID = hotelID;
+        hotel_name = hotelName;
+        waypointArray = locations;
     }
 
-    console.log("Hotel ID: " + ID);
-    console.log("Hotel Name:  " + name);
-    console.log("Locations A: " + locationsArray);
-
-    for(let i = 0; i < locationsArray.length; i++){
-        console.log("Place ID: " + JSON.stringify(locationsArray[i]));
+    for(let object of Object.values(waypointArray)){
+        for (let key of Object.keys(object)){
+            if(key === "placeID"){
+                waypointIDs.push(object[key]);
+            }else if(key === "placeName"){
+                waypointNames.push(object[key]);
+            }
+        }
     }
 
-    geocodePlaceId(ID, locationsArray);
+    for(let waypoint in waypointIDs){
+        waypointsLength++;
+    }
+
+    geocodePlaceId(hotel_ID, waypointIDs);
 }
 
 /**
- * Takes the hotel PlaceID and the locationsPlaceID Array from getTripData and works to convert them from placeID's to
+ * Takes the hotel PlaceID and the waypoints PlaceID Array from getTripData and works to convert them from placeID's to
  * addresses that will be used in calculateRoute()
+ * @param hotelID - The hotel placeID that was obtained from getTripData()
+ * @param waypointIDs - The waypoint placeID's that are obtained from getTripData()
  */
-function geocodePlaceId(hotelID, placeIDArray) {
-    console.log("Converting Place ID's to Address");
-    let waypointsArray = [];
-    let hotel = "";
+function geocodePlaceId(hotelID, waypointIDs) {
 
     const geocoder = new google.maps.Geocoder();
-    for(let place of placeIDArray){
-        geocoder.geocode({placeId: place}, function(results, status) {
+
+    for(let placeId of waypointIDs){
+        geocoder.geocode({ placeId: placeId }, (results, status) => {
             if (status === "OK") {
                 if (results[0]) {
-                    waypointsArray.push(results[0].geometry.location);
+                    storeWaypointsAddress(results[0].formatted_address)
                 } else {
-                    window.alert("No results found");
+                    M.toast({html:"No results found"});
                 }
             } else {
-                window.alert("Geocoder failed due to: " + status);
+                M.toast({html:"Geocoder failed due to: " + status});
             }
         });
     }
 
-    geocoder.geocode({placeId: hotelID}, function(results, status) {
+    geocoder.geocode({ placeId: hotelID }, (results, status) => {
         if (status === "OK") {
             if (results[0]) {
-                hotel += (results[0].geometry.location);
+                storeHotelAddress(results[0].formatted_address)
             } else {
-                window.alert("No results found");
+                M.toast({html:"No results found"});
             }
         } else {
-            window.alert("Geocoder failed due to: " + status);
+            M.toast({html:"Geocoder failed due to: " + status});
         }
     });
+}
 
-    console.log("Done Converting Place ID's");
-    calculateRoute(hotel, waypointsArray);
+/**
+ * Used to store the waypoint addresses given from geocodePlaceID()  in an Array to avoid from unordered execution
+ * within the geocode function. Calls isReady() to test if the Array is set up to be used in calculateRoute() .
+ * @param waypointAddress - The address of the waypoint being converted in geocodePlaceID()
+ */
+function storeWaypointsAddress(waypointAddress){
+    waypointAddresses.push(waypointAddress);
+    addressLength++;
+    isReady();
+}
+
+/**
+ * Used to store the hotel address given from geocodePlaceID() in the global string to avoid from unordered execution
+ * within the geocode function. Calls isReady() to test if the string is set up to be used in calculateRoute().
+ * @param address - The hotel address from geocodePlaceID()
+ */
+function storeHotelAddress(address) {
+    hotelAddress = address;
+    isReady();
+}
+
+/**
+ * This functions purpose is the make sure the both the waypoints Array and hotel Address have the expected amount of
+ * values in them to be used in route calculation to prevent from unexpected actions.
+ */
+function isReady(){
+    if(waypointsLength === addressLength && hotelAddress !== ""){
+        calculateRoute(hotelAddress, waypointAddresses);
+    }
 }
 
 /**
  * Takes the locations and hotel addresses that were given by the geoCodingPlaceID() function
  * and organizes it into a start, waypoints which are placed into a Array in travel order and an end point
  * which are used for the displayRoute() function
+ * @param hotel - The address of the hotel received from geocodePlaceID()
+ * @param waypointsArray - The addresses of the waypoints/locations of the users trip received from geocodePlaceID()
  */
-
-//Hard coded for test (Gonna make minor changes for final product)
-async function calculateRoute(hotel, waypointsArray) {
-    console.log("Calculating Optimal Route");
-
-    start = "5902 N President George Bush Hwy, Garland, TX 75044, USA";
-
-    let rawWaypoints = ["525 Talbert Dr, Plano, TX 75093, USA",
-        "2134 Zurek Ln, Heath, TX 75126, USA",
-        "4234 Maple Ave #2403, Dallas, TX 75219, USA",]
-
+function calculateRoute(hotel, waypointsArray) {
+    start = hotel;
     waypoints = [];
     end = "";
 
-    let length = rawWaypoints.length;
+    let length = waypointsArray.length;
 
-    while(rawWaypoints.length > 1){
-        for(let i = 0; i < rawWaypoints.length; i++){
+    while(waypointsArray.length > 1){
+        for(let i = 0; i < waypointsArray.length; i++){
             if(waypoints.length !== (length - 1)){
-                waypoints.push(rawWaypoints[0])
-                rawWaypoints.splice(0, 1)
+                waypoints.push(waypointsArray[0]);
+                waypointsArray.splice(0, 1);
             }
         }
     }
 
-    end += rawWaypoints.pop(0);
+    end += waypointsArray.pop(0);
 
-    console.log("Done Calculating Optimal Route");
 
     displayRoute(start,waypoints,end);
 }
@@ -139,7 +185,6 @@ async function calculateRoute(hotel, waypointsArray) {
  * @param end - the "destination" or the last point in the users route.
  */
 function displayRoute(start, waypoints, end) {
-    console.log("Starting to Display Route")
 
     const directionsRenderer = new google.maps.DirectionsRenderer();
     const directionsService = new google.maps.DirectionsService();
@@ -175,12 +220,12 @@ function displayRoute(start, waypoints, end) {
             if (status === "OK") {
                 directionsRenderer.setDirections(response);
             } else {
-                window.alert("Directions request failed due to " + status);
+                M.toast({html:"Directions request failed due to " + status});
             }
         }
     );
-    console.log("Done displaying route");
 }
+
 
 /**
  * Takes a latitude and longitude pair as parameters and centers the map on that specific
