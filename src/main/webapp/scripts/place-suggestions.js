@@ -83,11 +83,6 @@ function renderPlaceCards(places) {
   let placeCards = [];
   for(let i = 0; i < places.length; i++) {   
     const { phoneNumber, name, photoUrl, priceLevel, rating, address, website } = places[i];
-    const addressClass = address ? '' : 'undefined';
-    const phoneNumberClass = phoneNumber ? '' : 'undefined';
-    const ratingClass = rating ? '' : 'undefined';
-    const priceLevelClass = priceLevel ? '' : 'undefined';
-    const websiteClass = website ? '' : 'undefined';
 
     placeCards.push(
       `
@@ -102,15 +97,29 @@ function renderPlaceCards(places) {
                 <i class="material-icons">add</i>
               </a>
             </div>
-            <div class="card-content">
-              <p class="${addressClass}">${address}</p>
-              <p class="${phoneNumberClass}">${phoneNumber}</p>
-              <p class="${ratingClass}">Rating: ${rating}</p>
-              <p class="${priceLevelClass}">Price Level: ${priceLevel}</p>
+            <div class="card-content"> 
+            ` +
+              (address
+                ? `<p>${address}</p>`
+                : '') +
+              (phoneNumber
+                ? `<p>${phoneNumber}</p>`
+                : '') +
+              (rating
+                ? `<p>Rating: ${rating}</p>`
+                : '') +
+              (priceLevel
+                ? `<p>Price Level: ${priceLevel}</p>`
+                : '') +
+            `
             </div>
-            <div class="${websiteClass} card-action">
-              <a href="${website}">Website</a>
-            </div>
+            ` +
+              (website
+                ? `<div class="card-action">
+                    <a href="${website}">Website</a>
+                  </div>`
+                : '') +
+            `
           </div>
         </div>
       `
@@ -118,11 +127,6 @@ function renderPlaceCards(places) {
   }
 
   PLACE_CARDS_CONTAINER.innerHTML = placeCards.join('');
-
-  let undefElements = PLACE_CARDS_CONTAINER.querySelectorAll('.undefined');
-  for(let i = 0; i < undefElements.length; i++) {
-    undefElements[i].remove();
-  }
 }
 
 /**
