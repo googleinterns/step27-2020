@@ -70,8 +70,8 @@ async function getPlaceCardInformation(places) {
 
 function renderPlaceCards(places) {
   let placeCards = [];
-  for(obj in places) {
-    const { phoneNumber, name, photoUrl, priceLevel, rating, address, website } = obj;
+  for(let i = 0; i < places.length; i++) {   
+    const { phoneNumber, name, photoUrl, priceLevel, rating, address, website } = places[i];
     const addressClass = address ? '' : undefined;
     const phoneNumberClass = phoneNumber ? '' : 'undefined';
     const ratingClass = rating ? '' : 'undefined';
@@ -81,7 +81,7 @@ function renderPlaceCards(places) {
     placeCards.push(
       `
         <div class="col s12 m6">
-          <div class="card medium">
+          <div class="card large">
             <div class="card-image">
               <img class="responsive-img" src="${photoUrl}" alt="${name}" loading="lazy">
               <span class="card-title"><strong>${name}</strong></span>
@@ -92,10 +92,10 @@ function renderPlaceCards(places) {
               </a>
             </div>
             <div class="card-content">
-              <p class=${addressClass}>${address}</p>
-              <p class=${phoneNumberClass}>${phoneNumber}</p>
-              <p class=${ratingClass}>Rating: ${rating}</p>
-              <p class=${priceLevelClass}>Price Level: ${priceLevel}</p>
+              <p class="${addressClass}">${address}</p>
+              <p class="${phoneNumberClass}">${phoneNumber}</p>
+              <p class="${ratingClass}">Rating: ${rating}</p>
+              <p class="${priceLevelClass}">Price Level: ${priceLevel}</p>
             </div>
             <div class="${websiteClass} card-action">
               <a href="${website}">Website</a>
@@ -105,9 +105,10 @@ function renderPlaceCards(places) {
       `
     )
   }
+
   placeCardsContainer.innerHTML = placeCards.join('');
 
-  const undefElements = document.querySelectorAll('.undefined');
+  let undefElements = placeCardsContainer.querySelectorAll('.undefined');
   for(let i = 0; i < undefElements.length; i++) {
     undefElements[i].remove();
   }
