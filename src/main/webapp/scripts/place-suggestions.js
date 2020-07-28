@@ -1,5 +1,7 @@
 let city;
 let filter;
+let placeSuggestions = new Map();
+
 const PLACE_CARDS_CONTAINER = document.getElementById('place-cards-container');
 const DEFAULT_PLACE_IMAGE = '../assets/img/jason-dent-blue.jpg'
 
@@ -65,15 +67,13 @@ async function findPlacesInCity(city, filter) {
  * @param {Array} places array of PlaceResult objects returned from Places API
  */
 async function getPlaceCardInformation(places) {
-  let placeDetailsArr = [];
   for(let i = 0; i < places.length; i++) {
     const { place_id } = places[i];
     const placeDetails = await getPlaceDetails(place_id);
-    placeDetails.placeId = place_id;
-    placeDetailsArr.push(placeDetails);
+    placeSuggestions.set(place_id, placeDetails);
   }
 
-  renderPlaceCards(placeDetailsArr);
+  renderPlaceCards(placeSuggestions);
 }
 
 /**
