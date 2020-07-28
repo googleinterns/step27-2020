@@ -69,6 +69,7 @@ async function getPlaceCardInformation(places) {
   for(let i = 0; i < places.length; i++) {
     const { place_id } = places[i];
     const placeDetails = await getPlaceDetails(place_id);
+    placeDetails.placeId = place_id;
     placeDetailsArr.push(placeDetails);
   }
 
