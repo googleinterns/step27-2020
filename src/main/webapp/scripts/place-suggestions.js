@@ -35,6 +35,11 @@ function addFilterHandler() {
   });
 }
 
+/**
+ * Fetches locations according to filter within 10000m radius of selected city
+ * @param {Object} city PlaceResult object with city information returned from autocomplete that user selected
+ * @param {String} filter types of locations to look for e.g. amusement park
+ */
 async function findPlacesInCity(city, filter) {
   if (!city.hasOwnProperty('place_id')) {
     M.Toast.dismissAll();
@@ -55,6 +60,10 @@ async function findPlacesInCity(city, filter) {
   getPlaceCardInformation(results);
 }
 
+/**
+ * Gets details and photos for every place returned from Places API
+ * @param {Array} places array of PlaceResult objects returned from Places API
+ */
 async function getPlaceCardInformation(places) {
   let placeDetailsArr = [];
   for(let i = 0; i < places.length; i++) {
@@ -66,6 +75,10 @@ async function getPlaceCardInformation(places) {
   renderPlaceCards(placeDetailsArr);
 }
 
+/**
+ * Renders information cards to DOM for each place suggestion
+ * @param {Array} places array of objects containing information and photo URLs about each place
+ */
 function renderPlaceCards(places) {
   let placeCards = [];
   for(let i = 0; i < places.length; i++) {   
@@ -112,6 +125,10 @@ function renderPlaceCards(places) {
   }
 }
 
+/**
+ * Fetches more details about place such as phone number and website and puts it all into an object
+ * @param {String} placeId place ID of place to get details about 
+ */
 async function getPlaceDetails(placeId) {
   const detailsResponse = await fetch(
     `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${GOOGLE_API_KEY}`
@@ -133,7 +150,10 @@ async function getPlaceDetails(placeId) {
   return placeDetails;
 }
 
-
+/**
+ * Gets URL for photo of place or assigns it a default one if there are no photos available
+ * @param {Array} photos array of photos from PlaceResult object
+ */
 async function imageURLFromPhotos(photos) {
   const photoRef = 
     photos && Array.isArray(photos)
