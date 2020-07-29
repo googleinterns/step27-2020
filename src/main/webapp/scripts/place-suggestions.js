@@ -1,6 +1,7 @@
 let city;
 let filter;
 let placesMap = new Map();
+let locationData = [];
 
 const PLACE_CARDS_CONTAINER = document.getElementById('place-cards-container');
 const DEFAULT_PLACE_IMAGE = '../assets/img/jason-dent-blue.jpg'
@@ -67,9 +68,11 @@ async function findPlacesInCity(city, filter) {
  * @param {Array} places array of PlaceResult objects returned from Places API
  */
 async function getPlaceCardInformation(places) {
+  placesMap.clear();
   for(let i = 0; i < places.length; i++) {
     const { place_id } = places[i];
     const placeDetails = await getPlaceDetails(place_id);
+    placeDetails.placeId = place_id;
     placesMap.set(place_id, placeDetails);
   }
 
@@ -88,13 +91,13 @@ function renderPlaceCards(placesMap) {
     placeCards.push(
       `
         <div class="col s12 m6">
-          <div id="${placeId} "class="card large">
+          <div class="card large">
             <div class="card-image">
               <img class="responsive-img" src="${photoUrl}" alt="${name}" loading="lazy">
               <span class="card-title"><strong>${name}</strong></span>
             </div>
             <div class="card-fab">
-              <a class="btn-floating halfway-fab waves-effect waves-light blue">
+              <a class="btn-floating halfway-fab waves-effect waves-light blue onclick="addPlaceToTrip(${placeId});">
                 <i class="material-icons">add</i>
               </a>
             </div>
@@ -126,8 +129,18 @@ function renderPlaceCards(placesMap) {
       `
     )
   }
-
   PLACE_CARDS_CONTAINER.innerHTML = placeCards.join('');
+}
+
+function addPlaceToTrip(placeId) {
+  const placeDetails = placesMap.get(placeId);
+  const { name } = placeDetails;
+  const place = {
+    id: placeId,
+    name: name,
+    weight: 3,
+  }
+  tripPlaces.push(place);
 }
 
 /**
