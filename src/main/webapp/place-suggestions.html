@@ -61,6 +61,18 @@
           <a href="#!" class="modal-close waves-effect btn-flat">Cancel</a>
         </div>
       </div>
+
+      <div id="current-trip-modal" class="modal bottom-sheet">
+        <div id="current-trip-content" class="modal-content">
+          <h4>Current Trip</h4>
+          <div id='current-trip-updates'></div>
+          <ul id="current-trip-places" class="collection"></ul>
+        </div>
+        <div class="modal-footer">
+          <a class="modal-close waves-effect btn-flat" onclick="saveTrip();">Save Trip</a>
+        </div>
+      </div>
+
       <div id="input-container">
         <div id="city-input-area" class="row">
           <h5 id="city-input-title" class="col s12 m7">
@@ -107,7 +119,7 @@
 
       <div id="curr-trip-btn" class="fixed-action-btn">
         <a 
-          class="btn-floating btn-large red tooltipped" 
+          class="btn-floating btn-large blue tooltipped" 
           onclick="openCurrentTrip();"
           data-position="left"
           data-tooltip="Open current trip"
