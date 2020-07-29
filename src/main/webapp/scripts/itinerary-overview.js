@@ -271,7 +271,7 @@ function storePlaceCardDetails(placeDetails){
 }
 
 function isReadyPlaces(){
-    if(placeDetailsArray.length === waypointIDs.length){
+    if(placeDetailsArray.length === (waypointIDs.length + 1)){
         renderPlaceCards(placeDetailsArray)
     }
 }
