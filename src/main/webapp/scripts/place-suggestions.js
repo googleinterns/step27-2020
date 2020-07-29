@@ -1,5 +1,8 @@
 let city;
 let filter;
+let placesMap = new Map();
+let locationData = [];
+
 const PLACE_CARDS_CONTAINER = document.getElementById('place-cards-container');
 const DEFAULT_PLACE_IMAGE = '../assets/img/jason-dent-blue.jpg'
 
@@ -65,24 +68,25 @@ async function findPlacesInCity(city, filter) {
  * @param {Array} places array of PlaceResult objects returned from Places API
  */
 async function getPlaceCardInformation(places) {
-  let placeDetailsArr = [];
+  placesMap.clear();
   for(let i = 0; i < places.length; i++) {
     const { place_id } = places[i];
     const placeDetails = await getPlaceDetails(place_id);
-    placeDetailsArr.push(placeDetails);
+    placeDetails.placeId = place_id;
+    placesMap.set(place_id, placeDetails);
   }
 
-  renderPlaceCards(placeDetailsArr);
+  renderPlaceCards(placesMap);
 }
 
 /**
  * Renders information cards to DOM for each place suggestion
  * @param {Array} places array of objects containing information and photo URLs about each place
  */
-function renderPlaceCards(places) {
+function renderPlaceCards(placesMap) {
   let placeCards = [];
-  for(let i = 0; i < places.length; i++) {   
-    const { phoneNumber, name, photoUrl, priceLevel, rating, address, website } = places[i];
+  for(let [placeId, placeDetails] of placesMap.entries()) {   
+    const { phoneNumber, name, photoUrl, priceLevel, rating, address, website } = placeDetails;
 
     placeCards.push(
       `
@@ -93,7 +97,12 @@ function renderPlaceCards(places) {
               <span class="card-title"><strong>${name}</strong></span>
             </div>
             <div class="card-fab">
-              <a class="btn-floating halfway-fab waves-effect waves-light blue">
+              <a 
+                class="btn-floating halfway-fab waves-effect waves-light blue" 
+                onclick="addPlaceToTrip('${placeId}');"
+                data-position="bottom"
+                data-tooltip="Add to current trip"
+              >
                 <i class="material-icons">add</i>
               </a>
             </div>
@@ -125,8 +134,58 @@ function renderPlaceCards(places) {
       `
     )
   }
-
   PLACE_CARDS_CONTAINER.innerHTML = placeCards.join('');
+}
+
+function addPlaceToTrip(placeId) {
+  const placeDetails = placesMap.get(placeId);
+  locationData.push(placeDetails);
+}
+
+function openCurrentTrip() {
+  const currTripUpdates = document.getElementById('current-trip-updates');
+  const currTripPlacesCollection = document.getElementById('current-trip-places');
+  const currTripModalElem = document.getElementById('current-trip-modal');
+  const currTripModalInstance = M.Modal.getInstance(currTripModalElem);
+
+  if(locationData.length <= 0 || !locationData) {
+    currTripUpdates.innerHTML = "<p>It's lonely in here, add some places!</p>";
+    currTripModalInstance.open();
+    return;
+  }
+
+  currTripUpdates.innerHTML = '';
+  currTripUpdates.innerHTML = LOADING_ANIMATION_HTML;
+  currTripModalInstance.open();
+
+  currTripPlacesCollection.innerHTML = '';
+  let currTripPlaceCards = []
+  for(let location of locationData) {
+    const { name } = location;
+    currTripPlaceCards.push(
+      `
+        <li class="collection-item">
+          <div>${name}
+            <a onclick="deletePlaceFromTrip();" class="secondary-content">
+              <i class="material-icons">delete</i>
+            </a>
+          </div>
+        </li>
+      `
+    )
+    currTripUpdates.innerHTML = '';
+    currTripPlacesCollection.innerHTML = currTripPlaceCards.join('');
+  }
+}
+
+function findHotel() {
+  if(locationData.length <= 0 || !locationData) {
+    M.Toast.dismissAll();
+    M.toast({
+      html: 'Select some places first!',
+    });
+    return;
+  }
 }
 
 /**
@@ -138,10 +197,12 @@ async function getPlaceDetails(placeId) {
     `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${GOOGLE_API_KEY}`
   )
   const { result } = await detailsResponse.json();
-  const { international_phone_number, name, photos, price_level, rating, vicinity, website } = result;
+  const { geometry, international_phone_number, name, photos, price_level, rating, vicinity, website } = result;
+  const { location } = geometry;
   const photoUrl = await imageURLFromPhotos(photos);
   
   const placeDetails = {
+    location: location,
     phoneNumber: international_phone_number,
     name: name,
     photoUrl: photoUrl,
