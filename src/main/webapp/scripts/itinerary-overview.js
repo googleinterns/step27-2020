@@ -266,18 +266,13 @@ async function getPlaceDetails(placeIDArray) {
 }
 
 function storePlaceCardDetails(placeDetails){
-    console.log("Storing Place Details: " +  JSON.stringify(placeDetails))
     placeDetailsArray.push(placeDetails)
-    console.log("Done")
     isReadyPlaces()
 }
 
 function isReadyPlaces(){
     if(placeDetailsArray.length === waypointIDs.length){
-        console.log("Ready")
         renderPlaceCards(placeDetailsArray)
-    }else{
-        console.log("Not Ready")
     }
 }
 
