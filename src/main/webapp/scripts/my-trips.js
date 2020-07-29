@@ -754,7 +754,12 @@ async function fetchAndRenderTripsFromDB() {
               </div>
               <div id="trip-${timestamp}-locations"></div>
               <div id="trip-${timestamp}-map" class="trip-map"></div>
-            </div>
+            </div>` + 
+          isPastTrip === 'false'
+          ? `<div class="card-action">
+              <a class="btn-large indigo waves-effect" onclick="setTripToPastOrPlanned('${timestamp}', '${isPastTrip}')">This is a link</a>
+             </div>` : '' +
+          `
           </div>
         </div>
         <div class="col s12 m4" id="trip-${timestamp}-hotel-card">
@@ -996,4 +1001,31 @@ function getNumPlaceObjectsInArray(arr) {
     (acc, curr) => acc + (curr.place_id == undefined ? 0 : 1),
     0
   );
+}
+
+/**
+ * Sets a trip, identified by its timestamp, to a past trip.
+ * @param {string} timestamp 
+ * @param {string} isPastTrip - 'true' if setting trip to past trip, 'false' otherwise
+ */
+async function setTripToPastOrPlanned(timestamp, isPastTrip) {
+  const response = await fetch(`/trips-network?timestamp=${timestamp}&is_past_trip=${isPastTrip}`, {
+    method: 'PUT',
+    headers: {
+      'content-type': 'application/json',
+    },
+  });
+  
+  if (response.ok) {
+    M.toast({
+      html:
+        "Sucessfully marked trip as completed.",
+    });
+    fetchAndRenderTripsFromDB();
+  } else {
+    M.toast({
+      html:
+        "There was an error while setting your trip to a past trip. Please try again.",
+    });
+  }
 }
