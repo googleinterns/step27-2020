@@ -12,6 +12,7 @@ let numLocations;
 let locationPlaceObjects;
 let mapInitialized;
 let markers;
+
 /**
  * Adds a trip editor interface to the DOM, which the user can use to add a trip.
  * @param {string|null} timestamp timestamp string of the trip to be updated.
@@ -48,13 +49,19 @@ function openTripEditor(timestamp, locationData, title) {
             <form id="trip-editor-form">
               <div id="trip-locations-container">
                 <div class="row">
-                  <div class="col s6">
+                  <div class="col s12 m6">
                     <label for="location-1">Location 1</label>
                     <input id="location-1" type="text" required />
                   </div>
-                  <div class="col s6">
+                  <div class="col s9 m5">
                     <p class="range-field weight-slider">
-                      <label for="location-1-weight">Weight</label>
+                      <label 
+                        for="location-1-weight"
+                        class="tooltipped"
+                        data-tooltip="Assign how close you want to be to this location"
+                      >
+                        Weight
+                      </label>
                       <input
                         type="range"
                         name="location-1-weight"
@@ -65,6 +72,7 @@ function openTripEditor(timestamp, locationData, title) {
                       />
                     </p>
                   </div>
+                   
                 </div>
               </div>
               <div class="row">
@@ -135,18 +143,25 @@ function openTripEditor(timestamp, locationData, title) {
     for (let i = 2; i <= numLocations; i++) {
       document.getElementById('trip-locations-container').insertAdjacentHTML(
         'beforeend',
-        `<div class="row">
-          <div class="col s6">
-            <label for="location-${i}">Location ${i}</label>
+        `<div class="row" id="location-${i}-container">
+          <div class="col s12 m6">
+            <label for="location-${i}" id="location-${i}-label">Location ${i}</label>
             <input 
               id="location-${i}" 
               type="text" 
               value="${locationData[i - 1].placeName}"
             />
           </div>
-          <div class="col s6">
+          <div class="col s9 m5">
             <p class="range-field weight-slider">
-              <label for="location-${i}-weight">Weight</label>
+              <label 
+                for="location-${i}-weight" 
+                id="location-${i}-weight-label"
+                class="tooltipped"
+                data-tooltip="Assign how close you want to be to this location"
+              >
+                Weight
+              </label>
               <input
                 type="range"
                 name="location-${i}-weight"
@@ -157,6 +172,16 @@ function openTripEditor(timestamp, locationData, title) {
                 step="1"
               />
             </p>
+          </div>
+           <div class="col s3 m1">
+            <a 
+              id="location-${i}-delete"
+              class="btn-floating indigo waves-effect tooltipped" 
+              data-tooltip="Delete this location"
+              onclick="deleteLocation(${i})"
+            >
+              <i class="material-icons">remove_circle</i>
+            </a>
           </div>
         </div>
         `
@@ -195,6 +220,12 @@ function openTripEditor(timestamp, locationData, title) {
             infoWindow.open(map, marker);
           });
           fitMapToMarkers(map, markers);
+        } else {
+          M.Toast.dismissAll();
+          M.toast({
+            html:
+              "There was an error while loading one of your locations. Please try again.",
+          });
         }
       });
     });
@@ -217,14 +248,21 @@ function addLocation() {
   numLocations++;
   document.getElementById('trip-locations-container').insertAdjacentHTML(
     'beforeend',
-    `<div class="row">
-      <div class="col s6">
-        <label for="location-${numLocations}">Location ${numLocations}</label>
+    `<div class="row" id="location-${numLocations}-container">
+      <div class="col s12 m6">
+        <label for="location-${numLocations}" id="location-${numLocations}-label">Location ${numLocations}</label>
         <input id="location-${numLocations}" type="text" />
       </div>
-      <div class="col s6">
+      <div class="col s9 m5">
         <p class="range-field weight-slider">
-          <label for="location-${numLocations}-weight">Weight</label>
+          <label 
+            for="location-${numLocations}-weight" 
+            id="location-${numLocations}-weight-label"
+            class="tooltipped"
+            data-tooltip="Assign how close you want to be to this location"
+          >
+            Weight
+          </label>
           <input
             type="range"
             name="location-${numLocations}-weight"
@@ -234,14 +272,84 @@ function addLocation() {
           />
         </p>
       </div>
+      <div class="col s3 m1">
+        <a 
+          id="location-${numLocations}-delete"
+          class="btn-floating indigo waves-effect tooltipped"
+          data-tooltip="Delete this location" 
+          onclick="deleteLocation(${numLocations})"
+        >
+          <i class="material-icons">remove_circle</i>
+        </a>
+      </div>
     </div>`
   );
   // add autocomplete through Places API for new location
   const location = document.getElementById(`location-${numLocations}`);
   const autocomplete = new google.maps.places.Autocomplete(location);
+
+  // initialize tooltips for new locations
+  const tooltipElems = document.querySelectorAll('.tooltipped');
+  const tooltipInstances = M.Tooltip.init(tooltipElems, undefined);
   createPlaceHandler(autocomplete, numLocations);
   markers.push('');
   locationPlaceObjects.push('');
+}
+
+/**
+ * Deletes a location in a certain trip open in the Trip Editor.
+ * @param {number} locationNum number of location to be deleted
+ * @throws Will throw an error if the locationNum is invalid.
+ */
+function deleteLocation(locationNum) {
+  if (locationNum > markers.length || locationNum < 1) {
+    throw new Error('Cannot delete invalid location');
+  }
+  const index = locationNum - 1;
+  // Close current tooltip
+  const currDeleteButton = document.getElementById(
+    `location-${locationNum}-delete`
+  );
+  const instance = M.Tooltip.getInstance(currDeleteButton);
+  instance.close();
+
+  // Remove trip from DOM and shift following trip location nums down 1
+  const elem = document.getElementById(`location-${locationNum}-container`);
+  elem.parentElement.removeChild(elem);
+  for (let i = locationNum + 1; i <= numLocations; i++) {
+    const locationContainer = document.getElementById(
+      `location-${i}-container`
+    );
+    const locationLabel = document.getElementById(`location-${i}-label`);
+    const location = document.getElementById(`location-${i}`);
+    const weightLabel = document.getElementById(`location-${i}-weight-label`);
+    const weight = document.getElementById(`location-${i}-weight`);
+    const deleteButton = document.getElementById(`location-${i}-delete`);
+    const locationShift = `location-${i - 1}`;
+
+    const autocomplete = new google.maps.places.Autocomplete(location);
+    google.maps.event.clearInstanceListeners(autocomplete);
+    createPlaceHandler(autocomplete, i - 1);
+    locationContainer.id = `${locationShift}-container`;
+    locationLabel.id = `${locationShift}-label`;
+    location.id = `${locationShift}`;
+    
+    weightLabel.id = `${locationShift}-weight-label`;
+    weight.id = `${locationShift}-weight`;
+    deleteButton.id = `${locationShift}-delete`;
+    locationLabel.innerText = `Location ${i - 1}`;
+    locationLabel.htmlFor = `${locationShift}`;
+    deleteButton.onclick = () => deleteLocation(i - 1);
+  }
+
+  // Remove marker from map and also the array
+  if (markers[index] !== '') {
+    markers[index].setMap(null);
+  }
+  numLocations--;
+  markers.splice(index, 1);
+  fitMapToMarkers(map, markers);
+  locationPlaceObjects.splice(index, 1);
 }
 
 /**
@@ -779,7 +887,7 @@ function createPlaceHandler(element, locationNum) {
   google.maps.event.addListener(element, 'place_changed', () => {
     const obj = element.getPlace();
     obj.locationNum = locationNum;
-    locationPlaceObjects[locationNum - 1] = obj;
+    
     const { geometry, name } = obj;
     const { location } = geometry;
     const { lat, lng } = location;
@@ -797,9 +905,13 @@ function createPlaceHandler(element, locationNum) {
     }
     if (markers[locationNum - 1] !== '') {
       const currMarkerForLocation = markers[locationNum - 1];
+      if (currMarkerForLocation === undefined || locationNum > markers.length) {
+        google.maps.event.clearInstanceListeners(element, 'place_changed');
+        return;
+      }
       currMarkerForLocation.setMap(null);
     }
-
+    
     const marker = new google.maps.Marker({
       position: coords,
       map: map,
@@ -810,8 +922,10 @@ function createPlaceHandler(element, locationNum) {
           <p class="infowindow-text">Location ${locationNum}</p>`,
     });
     marker.addListener('click', () => infoWindow.open(map, marker));
+    locationPlaceObjects[locationNum - 1] = obj;
     markers[locationNum - 1] = marker;
-    if (locationNum !== 1) {
+    
+    if (markers.length !== 1) { 
       fitMapToMarkers(map, markers);
       map.setZoom(map.getZoom() - 0.3);
     }
