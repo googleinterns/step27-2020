@@ -5,18 +5,18 @@ let end;
 let hotel_name = "";
 let hotel_ID = "";
 let hotelAddress = "";
-let hotelNumber;
-let hotelPhoto = "";
+
 
 let waypointNames = [];
 let waypointIDs = [];
 let waypointAddresses = [];
-let waypointNumbers = [];
-let waypointPhotos = [];
 
+let placeDetailsArray = [];
 
 let waypointsLength = 0;
 let addressLength = 0;
+
+const PLACE_CARDS_CONTAINER = document.getElementById('place-cards-container');
 
 function init() {
     document.getElementById('itinerary-link').classList.add('active');
@@ -78,6 +78,7 @@ async function getTripData(){
         waypointsLength++;
     }
 
+    await getPlaceDetails(waypointIDs)
     geocodePlaceId(hotel_ID, waypointIDs);
 }
 
@@ -120,30 +121,30 @@ function geocodePlaceId(hotelID, waypointIDs) {
 
 /**
  * Used to store the waypoint addresses given from geocodePlaceID()  in an Array to avoid from unordered execution
- * within the geocode function. Calls isReady() to test if the Array is set up to be used in calculateRoute() .
+ * within the geocode function. Calls isReadyRoutes() to test if the Array is set up to be used in calculateRoute() .
  * @param waypointAddress - The address of the waypoint being converted in geocodePlaceID()
  */
 function storeWaypointsAddress(waypointAddress){
     waypointAddresses.push(waypointAddress);
     addressLength++;
-    isReady();
+    isReadyRoutes();
 }
 
 /**
  * Used to store the hotel address given from geocodePlaceID() in the global string to avoid from unordered execution
- * within the geocode function. Calls isReady() to test if the string is set up to be used in calculateRoute().
+ * within the geocode function. Calls isReadyRoutes() to test if the string is set up to be used in calculateRoute().
  * @param address - The hotel address from geocodePlaceID()
  */
 function storeHotelAddress(address) {
     hotelAddress = address;
-    isReady();
+    isReadyRoutes();
 }
 
 /**
  * This functions purpose is the make sure the both the waypoints Array and hotel Address have the expected amount of
  * values in them to be used in route calculation to prevent from unexpected actions.
  */
-function isReady(){
+function isReadyRoutes(){
     if(waypointsLength === addressLength && hotelAddress !== ""){
         calculateRoute(hotelAddress, waypointAddresses);
     }
@@ -228,13 +229,102 @@ function displayRoute(start, waypoints, end) {
 
 
 /**
+ * Fetches more details about place such as phone number and website and puts it all into an object
+ * @param {Array} placeIDArray place ID of place to get details about
+ */
+async function getPlaceDetails(placeIDArray) {
+
+    const detailsResponse = await fetch(
+        `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/details/json?place_id=${hotel_ID}&key=${GOOGLE_API_KEY}`
+    )
+    const { result } = await detailsResponse.json();
+    const { international_phone_number, name, vicinity, website } = result;
+
+    const placeDetails = {
+        phoneNumber: international_phone_number,
+        name: name,
+        address: vicinity,
+        website: website
+    }
+    storePlaceCardDetails(placeDetails);
+
+    for(let placeID of placeIDArray){
+        const detailsResponse = await fetch(
+            `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeID}&key=${GOOGLE_API_KEY}`
+        )
+        const { result } = await detailsResponse.json();
+        const { international_phone_number, name, vicinity, website } = result;
+
+        const placeDetails = {
+            phoneNumber: international_phone_number,
+            name: name,
+            address: vicinity,
+            website: website
+        }
+        storePlaceCardDetails(placeDetails);
+    }
+}
+
+function storePlaceCardDetails(placeDetails){
+    placeDetailsArray.push(placeDetails)
+    isReadyPlaces()
+}
+
+function isReadyPlaces(){
+    if(placeDetailsArray.length === waypointIDs.length){
+        renderPlaceCards(placeDetailsArray)
+    }
+}
+
+/**
+ * Renders information cards to DOM for each place suggestion
+ * @param {Array} places array of objects containing information and photo URLs about each place
+ */
+function renderPlaceCards(places) {
+    let placeCards = [];
+    for(let i = 0; i < places.length; i++) {
+        const { phoneNumber, name, address, website } = places[i];
+
+        placeCards.push(
+            `
+        <div class="col s12">
+            <div class="card horizontal">
+                <div class="card-image">
+        <img src="../assets/img/Building.jpg">
+                </div>
+        <div class="card-stacked">
+            <div class="card-content">
+            ` +
+            (name
+                ? `<p>${name}</p>`
+                : '') +
+            (address
+                ? `<p>${address}</p>`
+                : '') +
+            (phoneNumber
+                ? `<p>${phoneNumber}</p>`
+                : '') +
+            (website
+                ? `<p><a href="${website}">Website</a></p>`
+                : '') +
+            `
+            </div>
+            </div>
+        </div>
+    </div>
+      `
+        )
+    }
+    PLACE_CARDS_CONTAINER.innerHTML = placeCards.join('');
+}
+
+/**
  * Takes a latitude and longitude pair as parameters and centers the map on that specific
  * Location
  */
 function setCenter(coords) {
     map.setCenter(coords);
 }
-
 
 /**
  * Takes a latitude and longitude value as parameters and drops a maker on that specific
