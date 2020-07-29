@@ -51,6 +51,16 @@
     <div id="map"></div>
 
     <div class="page-container container">
+      <div id="hotel-modal" class="modal">
+        <div class="modal-content">
+          <h4>Hotel Results</h4>
+          <div id="hotels-map"></div>
+          <div id="hotel-results"></div>
+        </div>
+        <div class="modal-footer">
+          <a href="#!" class="modal-close waves-effect btn-flat">Cancel</a>
+        </div>
+      </div>
       <div id="input-container">
         <div id="city-input-area" class="row">
           <h5 id="city-input-title" class="col s12 m7">
@@ -94,6 +104,17 @@
       </div>
 
       <div id="place-cards-container" class="row"></div>
+
+      <div id="curr-trip-btn" class="fixed-action-btn">
+        <a 
+          class="btn-floating btn-large red tooltipped" 
+          onclick="openCurrentTrip();"
+          data-position="left"
+          data-tooltip="Open current trip"
+        >
+          <i class="large material-icons">mode_edit</i>
+        </a>
+      </div>
     </div>
 
     <div id="footer-section"></div>
