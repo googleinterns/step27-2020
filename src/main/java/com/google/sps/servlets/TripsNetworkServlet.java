@@ -22,6 +22,8 @@ import com.google.sps.util.TripDataConverter;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -46,15 +48,26 @@ public class TripsNetworkServlet extends HttpServlet {
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
     PreparedQuery tripResults = datastore.prepare(tripQuery);
     Iterable<Entity> tripEntityIterable = tripResults.asIterable();
+
+    Map<Trip, List<TripLocation>> tripsResponseMap = new HashMap<>();
     for (Entity entity : tripEntityIterable) {
+      // query and store trip locations under the current trip in the map
       Trip trip = TripDataConverter.convertEntityToTrip(entity);
+      Query tripLocationsQuery = new Query("trip-location").setAncestor(entity.getKey());
+      Iterable<Entity> tripLocationEntityIterable = datastore.prepare(tripLocationsQuery).asIterable();
+
+      List<TripLocation> tripLocationList = new ArrayList<>();
+      for (Entity tripEntity : tripLocationEntityIterable) {
+        TripLocation location = TripDataConverter.convertEntityToTripLocation(tripEntity);
+        tripLocationList.add(location);
+      }
+      tripsResponseMap.put(trip, tripLocationList);
     }
-    List<Map<Key, List<TripLocation>>> tripLocationMapList = new ArrayList<>();
-    Query tripLocationsQuery = new Query("trip-location")
-        .setFilter(new FilterPredicate(TripLocation.ENTITY_PROPERTY_OWNER, FilterOperator.EQUAL, userEmail));
 
     response.setContentType("application/json");
     Gson gson = new Gson();
-
+    String serializedJSON = gson.toJson(tripsResponseMap);
+    response.getWriter().println(serializedJSON);
+    response.setStatus(HttpServletResponse.SC_OK);
   }
 }
