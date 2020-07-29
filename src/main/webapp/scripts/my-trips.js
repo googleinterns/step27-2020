@@ -224,7 +224,7 @@ function openTripEditor(timestamp, locationData, title) {
           M.Toast.dismissAll();
           M.toast({
             html:
-              "There was an error while loading one of your locations. Please try again.",
+              'There was an error while loading one of your locations. Please try again.',
           });
         }
       });
@@ -333,7 +333,7 @@ function deleteLocation(locationNum) {
     locationContainer.id = `${locationShift}-container`;
     locationLabel.id = `${locationShift}-label`;
     location.id = `${locationShift}`;
-    
+
     weightLabel.id = `${locationShift}-weight-label`;
     weight.id = `${locationShift}-weight`;
     deleteButton.id = `${locationShift}-delete`;
@@ -724,7 +724,8 @@ async function fetchAndRenderTripsFromDB() {
       isPlannedTripsEmpty = false;
       HTMLElementToUpdate = plannedTripsHTMLElement;
     }
-    HTMLElementToUpdate.innerHTML += `
+    HTMLElementToUpdate.innerHTML +=
+      `
       <div class="row">
         <div class="col s12 m8">
           <div class="card">
@@ -754,7 +755,16 @@ async function fetchAndRenderTripsFromDB() {
               </div>
               <div id="trip-${timestamp}-locations"></div>
               <div id="trip-${timestamp}-map" class="trip-map"></div>
-            </div>
+            </div>` +
+      (isPastTrip === 'false'
+        ? `<div class="card-action center">
+                <a class="btn indigo waves-effect" onclick="setTripToPastOrPlanned('${timestamp}', 'true')">Mark Trip Completed</a>
+              </div>`
+        : `<div class="card-action center">
+                <a class="btn indigo waves-effect" onclick="setTripToPastOrPlanned('${timestamp}', 'false')">Mark Trip Planned</a>
+                <a class="btn indigo waves-effect" onclick="openTripsNetworkModal('${timestamp}')">Post on Trips Network</a>
+              </div>`) +
+      `
           </div>
         </div>
         <div class="col s12 m4" id="trip-${timestamp}-hotel-card">
@@ -887,7 +897,7 @@ function createPlaceHandler(element, locationNum) {
   google.maps.event.addListener(element, 'place_changed', () => {
     const obj = element.getPlace();
     obj.locationNum = locationNum;
-    
+
     const { geometry, name } = obj;
     const { location } = geometry;
     const { lat, lng } = location;
@@ -911,7 +921,7 @@ function createPlaceHandler(element, locationNum) {
       }
       currMarkerForLocation.setMap(null);
     }
-    
+
     const marker = new google.maps.Marker({
       position: coords,
       map: map,
@@ -924,8 +934,8 @@ function createPlaceHandler(element, locationNum) {
     marker.addListener('click', () => infoWindow.open(map, marker));
     locationPlaceObjects[locationNum - 1] = obj;
     markers[locationNum - 1] = marker;
-    
-    if (markers.length !== 1) { 
+
+    if (markers.length !== 1) {
       fitMapToMarkers(map, markers);
       map.setZoom(map.getZoom() - 0.3);
     }
@@ -996,4 +1006,85 @@ function getNumPlaceObjectsInArray(arr) {
     (acc, curr) => acc + (curr.place_id == undefined ? 0 : 1),
     0
   );
+}
+
+/**
+ * Sets a trip, identified by its timestamp, to a past trip.
+ * @param {string} timestamp
+ * @param {string} isPastTrip - 'true' if setting trip to past trip, 'false' otherwise
+ */
+async function setTripToPastOrPlanned(timestamp, isPastTrip) {
+  const response = await fetch(
+    `/trips-network?timestamp=${timestamp}&is_past_trip=${isPastTrip}`,
+    {
+      method: 'PUT',
+      headers: {
+        'content-type': 'application/json',
+      },
+    }
+  );
+
+  if (response.ok) {
+    M.toast({
+      html:
+        'Successfully marked trip as ' +
+        (isPastTrip === 'true' ? 'completed.' : 'planned'),
+    });
+    fetchAndRenderTripsFromDB();
+  } else {
+    M.toast({
+      html:
+        'There was an error while setting your trip to a past trip. Please try again.',
+    });
+  }
+}
+
+/**
+ * Opens a modal for posting the trip, identified by its timestamp, to the Trips Network.
+ * @param {string} timestamp
+ */
+function openTripsNetworkModal(timestamp) {
+  const elem = document.getElementById('trips-network-modal');
+  const instance = M.Modal.getInstance(elem);
+  instance.open();
+  const submitButton = document.getElementById('post-trip-button');
+  submitButton.onclick = () => postTripToTripsNetwork(timestamp);
+
+  // prevent page reload on form submit
+  const form = document.getElementById('trips-network-form');
+  form.addEventListener('submit', (e) => e.preventDefault());
+}
+
+/**
+ * Gets description and rating values from DOM and posts corresponding trip to trips network
+ * @param {string} timestamp
+ */
+async function postTripToTripsNetwork(timestamp) {
+  const desc = document.getElementById('trip-description').value;
+  const rating = document.getElementById('trip-rating').value;
+  const response = await fetch('/trips-network', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      description: desc,
+      rating: rating,
+      timestamp: timestamp,
+    }),
+  });
+
+  if (response.ok) {
+    M.toast({
+      html: 'Successfully posted trip to the Trips Network',
+    });
+    const elem = document.getElementById('trips-network-modal');
+    const instance = M.Modal.getInstance(elem);
+    instance.close();
+  } else {
+    M.toast({
+      html:
+        'There was an error while posting your trip to the Trips Network. Please try again.',
+    });
+  }
 }

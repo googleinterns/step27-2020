@@ -5,6 +5,7 @@ import com.google.appengine.tools.development.testing.LocalDatastoreServiceTestC
 import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
 import com.google.sps.data.Trip;
 import com.google.sps.servlets.TripsServlet;
+import com.google.sps.util.TripDataConverter;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -40,7 +41,7 @@ public class TripsServletTest {
     tripEntity.setProperty(Trip.ENTITY_PROPERTY_PAST_TRIP, false);
     tripEntity.setProperty(Trip.ENTITY_PROPERTY_PUBLIC, true);
     tripEntity.setProperty(Trip.ENTITY_PROPERTY_TIMESTAMP, 3942943923949L);
-    Trip trip = TripsServlet.convertEntityToTrip(tripEntity);
+    Trip trip = TripDataConverter.convertEntityToTrip(tripEntity);
 
     Assert.assertEquals("foo trip", trip.title());
     Assert.assertEquals("24234235", trip.hotelID());

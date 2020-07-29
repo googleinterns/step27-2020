@@ -20,3 +20,8 @@
   min-height: 100vh;
   padding-bottom: 1.5em;
 }
+
+.placeholder-text {
+  color: grey;
+  font-size: 18px;
+}
