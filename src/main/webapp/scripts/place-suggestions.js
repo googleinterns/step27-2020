@@ -97,7 +97,12 @@ function renderPlaceCards(placesMap) {
               <span class="card-title"><strong>${name}</strong></span>
             </div>
             <div class="card-fab">
-              <a class="btn-floating halfway-fab waves-effect waves-light blue" onclick="addPlaceToTrip('${placeId}');">
+              <a 
+                class="btn-floating halfway-fab waves-effect waves-light blue" 
+                onclick="addPlaceToTrip('${placeId}');"
+                data-position="bottom"
+                data-tooltip="Add to current trip"
+              >
                 <i class="material-icons">add</i>
               </a>
             </div>
@@ -134,14 +139,7 @@ function renderPlaceCards(placesMap) {
 
 function addPlaceToTrip(placeId) {
   const placeDetails = placesMap.get(placeId);
-  const { name } = placeDetails;
-  const place = {
-    id: placeId,
-    name: name,
-    weight: 3,
-  };
-  locationData.push(place);
-  console.log('here');
+  locationData.push(placeDetails);
 }
 
 function openCurrentTrip() {
@@ -180,8 +178,8 @@ function openCurrentTrip() {
   }
 }
 
-function saveTrip() {
-  if(locationData.length <= 0) {
+function findHotel() {
+  if(locationData.length <= 0 || !locationData) {
     M.Toast.dismissAll();
     M.toast({
       html: 'Select some places first!',
@@ -199,10 +197,12 @@ async function getPlaceDetails(placeId) {
     `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${GOOGLE_API_KEY}`
   )
   const { result } = await detailsResponse.json();
-  const { international_phone_number, name, photos, price_level, rating, vicinity, website } = result;
+  const { geometry, international_phone_number, name, photos, price_level, rating, vicinity, website } = result;
+  const { location } = geometry;
   const photoUrl = await imageURLFromPhotos(photos);
   
   const placeDetails = {
+    location: location,
     phoneNumber: international_phone_number,
     name: name,
     photoUrl: photoUrl,
