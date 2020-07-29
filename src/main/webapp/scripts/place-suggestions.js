@@ -97,7 +97,7 @@ function renderPlaceCards(placesMap) {
               <span class="card-title"><strong>${name}</strong></span>
             </div>
             <div class="card-fab">
-              <a class="btn-floating halfway-fab waves-effect waves-light blue onclick="addPlaceToTrip(${placeId});">
+              <a class="btn-floating halfway-fab waves-effect waves-light blue" onclick="addPlaceToTrip('${placeId}');">
                 <i class="material-icons">add</i>
               </a>
             </div>
@@ -139,8 +139,55 @@ function addPlaceToTrip(placeId) {
     id: placeId,
     name: name,
     weight: 3,
+  };
+  locationData.push(place);
+  console.log('here');
+}
+
+function openCurrentTrip() {
+  const currTripUpdates = document.getElementById('current-trip-updates');
+  const currTripPlacesCollection = document.getElementById('current-trip-places');
+  const currTripModalElem = document.getElementById('current-trip-modal');
+  const currTripModalInstance = M.Modal.getInstance(currTripModalElem);
+
+  if(locationData.length <= 0 || !locationData) {
+    currTripUpdates.innerHTML = "<p>It's lonely in here, add some places!</p>";
+    currTripModalInstance.open();
+    return;
   }
-  tripPlaces.push(place);
+
+  currTripUpdates.innerHTML = '';
+  currTripUpdates.innerHTML = LOADING_ANIMATION_HTML;
+  currTripModalInstance.open();
+
+  currTripPlacesCollection.innerHTML = '';
+  let currTripPlaceCards = []
+  for(let location of locationData) {
+    const { name } = location;
+    currTripPlaceCards.push(
+      `
+        <li class="collection-item">
+          <div>${name}
+            <a onclick="deletePlaceFromTrip();" class="secondary-content">
+              <i class="material-icons">delete</i>
+            </a>
+          </div>
+        </li>
+      `
+    )
+    currTripUpdates.innerHTML = '';
+    currTripPlacesCollection.innerHTML = currTripPlaceCards.join('');
+  }
+}
+
+function saveTrip() {
+  if(locationData.length <= 0) {
+    M.Toast.dismissAll();
+    M.toast({
+      html: 'Select some places first!',
+    });
+    return;
+  }
 }
 
 /**
