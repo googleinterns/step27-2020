@@ -14,10 +14,12 @@ import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.google.sps.data.AuthInfo;
 import com.google.sps.data.Trip;
 import com.google.sps.data.TripLocation;
 import com.google.sps.util.AuthChecker;
+import com.google.sps.util.BodyParser;
 import com.google.sps.util.TripDataConverter;
 
 import java.io.IOException;
@@ -98,6 +100,47 @@ public class TripsNetworkServlet extends HttpServlet {
     Entity tripToPatch = iterator.next();
     tripToPatch.setProperty(Trip.ENTITY_PROPERTY_PAST_TRIP, isPastTrip);
     datastore.put(tripToPatch);
+
+    response.setStatus(HttpServletResponse.SC_OK);
+  }
+
+  @Override
+  public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    String userEmail = AuthChecker.getUserEmail(response);
+    if (userEmail == null) {
+      return;
+    }
+    JsonObject jsonObject = BodyParser.parseJsonObjectFromRequest(request);
+    long timestamp = jsonObject.getAsJsonPrimitive(Trip.ENTITY_PROPERTY_TIMESTAMP).getAsLong();
+    double rating = jsonObject.getAsJsonPrimitive(Trip.ENTITY_PROPERTY_RATING).getAsDouble();
+    String description = jsonObject.getAsJsonPrimitive(Trip.ENTITY_PROPERTY_DESCRIPTION).getAsString();
+
+    DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+
+    Query tripQuery = new Query("trip")
+        .setFilter(new FilterPredicate(Trip.ENTITY_PROPERTY_OWNER, FilterOperator.EQUAL, userEmail))
+        .setFilter(new FilterPredicate(Trip.ENTITY_PROPERTY_TIMESTAMP, FilterOperator.EQUAL, timestamp));
+
+    Iterable<Entity> tripEntityIterable = datastore.prepare(tripQuery).asIterable();
+
+    if (Iterables.size(tripEntityIterable) == 0) {
+      response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+      return;
+    }
+
+    Iterator<Entity> iterator = tripEntityIterable.iterator();
+    Entity tripToPost = iterator.next();
+
+    if (!(boolean) tripToPost.getProperty(Trip.ENTITY_PROPERTY_PAST_TRIP)) {
+      // Trip isn't a past trip, so we can't post it to the network.
+      response.setStatus(HttpServletResponse.SC_PRECONDITION_FAILED);
+    }
+
+    tripToPost.setProperty(Trip.ENTITY_PROPERTY_PUBLIC, true);
+    tripToPost.setProperty(Trip.ENTITY_PROPERTY_RATING, rating);
+    tripToPost.setProperty(Trip.ENTITY_PROPERTY_DESCRIPTION, description);
+
+    datastore.put(tripToPost);
 
     response.setStatus(HttpServletResponse.SC_OK);
   }
