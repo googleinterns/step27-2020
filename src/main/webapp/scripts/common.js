@@ -25,6 +25,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const modalInstances = M.Modal.init(modalElems, undefined);
   const formSelectElems = document.querySelectorAll('select');
   const formSelectInstances = M.FormSelect.init(formSelectElems, undefined);
+  const tooltipElems = document.querySelectorAll('.tooltipped');
+  const tooltipInstances = M.Tooltip.init(tooltipElems, undefined);
 });
 
 /**
