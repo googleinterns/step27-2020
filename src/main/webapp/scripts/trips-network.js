@@ -10,23 +10,21 @@ function init() {
 
 /**
  * Fetches shared trips data from /trips-network endpoint and renders it to the page
- * in card format. 
+ * in card format.
  */
 async function loadSharedTripsData() {
-  // Render loading animation while awaiting the backend fetch. 
+  // Render loading animation while awaiting the backend fetch.
   document.getElementById(
     'shared-trips-section'
   ).innerHTML = LOADING_ANIMATION_HTML;
 
   const response = await fetch('/trips-network', {
-    method: 'GET'
+    method: 'GET',
   });
   const tripsData = await response.json();
   const keys = Object.keys(tripsData);
   if (keys.length === 0) {
-    document.getElementById(
-      'shared-trips-section'
-    ).innerHTML = `
+    document.getElementById('shared-trips-section').innerHTML = `
       <div class="row"><div class="col s12">
       <p class="placeholder-text">No posts to show. Be the first one to post!</p>
       </div></div>
@@ -49,7 +47,7 @@ async function loadSharedTripsData() {
       description,
       rating,
     } = parseSerializedJson(key);
-    
+
     const locations = tripsData[key];
     const currData = {
       title: title,
@@ -63,10 +61,17 @@ async function loadSharedTripsData() {
     posts.push(currData);
   }
   // Once data is loaded, render them into cards that display the data readably
-  document.getElementById(
-    'shared-trips-section'
-  ).innerHTML = posts.map(
-    ({ title, destinations, owner, description, hotel, hotelImage, rating }) => `
+  document.getElementById('shared-trips-section').innerHTML = posts
+    .map(
+      ({
+        title,
+        destinations,
+        owner,
+        description,
+        hotel,
+        hotelImage,
+        rating,
+      }) => `
         <div class="col m12 shared-trip-card">
           <div class="card">
             <div class="card-content">
@@ -96,5 +101,6 @@ async function loadSharedTripsData() {
           </div>
         </div>
       `
-  ).join('');
+    )
+    .join('');
 }
