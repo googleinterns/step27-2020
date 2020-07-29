@@ -69,7 +69,7 @@ async function findPlacesInCity(city, filter) {
  */
 async function getPlaceCardInformation(places) {
   placesMap.clear();
-  places.slice(0, 5);
+  places = places.slice(0, 5);
   for(let i = 0; i < places.length; i++) {
     const { place_id } = places[i];
     const placeDetails = await getPlaceDetails(place_id);
