@@ -8,85 +8,65 @@ function init() {
   loadSharedTripsData();
 }
 
-const SAMPLE_POSTS_DATA = [
-  {
-    title: 'Amazing SF Trip',
-    destinations: [
-      {
-        name: 'Golden Gate Bridge',
-      },
-      {
-        name: "Fisherman's Wharf",
-      },
-    ],
-    owner: 'CoolGuy123',
-    description:
-      'Great trip in SF, had a lot of fun. Lorem ipsum dolor sit amet.',
-    timestamp: 1593466864528,
-    hotel: 'Hotel Inn San Fransisco',
-    rating: 4.5,
-  },
-  {
-    title: 'Very Very Good Trip',
-    destinations: [
-      {
-        name: 'Empire State Building',
-      },
-      {
-        name: 'SoHo',
-      },
-      {
-        name: 'High Line',
-      },
-    ],
-    owner: 'HappyGuy',
-    description: 'Great trip. Not much else to say.',
-    timestamp: 1583466733528,
-    hotel: 'Luxury Hotel New York',
-    rating: 5,
-  },
-  {
-    title: "Don't Go Here",
-    destinations: [
-      {
-        name: 'Bad Place #1',
-      },
-      {
-        name: 'Bad Place #2',
-      },
-      {
-        name: 'Bad Place #3',
-      },
-    ],
-    owner: 'BadGuy123',
-    description: "Don't do this. I had a horrible time.",
-    timestamp: 1592466864528,
-    hotel: 'Bad Hotel',
-    rating: 1,
-  },
-];
-
 /**
- * Fetches shared trips data from constant object data and renders it to the page
- * in card format. Currently using static data; currently data-driven but not
- * based on backend
+ * Fetches shared trips data from /trips-network endpoint and renders it to the page
+ * in card format. 
  */
-function loadSharedTripsData() {
-  // Render loading animation while awaiting the backend fetch. Since the
-  // function is not yet async, this part of the code is not visible since
-  // the loading is negligible with constant preloaded data
+async function loadSharedTripsData() {
+  // Render loading animation while awaiting the backend fetch. 
   document.getElementById(
     'shared-trips-section'
   ).innerHTML = LOADING_ANIMATION_HTML;
 
-  // Sort posts with newest first
-  SAMPLE_POSTS_DATA.sort((a, b) => b.timestamp - a.timestamp);
+  const response = await fetch('/trips-network', {
+    method: 'GET'
+  });
+  const tripsData = await response.json();
+  const keys = Object.keys(tripsData);
+  if (keys.length === 0) {
+    document.getElementById(
+      'shared-trips-section'
+    ).innerHTML = `
+      <div class="row"><div class="col s12">
+      <p class="placeholder-text">No posts to show. Be the first one to post!</p>
+      </div></div>
+    `;
+    return;
+  }
+  keys.sort(
+    (a, b) =>
+      parseSerializedJson(b).timestamp - parseSerializedJson(a).timestamp
+  );
 
+  const posts = [];
+  console.log(tripsData);
+  for (key of keys) {
+    const {
+      title,
+      hotelName,
+      hotelImage,
+      owner,
+      description,
+      rating,
+    } = parseSerializedJson(key);
+    
+    const locations = tripsData[key];
+    const currData = {
+      title: title,
+      destinations: locations,
+      owner: owner,
+      description: description,
+      hotel: hotelName,
+      hotelImage: hotelImage,
+      rating: rating,
+    };
+    posts.push(currData);
+  }
   // Once data is loaded, render them into cards that display the data readably
   document.getElementById(
     'shared-trips-section'
-  ).innerHTML = SAMPLE_POSTS_DATA.map(
-    ({ title, destinations, owner, description, timestamp, hotel, rating }) => `
+  ).innerHTML = posts.map(
+    ({ title, destinations, owner, description, hotel, hotelImage, rating }) => `
         <div class="col m12 shared-trip-card">
           <div class="card">
             <div class="card-content">
@@ -94,30 +74,27 @@ function loadSharedTripsData() {
               <div class="left-align">
                 <h6>Rating: ${rating}</h6>
               </div>
-              <div class="right-align">
-                <h6>${unixTimestampToString(timestamp)}</h6>
-              </div>
               <p>${description}</p>
-              <ul class="collection with-header">
-                <li class="collection-header"><h5>Hotel: ${hotel}</h5></li>
-                ${destinations
-                  .map(
-                    ({ name }, index) => `
-                      <li class="collection-item">
-                        <div>
-                          ${index + 1}. ${name}
-                          <a href="#" class="secondary-content">
-                          <i class="material-icons indigo-text">place</i>
-                          </a>
-                        </div>
-                      </li>
-                    `
-                  )
-                  .join(' ')}
+              <div class="col s12">
+                <ul class="collection with-header">
+                  <li class="collection-header"><h5>Hotel: ${hotel}</h5></li>
+                  ${destinations
+                    .map(
+                      ({ placeName }) => `
+                        <li class="collection-item">
+                          <div>
+                            <i class="material-icons left indigo-text">place</i>
+                            ${placeName}
+                          </div>
+                        </li>
+                      `
+                    )
+                    .join('')}
                 </ul>
+              </div>
             </div>
           </div>
         </div>
       `
-  ).join(' ');
+  ).join('');
 }

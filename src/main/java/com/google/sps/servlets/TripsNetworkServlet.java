@@ -123,7 +123,7 @@ public class TripsNetworkServlet extends HttpServlet {
 
     Iterable<Entity> tripEntityIterable = datastore.prepare(tripQuery).asIterable();
 
-    if (Iterables.size(tripEntityIterable) == 0) {
+    if (Iterables.size(tripEntityIterable) == 0 || Iterables.size(tripEntityIterable) > 1) {
       response.setStatus(HttpServletResponse.SC_NOT_FOUND);
       return;
     }
