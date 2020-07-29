@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -46,6 +47,7 @@ public class TripsNetworkServlet extends HttpServlet {
         .setFilter(new FilterPredicate(Trip.ENTITY_PROPERTY_PAST_TRIP, FilterOperator.EQUAL, true));
 
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+
     PreparedQuery tripResults = datastore.prepare(tripQuery);
     Iterable<Entity> tripEntityIterable = tripResults.asIterable();
 
@@ -68,6 +70,35 @@ public class TripsNetworkServlet extends HttpServlet {
     Gson gson = new Gson();
     String serializedJSON = gson.toJson(tripsResponseMap);
     response.getWriter().println(serializedJSON);
+    response.setStatus(HttpServletResponse.SC_OK);
+  }
+
+  @Override
+  public void doPut(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    String userEmail = AuthChecker.getUserEmail(response);
+    if (userEmail == null) {
+      return;
+    }
+    long timestamp = Long.parseLong(request.getParameter("timestamp"));
+    boolean isPastTrip = Boolean.parseBoolean(request.getParameter("is_past_trip"));
+    DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+
+    Query tripQuery = new Query("trip")
+        .setFilter(new FilterPredicate(Trip.ENTITY_PROPERTY_OWNER, FilterOperator.EQUAL, userEmail))
+        .setFilter(new FilterPredicate(Trip.ENTITY_PROPERTY_TIMESTAMP, FilterOperator.EQUAL, timestamp));
+
+    Iterable<Entity> tripEntityIterable = datastore.prepare(tripQuery).asIterable();
+
+    if (Iterables.size(tripEntityIterable) == 0) {
+      response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+      return;
+    }
+
+    Iterator<Entity> iterator = tripEntityIterable.iterator();
+    Entity tripToPatch = iterator.next();
+    tripToPatch.setProperty(Trip.ENTITY_PROPERTY_PAST_TRIP, isPastTrip);
+    datastore.put(tripToPatch);
+
     response.setStatus(HttpServletResponse.SC_OK);
   }
 }
