@@ -24,8 +24,8 @@ function init() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    const elems = document.querySelectorAll('select');
-    const instances = M.FormSelect.init(elems, undefined);
+    const elements = document.querySelectorAll('select');
+    M.FormSelect.init(elements, undefined);
 });
 
 async function displayMap() {
@@ -289,26 +289,26 @@ function renderPlaceCards(places) {
             `
         <div class="col s12">
             <div class="card horizontal">
-                <div class="card-image">
-        <img src="../assets/img/Building.jpg">
-                </div>
         <div class="card-stacked">
             <div class="card-content">
             ` +
             (name
-                ? `<p>${name}</p>`
+                ? `<h5 style="font-size: large; font-family:'Berlin Sans FB',serif">${name}</h5>`
                 : '') +
             (address
-                ? `<p>${address}</p>`
+                ? `<h6 style="font-size: medium;font-family:'Berlin Sans FB',serif">${address}</h6>`
                 : '') +
             (phoneNumber
-                ? `<p>${phoneNumber}</p>`
+                ? `<h6 style="font-size: medium;font-family:'Berlin Sans FB',serif">${phoneNumber}</h6>`
                 : '') +
             (website
-                ? `<p><a href="${website}">Website</a></p>`
+                ? `<h6 style="font-size: medium;font-family:'Berlin Sans FB',serif"><a href="${website}">Website</a></h6>`
                 : '') +
-            `
+            `            
             </div>
+        </div>
+            <div class="card-image">
+              <img src="../assets/img/Building.jpg" style="max-width: 75px;max-height: 75px;" alt="Location Photo">
             </div>
         </div>
     </div>
@@ -332,7 +332,7 @@ function setCenter(coords) {
  */
 function dropMarker(lat,lng) {
     const location = {lat: lat, lng: lng};
-    const marker = new google.maps.Marker({
+    new google.maps.Marker({
         map: map,
         position: location, //Default coords if geolocation fails
         animation: google.maps.Animation.DROP,
