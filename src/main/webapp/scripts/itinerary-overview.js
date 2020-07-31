@@ -11,6 +11,11 @@ let waypointNames = [];
 let waypointIDs = [];
 let waypointAddresses = [];
 
+document.addEventListener('DOMContentLoaded', function() {
+    const tooltipElems = document.querySelectorAll('.tooltipped');
+    const tooltipInstances = M.Tooltip.init(tooltipElems, undefined);
+});
+
 let placeDetailsArray = [];
 
 let waypointsLength = 0;
@@ -25,11 +30,6 @@ function init() {
     document.getElementById('itinerary-link').classList.add('active');
     document.getElementById('itinerary-link-m').classList.add('active');
 }
-
-document.addEventListener('DOMContentLoaded', function() {
-    const elements = document.querySelectorAll('select');
-    M.FormSelect.init(elements, undefined);
-});
 
 async function displayMap() {
     await getTripData();
