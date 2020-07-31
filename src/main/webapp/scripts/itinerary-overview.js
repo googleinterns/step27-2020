@@ -17,6 +17,7 @@ let waypointsLength = 0;
 let addressLength = 0;
 
 const PLACE_CARDS_CONTAINER = document.getElementById('place-cards-container');
+const DEFAULT_PLACE_IMAGE = '../assets/img/Building.jpg'
 
 function init() {
     document.getElementById('itinerary-link').classList.add('active');
@@ -227,6 +228,26 @@ function displayRoute(start, waypoints, end) {
     );
 }
 
+/**
+ * Gets URL for photo of place or assigns it a default one if there are no photos available
+ * @param {Array} photos array of photos from PlaceResult object
+ */
+async function imageURLFromPhotos(photos) {
+    const photoRef =
+        photos && Array.isArray(photos)
+            ? photos[0].photo_reference
+            : undefined;
+
+    if(photoRef) {
+        const photoResponse = await fetch(
+            `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/photo?maxheight=300&photoreference=${photoRef}&key=${GOOGLE_API_KEY}`
+        );
+        const blob = await photoResponse.blob();
+        return URL.createObjectURL(blob);
+    } else {
+        return DEFAULT_PLACE_IMAGE;
+    }
+}
 
 /**
  * Fetches more details about place such as phone number and website and puts it all into an object
@@ -238,11 +259,14 @@ async function getPlaceDetails(placeIDArray) {
         `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/details/json?place_id=${hotel_ID}&key=${GOOGLE_API_KEY}`
     )
     const { result } = await detailsResponse.json();
-    const { international_phone_number, name, vicinity, website } = result;
+    const { international_phone_number, name, photos, vicinity, website } = result;
+    const photoUrl = await imageURLFromPhotos(photos);
+
 
     const placeDetails = {
         phoneNumber: international_phone_number,
         name: name,
+        photoUrl: photoUrl,
         address: vicinity,
         website: website
     }
@@ -253,11 +277,13 @@ async function getPlaceDetails(placeIDArray) {
             `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeID}&key=${GOOGLE_API_KEY}`
         )
         const { result } = await detailsResponse.json();
-        const { international_phone_number, name, vicinity, website } = result;
+        const { international_phone_number, name, photos, vicinity, website } = result;
+        const photoUrl = await imageURLFromPhotos(photos);
 
         const placeDetails = {
             phoneNumber: international_phone_number,
             name: name,
+            photoUrl: photoUrl,
             address: vicinity,
             website: website
         }
@@ -283,7 +309,7 @@ function isReadyPlaces(){
 function renderPlaceCards(places) {
     let placeCards = [];
     for(let i = 0; i < places.length; i++) {
-        const { phoneNumber, name, address, website } = places[i];
+        const { phoneNumber, name, photoUrl, address, website } = places[i];
 
         placeCards.push(
             `
@@ -295,6 +321,9 @@ function renderPlaceCards(places) {
             (name
                 ? `<h5 style="font-size: large; font-family:'Berlin Sans FB',serif">${name}</h5>`
                 : '') +
+            (photoUrl
+                ?`<img src="${photoUrl}" style="width: 50px;height: 50px; float: right; border-radius: 8px;" alt="${name}">`
+                : '')+
             (address
                 ? `<h6 style="font-size: medium;font-family:'Berlin Sans FB',serif">${address}</h6>`
                 : '') +
@@ -307,9 +336,6 @@ function renderPlaceCards(places) {
             `            
             </div>
         </div>
-            <div class="card-image">
-              <img src="../assets/img/Building.jpg" style="max-width: 75px;max-height: 75px;" alt="Location Photo">
-            </div>
         </div>
     </div>
       `
