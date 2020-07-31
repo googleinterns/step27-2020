@@ -30,7 +30,7 @@ public class BodyParserTest {
   @Test
   public void testSerializedJsonParse() throws IOException {
     JsonObject obj = BodyParser.parseJsonObjectFromRequest(request);
-    Assert.assertEquals(obj.getAsJsonPrimitive("prop1").getAsInt(), 12345);
-    Assert.assertEquals(obj.getAsJsonPrimitive("prop2").getAsString(), "asdf");
+    Assert.assertEquals(12345, obj.getAsJsonPrimitive("prop1").getAsInt());
+    Assert.assertEquals("asdf", obj.getAsJsonPrimitive("prop2").getAsString());
   }
 }
