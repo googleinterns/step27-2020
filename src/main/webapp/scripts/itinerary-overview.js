@@ -16,8 +16,10 @@ let placeDetailsArray = [];
 let waypointsLength = 0;
 let addressLength = 0;
 
+let currentMode = "DRIVING";
+
 const PLACE_CARDS_CONTAINER = document.getElementById('place-cards-container');
-const DEFAULT_PLACE_IMAGE = '../assets/img/Building.jpg'
+const DEFAULT_PLACE_IMAGE = '../assets/img/Building.jpg';
 
 function init() {
     document.getElementById('itinerary-link').classList.add('active');
@@ -31,10 +33,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function displayMap() {
     await getTripData();
-
-    document.getElementById("mode").addEventListener("change", function() {
-        displayRoute(start, waypoints, end);
-    });
 }
 
 /**
@@ -209,14 +207,13 @@ function displayRoute(start, waypoints, end) {
         })
     }
 
-    const selectedMode = document.getElementById("mode").value;
     directionsService.route(
         {
             origin: start,
             destination: end,
             waypoints: waypointArray,
             optimizeWaypoints: true,
-            travelMode: google.maps.TravelMode[selectedMode]
+            travelMode: google.maps.TravelMode[currentMode]
         },
         function(response, status) {
             if (status === "OK") {
@@ -228,6 +225,30 @@ function displayRoute(start, waypoints, end) {
     );
 }
 
+/**
+ * Method that changes the travel mode that the user will be using on their trip.
+ * @param travelMode{String} one of the accepted modes of travel by displayRoute() (DRIVING,WALKING,BICYCLING,TRANSIT)
+ */
+function changeTravelMode(travelMode){
+    currentMode = travelMode;
+    displayRoute(start, waypoints, end);
+}
+
+function changeTravelModeDriving(){
+    changeTravelMode("DRIVING");
+}
+
+function changeTravelModeTransit(){
+    changeTravelMode("TRANSIT");
+}
+
+function changeTravelModeWalking(){
+    changeTravelMode("WALKING");
+}
+
+function changeTravelModeCycling(){
+    changeTravelMode("BICYCLING");
+}
 /**
  * Gets URL for photo of place or assigns it a default one if there are no photos available
  * @param {Array} photos array of photos from PlaceResult object
@@ -292,13 +313,13 @@ async function getPlaceDetails(placeIDArray) {
 }
 
 function storePlaceCardDetails(placeDetails){
-    placeDetailsArray.push(placeDetails)
-    isReadyPlaces()
+    placeDetailsArray.push(placeDetails);
+    isReadyPlaces();
 }
 
 function isReadyPlaces(){
     if(placeDetailsArray.length === (waypointIDs.length + 1)){
-        renderPlaceCards(placeDetailsArray)
+        renderPlaceCards(placeDetailsArray);
     }
 }
 

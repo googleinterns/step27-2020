@@ -19,8 +19,8 @@
             href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
     />
 </head>
-<body onload="init(); displayMap()">
-<nav class="blue darken-2" role="navigation" id="navbar-section"></nav>
+<body onload="displayMap()">
+<!--<nav class="blue darken-2" role="navigation" id="navbar-section"></nav>-->
 <ul class="sidenav" id="mobile-demo"></ul>
 
 <div id="map"></div>
@@ -29,26 +29,52 @@
     <div class="col s3">
         <div id="itinerary-panel">
             <div id="mode-panel">
-                <select id="mode">
-                    <option value="DRIVING">Driving</option>
-                    <option value="WALKING">Walking</option>
-                    <option value="BICYCLING">Bicycling</option>
-                    <option value="TRANSIT">Transit</option>
-                </select>
+                <button type="button"
+                        class="btn-floating btn-small waves-effect waves-light teal"
+                        id="driving-button"
+                        onclick="changeTravelModeDriving()"
+                >
+                    <i class="material-icons">directions_car</i>
+                </button>
+
+                <button type="button"
+                        class="btn-floating btn-small waves-effect waves-light teal"
+                        id="transit-button"
+                        onclick="changeTravelModeTransit()"
+                >
+                    <i class="material-icons">directions_transit</i>
+                </button>
+
+                <button type="button"
+                        class="btn-floating btn-small waves-effect waves-light teal"
+                        id="walking-button"
+                        onclick="changeTravelModeWalking()"
+                >
+                    <i class="material-icons">directions_walk</i>
+                </button>
+                <button type="button"
+                        class="btn-floating btn-small waves-effect waves-light teal"
+                        id="bicycling-button"
+                        onclick="changeTravelModeCycling()"
+                >
+                    <i class="material-icons">directions_bike</i>
+                </button>
+
             </div>
             <div id="place-cards-container"></div>
         </div>
     </div>
 </div>
-<div id="footer-section"></div>
-<script
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDlLtx69Y4-65_dCK67ZX3lzKTYpyc5CWI&libraries=&v=weekly"
-        defer
-></script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-<script src="scripts/common.js"></script>
-<script src="scripts/itinerary-overview.js"></script>
-<script src="scripts/service-account.js"></script>
+    <!--<div id="footer-section"></div>-->
+    <script
+            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDlLtx69Y4-65_dCK67ZX3lzKTYpyc5CWI&libraries=&v=weekly"
+            defer
+    ></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script src="scripts/common.js"></script>
+    <script src="scripts/itinerary-overview.js"></script>
+    <script src="scripts/service-account.js"></script>
 </body>
 </html>

@@ -8,6 +8,10 @@
     height: 100%;
 }
 
+#mode-panel{
+    padding-left: 32% ;
+}
+
 html,
 body {
     height: 100%;
