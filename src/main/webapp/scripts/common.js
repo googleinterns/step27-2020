@@ -155,6 +155,16 @@ function parseSerializedJson(json) {
       if (currChar !== ',' && currChar !== '}') {
         currValue += currChar;
       } else {
+        if (currChar === ',') {
+          const restOfJson = json.substring(i + 1, json.length);
+          const indexOfComma = restOfJson.indexOf(',');
+          const indexOfEquals = restOfJson.indexOf('=');
+          
+          if (indexOfComma < indexOfEquals && indexOfComma !== -1) {
+            currValue += currChar;
+            continue;
+          }
+        }
         isField = true;
         // add field to obj and reset field and value strings
         obj[currField] = currValue;
