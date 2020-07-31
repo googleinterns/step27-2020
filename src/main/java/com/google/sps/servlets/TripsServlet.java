@@ -8,6 +8,7 @@ import com.google.appengine.api.datastore.Transaction;
 import com.google.appengine.api.datastore.TransactionOptions;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query.FilterPredicate;
+import com.google.appengine.api.users.UserServiceFactory;
 import com.google.common.collect.Iterables;
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.Key;
@@ -41,7 +42,7 @@ import javax.servlet.http.HttpServletResponse;
 public class TripsServlet extends HttpServlet {
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    String userEmail = AuthChecker.getUserEmail(response);
+    String userEmail = AuthChecker.getUserEmail(response, UserServiceFactory.getUserService());
     if (userEmail == null) {
       return;
     }
@@ -86,7 +87,7 @@ public class TripsServlet extends HttpServlet {
 
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    String userEmail = AuthChecker.getUserEmail(response);
+    String userEmail = AuthChecker.getUserEmail(response, UserServiceFactory.getUserService());
     if (userEmail == null) {
       return;
     }
@@ -106,7 +107,8 @@ public class TripsServlet extends HttpServlet {
       Iterator<JsonElement> locationIterator = locationData.iterator();
 
       while (locationIterator.hasNext()) {
-        TripLocation location = TripDataConverter.convertJsonObjectToTripLocation(locationIterator.next().getAsJsonObject(), userEmail);
+        TripLocation location = TripDataConverter
+            .convertJsonObjectToTripLocation(locationIterator.next().getAsJsonObject(), userEmail);
         datastore.put(txn, TripDataConverter.convertTripLocationToEntity(location, tripEntity));
       }
       ;
@@ -124,7 +126,7 @@ public class TripsServlet extends HttpServlet {
 
   @Override
   public void doPut(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    String userEmail = AuthChecker.getUserEmail(response);
+    String userEmail = AuthChecker.getUserEmail(response, UserServiceFactory.getUserService());
     if (userEmail == null) {
       return;
     }
@@ -168,7 +170,8 @@ public class TripsServlet extends HttpServlet {
       Iterator<JsonElement> locationIterator = locationData.iterator();
 
       while (locationIterator.hasNext()) {
-        TripLocation location = TripDataConverter.convertJsonObjectToTripLocation(locationIterator.next().getAsJsonObject(), userEmail);
+        TripLocation location = TripDataConverter
+            .convertJsonObjectToTripLocation(locationIterator.next().getAsJsonObject(), userEmail);
         datastore.put(txn, TripDataConverter.convertTripLocationToEntity(location, tripEntity));
       }
 
@@ -185,7 +188,7 @@ public class TripsServlet extends HttpServlet {
 
   @Override
   public void doDelete(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    String userEmail = AuthChecker.getUserEmail(response);
+    String userEmail = AuthChecker.getUserEmail(response, UserServiceFactory.getUserService());
     if (userEmail == null) {
       return;
     }

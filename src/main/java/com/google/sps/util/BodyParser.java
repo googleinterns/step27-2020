@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 
 public class BodyParser {
-
+  
   /**
    * Parses the request body of a certain HTTP request using the Java Servlet framework
    * and converts it into a Gson JsonObject.

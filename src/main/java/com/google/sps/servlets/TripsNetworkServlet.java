@@ -40,7 +40,7 @@ public class TripsNetworkServlet extends HttpServlet {
 
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    String userEmail = AuthChecker.getUserEmail(response);
+    String userEmail = AuthChecker.getUserEmail(response, UserServiceFactory.getUserService());
     if (userEmail == null) {
       return;
     }
@@ -77,7 +77,7 @@ public class TripsNetworkServlet extends HttpServlet {
 
   @Override
   public void doPut(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    String userEmail = AuthChecker.getUserEmail(response);
+    String userEmail = AuthChecker.getUserEmail(response, UserServiceFactory.getUserService());
     if (userEmail == null) {
       return;
     }
@@ -106,7 +106,7 @@ public class TripsNetworkServlet extends HttpServlet {
 
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    String userEmail = AuthChecker.getUserEmail(response);
+    String userEmail = AuthChecker.getUserEmail(response, UserServiceFactory.getUserService());
     if (userEmail == null) {
       return;
     }
