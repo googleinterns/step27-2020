@@ -23,15 +23,21 @@ let addressLength = 0;
 
 let currentMode = "DRIVING";
 
+const DRIVING = "DRIVING";
+const WALKING = "WALKING";
+const BICYCLING = "BICYCLING";
+const TRANSIT = "TRANSIT";
+
 const PLACE_CARDS_CONTAINER = document.getElementById('place-cards-container');
 const DEFAULT_PLACE_IMAGE = '../assets/img/Building.jpg';
 
 function init() {
     document.getElementById('itinerary-link').classList.add('active');
+
     document.getElementById('itinerary-link-m').classList.add('active');
 }
 
-async function displayMap() {
+async function displayInfo() {
     await getTripData();
 }
 
@@ -234,21 +240,6 @@ function changeTravelMode(travelMode){
     displayRoute(start, waypoints, end);
 }
 
-function changeTravelModeDriving(){
-    changeTravelMode("DRIVING");
-}
-
-function changeTravelModeTransit(){
-    changeTravelMode("TRANSIT");
-}
-
-function changeTravelModeWalking(){
-    changeTravelMode("WALKING");
-}
-
-function changeTravelModeCycling(){
-    changeTravelMode("BICYCLING");
-}
 /**
  * Gets URL for photo of place or assigns it a default one if there are no photos available
  * @param {Array} photos array of photos from PlaceResult object

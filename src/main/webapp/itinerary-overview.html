@@ -19,9 +19,7 @@
             href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
     />
 </head>
-<body onload="displayMap()">
-<!--<nav class="blue darken-2" role="navigation" id="navbar-section"></nav>-->
-<ul class="sidenav" id="mobile-demo"></ul>
+<body onload="displayInfo()">
 
 <div class="map-container" id="map"></div>
 
@@ -36,7 +34,7 @@
                     <button type="button"
                             class="btn-floating btn-small waves-effect waves-light red tooltipped"
                             id="driving-button"
-                            onclick="changeTravelModeDriving()"
+                            onclick="changeTravelMode(DRIVING)"
                             data-position="bottom"
                             data-tooltip="Use this if you plan on Driving to your locations"
                     >
@@ -46,7 +44,7 @@
                     <button type="button"
                             class="btn-floating btn-small waves-effect waves-light green tooltipped"
                             id="transit-button"
-                            onclick="changeTravelModeTransit()"
+                            onclick="changeTravelMode(TRANSIT)"
                             data-position="bottom"
                             data-tooltip="Use this if you plan on taking public transit to your locations"
                     >
@@ -56,7 +54,7 @@
                     <button type="button"
                             class="btn-floating btn-small waves-effect waves-light blue tooltipped"
                             id="walking-button"
-                            onclick="changeTravelModeWalking()"
+                            onclick="changeTravelMode(WALKING)"
                             data-position="bottom"
                             data-tooltip="Use this if you plan on Walking to your locations"
                     >
@@ -65,7 +63,7 @@
                     <button type="button"
                             class="btn-floating btn-small waves-effect waves-light yellow tooltipped"
                             id="bicycling-button"
-                            onclick="changeTravelModeCycling()"
+                            onclick="changeTravelMode(BICYCLING)"
                             data-position="bottom"
                             data-tooltip="Use this if you plan on Biking to your locations"
                     >
@@ -78,7 +76,6 @@
     </div>
 </div>
 
-<!--<div id="footer-section"></div>-->
 <script
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDlLtx69Y4-65_dCK67ZX3lzKTYpyc5CWI&libraries=&v=weekly"
         defer
