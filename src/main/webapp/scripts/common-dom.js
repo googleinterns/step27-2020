@@ -124,4 +124,3 @@ function showLogoutButton(logoutUrl) {
         `;
 }
 
-

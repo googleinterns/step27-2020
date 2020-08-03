@@ -37,7 +37,6 @@ async function loadSharedTripsData() {
   );
 
   const posts = [];
-  console.log(tripsData);
   for (key of keys) {
     const {
       title,

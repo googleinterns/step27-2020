@@ -34,4 +34,19 @@ describe('Test the serialized by Gson JSON parser', () => {
       title: 'test',
     });
   });
+
+  it('parses a Trip serialized JSON with commas in values correctly', () => {
+    expect(parseSerializedJson('Trip{title=broken, hotelID=aBc234, hotelName=The Hotel, hotelImage=aBcXP, rating=3.5, description=commas, but, not, broken., owner=peter@google.com, isPastTrip=true, isPublic=true, timestamp=1596136046764}')).toEqual({
+      title: 'broken',
+      hotelID: 'aBc234',
+      hotelName: 'The Hotel',
+      hotelImage: 'aBcXP',
+      rating: '3.5',
+      description: 'commas, but, not, broken.',
+      owner: 'peter@google.com',
+      isPastTrip: 'true',
+      isPublic: 'true',
+      timestamp: '1596136046764',
+    });
+  });
 });
