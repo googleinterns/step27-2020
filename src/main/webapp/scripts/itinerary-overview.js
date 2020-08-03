@@ -1,3 +1,8 @@
+document.addEventListener('DOMContentLoaded', function() {
+    const tooltipElems = document.querySelectorAll('.tooltipped');
+    M.Tooltip.init(tooltipElems, undefined);
+});
+
 let start;
 let waypoints;
 let end;
@@ -10,11 +15,6 @@ let hotelAddress = "";
 let waypointNames = [];
 let waypointIDs = [];
 let waypointAddresses = [];
-
-document.addEventListener('DOMContentLoaded', function() {
-    const tooltipElems = document.querySelectorAll('.tooltipped');
-    const tooltipInstances = M.Tooltip.init(tooltipElems, undefined);
-});
 
 let placeDetailsArray = [];
 
@@ -340,19 +340,19 @@ function renderPlaceCards(places) {
             <div class="card-content">
             ` +
             (name
-                ? `<h5 style="font-size: large; font-family:'Berlin Sans FB',serif">${name}</h5>`
+                ? `<h5 style="font-size: large;">${name}</h5>`
                 : '') +
             (photoUrl
                 ?`<img src="${photoUrl}" style="width: 50px;height: 50px; float: right; border-radius: 8px;" alt="${name}">`
                 : '')+
             (address
-                ? `<h6 style="font-size: medium;font-family:'Berlin Sans FB',serif">${address}</h6>`
+                ? `<h6 style="font-size: medium;">${address}</h6>`
                 : '') +
             (phoneNumber
-                ? `<h6 style="font-size: medium;font-family:'Berlin Sans FB',serif">${phoneNumber}</h6>`
+                ? `<h6 style="font-size: medium;">${phoneNumber}</h6>`
                 : '') +
             (website
-                ? `<h6 style="font-size: medium;font-family:'Berlin Sans FB',serif"><a href="${website}">Website</a></h6>`
+                ? `<h6 style="font-size: medium;"><a href="${website}">Website</a></h6>`
                 : '') +
             `            
             </div>

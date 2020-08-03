@@ -9,7 +9,21 @@
 }
 
 #mode-panel{
-    padding-left: 32% ;
+    float: top;
+    margin-left: auto;
+}
+
+#place-cards-container{
+    float: bottom;
+}
+
+.site-icon{
+    float: right;
+}
+
+.cards{
+    height: 950px; /*Five Cards Length*/
+    overflow-y: scroll;
 }
 
 html,
@@ -17,5 +31,8 @@ body {
     height: 100%;
     margin: 0;
     padding: 0;
+    overflow: hidden;
+
 }
+
 
