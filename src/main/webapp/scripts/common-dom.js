@@ -13,6 +13,19 @@
 // limitations under the License.
 
 // This file contains all the constant scripts to be loaded on each page.
+const LOADING_ANIMATION_HTML = `
+  <div class="preloader-wrapper big active loading-animation">
+    <div class="spinner-layer spinner-blue-only">
+      <div class="circle-clipper left">
+        <div class="circle"></div>
+      </div><div class="gap-patch">
+        <div class="circle"></div>
+      </div><div class="circle-clipper right">
+        <div class="circle"></div>
+      </div>
+    </div>
+  </div>
+`;
 
 renderNavbar();
 renderFooter();
@@ -90,20 +103,6 @@ function authReload() {
     });
 }
 
-const LOADING_ANIMATION_HTML = `
-  <div class="preloader-wrapper big active loading-animation">
-    <div class="spinner-layer spinner-blue-only">
-      <div class="circle-clipper left">
-        <div class="circle"></div>
-      </div><div class="gap-patch">
-        <div class="circle"></div>
-      </div><div class="circle-clipper right">
-        <div class="circle"></div>
-      </div>
-    </div>
-  </div>
-`;
-
 /**
  * Shows the logout button given a logout url string in
  * the main navbar and mobile sidenav.
@@ -125,64 +124,3 @@ function showLogoutButton(logoutUrl) {
         `;
 }
 
-/**
- * Parses a serialized JSON string produced by Gson for a value class and
- * converts it to a JS object.
- * @param {string} json a JSON string in the form
- *                      "ClassName{field1=val, ..., fieldN=val}"
- * @returns {Object} JS object with the data stored in json.
- */
-function parseSerializedJson(json) {
-  const charArray = [...json];
-  const startIndex = charArray.indexOf('{');
-
-  // Build JS object by iterating through
-  let obj = {};
-  let isField = true;
-  let [currField, currValue] = ['', ''];
-  for (let i = startIndex + 1; i < charArray.length; i++) {
-    const currChar = charArray[i];
-    if (isField) {
-      if (currChar === ' ') {
-        continue;
-      }
-      if (currChar !== '=') {
-        currField += currChar;
-      } else {
-        isField = false;
-      }
-    } else {
-      if (currChar !== ',' && currChar !== '}') {
-        currValue += currChar;
-      } else {
-        if (currChar === ',') {
-          const restOfJson = json.substring(i + 1, json.length);
-          const indexOfComma = restOfJson.indexOf(',');
-          const indexOfEquals = restOfJson.indexOf('=');
-          
-          if (indexOfComma < indexOfEquals && indexOfComma !== -1) {
-            currValue += currChar;
-            continue;
-          }
-        }
-        isField = true;
-        // add field to obj and reset field and value strings
-        obj[currField] = currValue;
-        [currField, currValue] = ['', ''];
-      }
-    }
-  }
-
-  return obj;
-}
-
-/**
- * Converts Unix epoch time number to a string of the form MM/DD/YYYY.
- * Uses the client timezone to calculate the string; behavior can differ
- * on different devices.
- * @param {number} timestamp
- * @returns {string} date corresponding to timestamp in MM/DD/YYYY form.
- */
-function unixTimestampToString(timestamp) {
-  return new Date(timestamp).toLocaleDateString();
-}
