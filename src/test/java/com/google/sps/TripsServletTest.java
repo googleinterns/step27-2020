@@ -114,9 +114,14 @@ public class TripsServletTest {
   @Test
   public void testDoPost() throws IOException {
     setUserAuthenticated();
+    Assert.assertEquals(0, datastore.prepare(new Query("trip")).countEntities(FetchOptions.Builder.withLimit(10)));
+    Assert.assertEquals(0,
+        datastore.prepare(new Query("trip-location")).countEntities(FetchOptions.Builder.withLimit(10)));
     when(request.getReader()).thenReturn(new BufferedReader(new StringReader(postRequestBody.toString())));
     servlet.doPost(request, response);
-
+    Assert.assertEquals(1, datastore.prepare(new Query("trip")).countEntities(FetchOptions.Builder.withLimit(10)));
+    Assert.assertEquals(2,
+        datastore.prepare(new Query("trip-location")).countEntities(FetchOptions.Builder.withLimit(10)));
     verify(response).setStatus(HttpServletResponse.SC_CREATED);
   }
 
@@ -138,7 +143,6 @@ public class TripsServletTest {
     Assert.assertEquals(2,
         datastore.prepare(new Query("trip-location")).countEntities(FetchOptions.Builder.withLimit(10)));
     Assert.assertEquals("My Trip, Updated", updatedTrip.getProperty("title"));
-
   }
 
   @Test
@@ -146,6 +150,32 @@ public class TripsServletTest {
     setUserAuthenticated();
     when(request.getReader()).thenReturn(new BufferedReader(new StringReader(putRequestBody.toString())));
     servlet.doPut(request, response);
+
+    verify(response).setStatus(HttpServletResponse.SC_NOT_FOUND);
+  }
+
+  @Test
+  public void testDoDeleteTripExists() throws IOException {
+    postPreexistingTrip();
+    Assert.assertEquals(1, datastore.prepare(new Query("trip")).countEntities(FetchOptions.Builder.withLimit(10)));
+    Assert.assertEquals(2,
+        datastore.prepare(new Query("trip-location")).countEntities(FetchOptions.Builder.withLimit(10)));
+
+    when(request.getParameter("timestamp")).thenReturn(Long.toString(timestamp));
+    servlet.doDelete(request, response);
+
+    verify(response).setStatus(HttpServletResponse.SC_OK);
+    Assert.assertEquals(0, datastore.prepare(new Query("trip")).countEntities(FetchOptions.Builder.withLimit(10)));
+    Assert.assertEquals(0,
+        datastore.prepare(new Query("trip-location")).countEntities(FetchOptions.Builder.withLimit(10)));
+  }
+
+  @Test
+  public void testDoDeleteTripDoesNotExist() throws IOException {
+    setUserAuthenticated();
+
+    when(request.getParameter("timestamp")).thenReturn(Long.toString(timestamp));
+    servlet.doDelete(request, response);
 
     verify(response).setStatus(HttpServletResponse.SC_NOT_FOUND);
   }
