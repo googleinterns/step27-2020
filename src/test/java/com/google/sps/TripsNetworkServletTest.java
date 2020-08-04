@@ -14,20 +14,15 @@ import javax.servlet.http.HttpServletResponse;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
-import com.google.appengine.api.datastore.FetchOptions;
-import com.google.appengine.api.datastore.Query;
 import com.google.appengine.tools.development.testing.LocalDatastoreServiceTestConfig;
 import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.sps.data.Trip;
 import com.google.sps.data.TripLocation;
 import com.google.sps.servlets.TripsNetworkServlet;
-import com.google.sps.servlets.TripsServlet;
 import com.google.sps.util.TripDataConverter;
 
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -56,13 +51,28 @@ public class TripsNetworkServletTest {
     helper.setUp();
 
     // Put one public trip and one non-past, non-public trip in the Datastore.
-    trip1Public = Trip.builder().setTitle("A publicized trip").setDescription("Lorem ipsum dolor, sit, amet.")
-        .setHotelID("h0t3l_iD").setHotelImage("iMg").setHotelName("Publicized Hotel").setIsPastTrip(true)
-        .setIsPublic(true).setOwner("peter@google.com").setRating(4.5).setTimestamp(publicTripTimestamp).build();
+    trip1Public = Trip.builder()
+                    .setTitle("A publicized trip")
+                    .setDescription("Lorem ipsum dolor, sit, amet.")
+                    .setHotelID("h0t3l_iD")
+                    .setHotelImage("iMg")
+                    .setHotelName("Publicized Hotel")
+                    .setIsPastTrip(true)
+                    .setIsPublic(true)
+                    .setOwner("peter@google.com")
+                    .setRating(4.5)
+                    .setTimestamp(publicTripTimestamp)
+                    .build();
     TripLocation trip1Location1 = TripLocation.create("abc", "Googleplex", 1, "peter@google.com");
-    trip2Planned = Trip.builder().setTitle("A planned trip").setHotelID("pl4nn3d").setHotelImage("xYz")
-        .setHotelName("Planned Hotel").setIsPastTrip(false).setOwner("josh@google.com")
-        .setTimestamp(plannedTripTimestamp).build();
+    trip2Planned = Trip.builder()
+                    .setTitle("A planned trip")
+                    .setHotelID("pl4nn3d")
+                    .setHotelImage("xYz")
+                    .setHotelName("Planned Hotel")
+                    .setIsPastTrip(false)
+                    .setOwner("josh@google.com")
+                    .setTimestamp(plannedTripTimestamp)
+                    .build();
     TripLocation trip2Location1 = TripLocation.create("def", "Google NYC", 2, "josh@google.com");
 
     Entity trip1Entity = TripDataConverter.convertTripToEntity(trip1Public);
