@@ -16,7 +16,6 @@ import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.FetchOptions;
 import com.google.appengine.api.datastore.Query;
-import com.google.appengine.api.datastore.dev.LocalDatastoreService;
 import com.google.appengine.tools.development.testing.LocalDatastoreServiceTestConfig;
 import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
 import com.google.gson.JsonArray;
@@ -35,26 +34,25 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public class TripsServletTest {
-  private LocalServiceTestHelper helper;
-  private HttpServletRequest request;
-  private HttpServletResponse response;
-  private PrintWriter pw;
+  private LocalServiceTestHelper helper = new LocalServiceTestHelper(new LocalDatastoreServiceTestConfig());
+  private DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+  private TripsServlet servlet = new TripsServlet();
+  private HttpServletRequest request = mock(HttpServletRequest.class);
+  private HttpServletResponse response = mock(HttpServletResponse.class);
+  private PrintWriter pw = new PrintWriter(new StringWriter());
   private long timestamp = 1596490838000L;
   private TripLocation tripLocation1;
   private TripLocation tripLocation2;
   private JsonObject postRequestBody;
   private JsonObject putRequestBody;
-  private TripsServlet servlet;
-  private DatastoreService datastore;
 
   @Before
   public void setUp() throws IOException {
-    helper = new LocalServiceTestHelper(new LocalDatastoreServiceTestConfig());
-    datastore = DatastoreServiceFactory.getDatastoreService();
-    request = mock(HttpServletRequest.class);
-    response = mock(HttpServletResponse.class);
-    servlet = new TripsServlet();
-    pw = new PrintWriter(new StringWriter());
+    helper.setEnvIsLoggedIn(true);
+    helper.setEnvEmail("peter@google.com");
+    helper.setEnvAuthDomain("localhost");
+    helper.setUp();
+
     when(response.getWriter()).thenReturn(pw);
 
     postRequestBody = new JsonObject();
@@ -91,7 +89,7 @@ public class TripsServletTest {
   }
 
   @Test
-  public void testUnauthenticatedUser() throws IOException {
+  public void testUnauthenticatedUserAllHttpMethods() throws IOException {
     helper.setEnvIsLoggedIn(false);
     helper.setUp();
 
@@ -104,7 +102,6 @@ public class TripsServletTest {
 
   @Test
   public void testDoGet() throws IOException {
-    setUserAuthenticated();
     servlet.doGet(request, response);
     verify(response).setContentType("application/json;");
     verify(response).getWriter();
@@ -113,7 +110,6 @@ public class TripsServletTest {
 
   @Test
   public void testDoPost() throws IOException {
-    setUserAuthenticated();
     Assert.assertEquals(0, datastore.prepare(new Query("trip")).countEntities(FetchOptions.Builder.withLimit(10)));
     Assert.assertEquals(0,
         datastore.prepare(new Query("trip-location")).countEntities(FetchOptions.Builder.withLimit(10)));
@@ -147,7 +143,6 @@ public class TripsServletTest {
 
   @Test
   public void testDoPutTripDoesNotExist() throws IOException {
-    setUserAuthenticated();
     when(request.getReader()).thenReturn(new BufferedReader(new StringReader(putRequestBody.toString())));
     servlet.doPut(request, response);
 
@@ -172,8 +167,6 @@ public class TripsServletTest {
 
   @Test
   public void testDoDeleteTripDoesNotExist() throws IOException {
-    setUserAuthenticated();
-
     when(request.getParameter("timestamp")).thenReturn(Long.toString(timestamp));
     servlet.doDelete(request, response);
 
@@ -185,23 +178,11 @@ public class TripsServletTest {
    * the example trip modeled by postRequestBody to the Datastore.
    */
   public void postPreexistingTrip() {
-    setUserAuthenticated();
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
     Trip trip = TripDataConverter.convertJsonObjectToTrip(postRequestBody, "peter@google.com", timestamp);
     Entity tripEntity = TripDataConverter.convertTripToEntity(trip);
     datastore.put(tripEntity);
     datastore.put(TripDataConverter.convertTripLocationToEntity(tripLocation1, tripEntity));
     datastore.put(TripDataConverter.convertTripLocationToEntity(tripLocation2, tripEntity));
-  }
-
-  /**
-   * Sets the LocalServiceTestHelper member of this class to be authenticated with
-   * email peter@google.com.
-   */
-  private void setUserAuthenticated() {
-    helper.setEnvIsLoggedIn(true);
-    helper.setEnvEmail("peter@google.com");
-    helper.setEnvAuthDomain("localhost");
-    helper.setUp();
   }
 }
