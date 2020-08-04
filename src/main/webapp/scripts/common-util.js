@@ -20,10 +20,10 @@ async function imageURLFromPhotoRef(photoRef) {
  */
 function placesToCoordsWeightArray(arr) {
   // Build array containing {lat, lng, weight} objects
-  return arr.map(({ geometry, locationNum }) => ({
+  return arr.map(({ geometry, weight }) => ({
     lat: geometry.location.lat(),
     lng: geometry.location.lng(),
-    weight: document.getElementById(`location-${locationNum}-weight`).value,
+    weight: weight,
   }));
 }
 

@@ -374,7 +374,6 @@ function cancelTripCreation() {
  *                                Null if this is a new trip.
  */
 async function findHotel(timestamp) {
-  document.getElementById('hotel-results').innerHTML = LOADING_ANIMATION_HTML;
   if (numLocations !== getNumPlaceObjectsInArray(locationPlaceObjects)) {
     M.Toast.dismissAll();
     M.toast({
@@ -382,11 +381,14 @@ async function findHotel(timestamp) {
     });
     return;
   }
+
+  document.getElementById('hotel-results').innerHTML = LOADING_ANIMATION_HTML;
   const elem = document.getElementById('hotel-modal');
   const instance = M.Modal.getInstance(elem);
   instance.open();
 
   // Get center point from which to start searching for hotels
+  getPlaceWeights(locationPlaceObjects);
   const coords = placesToCoordsWeightArray(locationPlaceObjects);
   const [lat, lng] = centerOfMass(coords);
   document.getElementById('hotels-map').innerHTML = '';
@@ -536,13 +538,13 @@ async function saveTrip(hotelID, hotelRef, hotelName, timestamp) {
   instance.close();
 
   // Build location and weight arrays
+  getPlaceWeights(locationPlaceObjects);
   const locationData = [];
-
   for (let i = 1; i <= numLocations; i++) {
     locationData.push({
       id: locationPlaceObjects[i - 1].place_id,
       name: locationPlaceObjects[i - 1].name,
-      weight: document.getElementById(`location-${i}-weight`).value,
+      weight: locationPlaceObjects[i - 1].weight,
     });
   }
 
@@ -1006,5 +1008,15 @@ async function postTripToTripsNetwork(timestamp) {
       html:
         'There was an error while posting your trip to the Trips Network. Please try again.',
     });
+  }
+}
+
+/**
+ * Updates weights of place objects in array
+ * @param {Array} arr an array of places
+ */
+function getPlaceWeights(arr) {
+  for(let obj of arr) {
+    obj.weight = document.getElementById(`location-${obj.locationNum}-weight`).value;
   }
 }
