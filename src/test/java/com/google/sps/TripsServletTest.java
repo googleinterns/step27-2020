@@ -40,7 +40,7 @@ public class TripsServletTest {
   private HttpServletRequest request = mock(HttpServletRequest.class);
   private HttpServletResponse response = mock(HttpServletResponse.class);
   private PrintWriter pw = new PrintWriter(new StringWriter());
-  private long timestamp = 1596490838000L;
+  private static long timestamp = 1596490838000L;
   private TripLocation tripLocation1;
   private TripLocation tripLocation2;
   private JsonObject postRequestBody;
@@ -178,7 +178,6 @@ public class TripsServletTest {
    * the example trip modeled by postRequestBody to the Datastore.
    */
   public void postPreexistingTrip() {
-    DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
     Trip trip = TripDataConverter.convertJsonObjectToTrip(postRequestBody, "peter@google.com", timestamp);
     Entity tripEntity = TripDataConverter.convertTripToEntity(trip);
     datastore.put(tripEntity);
