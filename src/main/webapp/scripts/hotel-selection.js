@@ -3,7 +3,6 @@ const HOTEL_MAP = document.getElementById('hotel-map');
 const HOTEL_RESULTS = document.getElementById('hotel-results');
 
 async function findHotel(timestamp) {
-  document.getElementById('hotel-results').innerHTML = LOADING_ANIMATION_HTML;
   if (numLocations !== getNumPlaceObjectsInArray(locationPlaceObjects)) {
     M.Toast.dismissAll();
     M.toast({
@@ -11,9 +10,9 @@ async function findHotel(timestamp) {
     });
     return;
   }
-  const elem = document.getElementById('hotel-modal');
-  const instance = M.Modal.getInstance(elem);
-  instance.open();
+
+  document.getElementById('hotel-results').innerHTML = LOADING_ANIMATION_HTML;
+  openHotelModal();
 
   // Get center point from which to start searching for hotels
   const coords = placesToCoordsWeightArray(locationPlaceObjects);
