@@ -1,6 +1,7 @@
 let city;
 let filter;
 let placesMap = new Map();
+let tripPlaceMap = new Map();
 let locationData = [];
 
 const PLACE_CARDS_CONTAINER = document.getElementById('place-cards-container');
@@ -140,23 +141,23 @@ function renderPlaceCards(placesMap) {
 
 function addPlaceToTrip(placeId) {
   const placeDetails = placesMap.get(placeId);
-  locationData.push(placeDetails);
+  tripPlaceMap.set()
 }
 
 function openCurrentTrip() {
-  const currTripUpdates = document.getElementById('current-trip-updates');
+  const currTripStatus = document.getElementById('current-trip-updates');
   const currTripPlacesCollection = document.getElementById('current-trip-places');
   const currTripModalElem = document.getElementById('current-trip-modal');
   const currTripModalInstance = M.Modal.getInstance(currTripModalElem);
 
   if(locationData.length <= 0 || !locationData) {
-    currTripUpdates.innerHTML = "<p>It's lonely in here, add some places!</p>";
+    currTripStatus.innerHTML = "<p>It's lonely in here, add some places!</p>";
     currTripModalInstance.open();
     return;
   }
 
-  currTripUpdates.innerHTML = '';
-  currTripUpdates.innerHTML = LOADING_ANIMATION_HTML;
+  currTripStatus.innerHTML = '';
+  currTripStatus.innerHTML = LOADING_ANIMATION_HTML;
   currTripModalInstance.open();
 
   currTripPlacesCollection.innerHTML = '';
@@ -174,7 +175,7 @@ function openCurrentTrip() {
         </li>
       `
     )
-    currTripUpdates.innerHTML = '';
+    currTripStatus.innerHTML = '';
     currTripPlacesCollection.innerHTML = currTripPlaceCards.join('');
   }
 }
