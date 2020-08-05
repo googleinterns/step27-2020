@@ -391,8 +391,8 @@ async function findHotel(timestamp) {
   getPlaceWeights(locationPlaceObjects);
   const coords = placesToCoordsWeightArray(locationPlaceObjects);
   const [lat, lng] = centerOfMass(coords);
-  document.getElementById('hotels-map').innerHTML = '';
-  document.getElementById('hotels-map').style.display = 'none';
+  document.getElementById('hotel-map').innerHTML = '';
+  document.getElementById('hotel-map').style.display = 'none';
 
   const response = await fetch(
     `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/textsearch/json?type=lodging&location=${lat},${lng}&radius=10000&key=${GOOGLE_API_KEY}&output=json`
@@ -411,7 +411,7 @@ async function findHotel(timestamp) {
  */
 async function parseAndRenderHotelResults(json, centerPoint, timestamp) {
   const modalContent = document.getElementById('hotel-results');
-  const hotelsMapElem = document.getElementById('hotels-map');
+  const hotelsMapElem = document.getElementById('hotel-map');
   hotelsMapElem.style.height = '';
 
   if (!json || json.length === 0) {
@@ -420,7 +420,7 @@ async function parseAndRenderHotelResults(json, centerPoint, timestamp) {
   } else {
     json = json.slice(0, 10);
     const hotelMap = new google.maps.Map(
-      document.getElementById('hotels-map'),
+      document.getElementById('hotel-map'),
       {
         center: centerPoint,
         zoom: 12,
