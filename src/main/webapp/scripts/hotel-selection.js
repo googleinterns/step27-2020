@@ -1,3 +1,7 @@
+//const DOM elements for components of shared hotel modal
+const HOTEL_MAP = document.getElementById('hotel-map');
+const HOTEL_RESULTS = document.getElementById('hotel-results');
+
 async function findHotel(timestamp) {
   document.getElementById('hotel-results').innerHTML = LOADING_ANIMATION_HTML;
   if (numLocations !== getNumPlaceObjectsInArray(locationPlaceObjects)) {
@@ -136,6 +140,18 @@ async function parseAndRenderHotelResults(json, centerPoint, timestamp) {
       )
       .join('');
   }
+}
+
+function openHotelModal() {
+  const HOTEL_MODAL_ELEM = document.getElementById('hotel-modal');
+  const HOTEL_MODAL_INSTANCE = M.Modal.getInstance(HOTEL_MODAL_ELEM);
+  HOTEL_MODAL_INSTANCE.open();
+}
+
+function closeHotelModal() {
+  const HOTEL_MODAL_ELEM = document.getElementById('hotel-modal');
+  const HOTEL_MODAL_INSTANCE = M.Modal.getInstance(HOTEL_MODAL_ELEM);
+  HOTEL_MODAL_INSTANCE.close();
 }
 
 
