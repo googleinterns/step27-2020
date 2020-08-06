@@ -2,7 +2,7 @@
  * Fetches image and gets temp URL of image from Google Place Photos
  * @param {string} photoRef a Place Photos photo_reference
  * @returns {string} String containing object url of the resulting image
- */
+
 async function imageURLFromPhotoRef(photoRef) {
   const photoResponse = await fetch(
     `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/photo?maxwidth=500&photoreference=${photoRef}&key=${GOOGLE_API_KEY}`
@@ -10,6 +10,38 @@ async function imageURLFromPhotoRef(photoRef) {
   const blob = await photoResponse.blob();
   const photoUrl = await URL.createObjectURL(blob);
   return photoUrl;
+}
+*/
+
+/**
+ * Gets URL for photo of place or assigns it a default one if there are no photos available
+ * @param {Array} photos array of photos from PlaceResult object
+*/
+async function imageInfoFromPhotosArray(photos) {
+  const photoRef = 
+    photos && Array.isArray(photos)
+      ? photos[0].photo_reference
+      : undefined;
+
+  let photoInfo;
+  if(photoRef) {
+    const photoResponse = await fetch(
+      `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/photo?maxwidth=500&photoreference=${photoRef}&key=${GOOGLE_API_KEY}`
+    );
+    const blob = await photoResponse.blob();
+    const photoUrl = await URL.createObjectURL(blob);
+    photoInfo = {
+      photoRef: photoRef,
+      photoUrl: photoUrl,
+    }
+    return photoInfo;
+  } else {
+    photoInfo = {
+      photoRef: '',
+      photoUrl: DEFAULT_PLACE_IMAGE,
+    }
+    return photoInfo;
+  }
 }
 
 /**
@@ -21,8 +53,8 @@ async function imageURLFromPhotoRef(photoRef) {
 function placesToCoordsWeightArray(arr) {
   // Build array containing {lat, lng, weight} objects
   return arr.map(({ geometry, weight }) => ({
-    lat: geometry.location.lat(),
-    lng: geometry.location.lng(),
+    lat: geometry.location.lat,
+    lng: geometry.location.lng,
     weight: weight,
   }));
 }

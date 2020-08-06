@@ -1,9 +1,14 @@
 let city;
 let filter;
-let placesMap = new Map();
-let tripPlaceMap = new Map();
-let locationData = [];
+let placeDetailsMap = new Map();
 
+//util functions rely on these specific variable names
+//kinda crappy...too bad! 
+let locationPlaceObjects = [];
+let markers = [];
+let numLocations = 0;
+
+const DEFAULT_WEIGHT = 3;
 const PLACE_CARDS_CONTAINER = document.getElementById('place-cards-container');
 const DEFAULT_PLACE_IMAGE = '../assets/img/jason-dent-blue.jpg'
 
@@ -69,25 +74,25 @@ async function findPlacesInCity(city, filter) {
  * @param {Array} places array of PlaceResult objects returned from Places API
  */
 async function getPlaceCardInformation(places) {
-  placesMap.clear();
+  placeDetailsMap.clear();
   places = places.slice(0, 5);
   for(let i = 0; i < places.length; i++) {
     const { place_id } = places[i];
     const placeDetails = await getPlaceDetails(place_id);
-    placeDetails.placeId = place_id;
-    placesMap.set(place_id, placeDetails);
+    placeDetails.place_id = place_id;
+    placeDetailsMap.set(place_id, placeDetails);
   }
 
-  renderPlaceCards(placesMap);
+  renderPlaceCards(placeDetailsMap);
 }
 
 /**
  * Renders information cards to DOM for each place suggestion
  * @param {Array} places array of objects containing information and photo URLs about each place
  */
-function renderPlaceCards(placesMap) {
+function renderPlaceCards(placeDetailsMap) {
   let placeCards = [];
-  for(let [placeId, placeDetails] of placesMap.entries()) {   
+  for(let [placeId, placeDetails] of placeDetailsMap.entries()) {   
     const { phoneNumber, name, photoUrl, priceLevel, rating, address, website } = placeDetails;
 
     placeCards.push(
@@ -140,17 +145,27 @@ function renderPlaceCards(placesMap) {
 }
 
 function addPlaceToTrip(placeId) {
-  const placeDetails = placesMap.get(placeId);
-  tripPlaceMap.set()
+  const placeDetails = placeDetailsMap.get(placeId);
+  locationPlaceObjects.push(placeDetails);
+
+  const { geometry, name } = placeDetails;
+  const { location } = geometry;
+  const marker = {
+    title: name,
+    position: location,
+  }
+  markers.push(marker);
+
+  numLocations++;
 }
 
 function openCurrentTrip() {
-  const currTripStatus = document.getElementById('current-trip-updates');
+  const currTripStatus = document.getElementById('current-trip-status');
   const currTripPlacesCollection = document.getElementById('current-trip-places');
   const currTripModalElem = document.getElementById('current-trip-modal');
   const currTripModalInstance = M.Modal.getInstance(currTripModalElem);
 
-  if(locationData.length <= 0 || !locationData) {
+  if(locationPlaceObjects.length <= 0 || !locationPlaceObjects) {
     currTripStatus.innerHTML = "<p>It's lonely in here, add some places!</p>";
     currTripModalInstance.open();
     return;
@@ -162,7 +177,7 @@ function openCurrentTrip() {
 
   currTripPlacesCollection.innerHTML = '';
   let currTripPlaceCards = []
-  for(let location of locationData) {
+  for(let location of locationPlaceObjects) {
     const { name } = location;
     currTripPlaceCards.push(
       `
@@ -180,6 +195,10 @@ function openCurrentTrip() {
   }
 }
 
+function resetPage(response) {
+
+}
+/*
 function findHotel() {
   if(locationData.length <= 0 || !locationData) {
     M.Toast.dismissAll();
@@ -189,7 +208,7 @@ function findHotel() {
     return;
   }
 }
-
+*/
 /**
  * Fetches more details about place such as phone number and website and puts it all into an object
  * @param {String} placeId place ID of place to get details about 
@@ -200,41 +219,20 @@ async function getPlaceDetails(placeId) {
   )
   const { result } = await detailsResponse.json();
   const { geometry, international_phone_number, name, photos, price_level, rating, vicinity, website } = result;
-  const { location } = geometry;
-  const photoUrl = await imageURLFromPhotos(photos);
+  const { photoUrl } = await imageInfoFromPhotosArray(photos);
   
   const placeDetails = {
-    location: location,
+    geometry: geometry,
     phoneNumber: international_phone_number,
     name: name,
     photoUrl: photoUrl,
     priceLevel: price_level,
     rating: rating,
     address: vicinity,
-    website: website
+    website: website,
+    weight: DEFAULT_WEIGHT,
   }
 
   return placeDetails;
 }
 
-/**
- * Gets URL for photo of place or assigns it a default one if there are no photos available
- * @param {Array} photos array of photos from PlaceResult object
- */
-async function imageURLFromPhotos(photos) {
-  const photoRef = 
-    photos && Array.isArray(photos)
-      ? photos[0].photo_reference
-      : undefined;
-  
-  if(photoRef) {
-    const photoResponse = await fetch(
-      `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/photo?maxheight=300&photoreference=${photoRef}&key=${GOOGLE_API_KEY}`
-    );
-    const blob = await photoResponse.blob();
-    const photoUrl = await URL.createObjectURL(blob);
-    return photoUrl;
-  } else {
-    return DEFAULT_PLACE_IMAGE;
-  }
-}
