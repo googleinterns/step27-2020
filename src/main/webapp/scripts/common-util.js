@@ -2,7 +2,7 @@
  * Fetches image and gets temp URL of image from Google Place Photos
  * @param {string} photoRef a Place Photos photo_reference
  * @returns {string} String containing object url of the resulting image
-
+*/
 async function imageURLFromPhotoRef(photoRef) {
   const photoResponse = await fetch(
     `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/photo?maxwidth=500&photoreference=${photoRef}&key=${GOOGLE_API_KEY}`
@@ -11,7 +11,7 @@ async function imageURLFromPhotoRef(photoRef) {
   const photoUrl = await URL.createObjectURL(blob);
   return photoUrl;
 }
-*/
+
 
 /**
  * Gets URL for photo of place or assigns it a default one if there are no photos available

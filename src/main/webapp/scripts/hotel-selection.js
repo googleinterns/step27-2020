@@ -7,7 +7,7 @@ const HOTEL_RESULTS = document.getElementById('hotel-results');
  * @param {string|null} timestamp timestamp string of the trip to be updated.
  *                                Null if this is a new trip.
  */
-async function findHotel(timestamp) {
+async function fetchHotelResults(timestamp) {
   HOTEL_RESULTS.innerHTML = LOADING_ANIMATION_HTML;
   HOTEL_MAP_ELEM.innerHTML = '';
   HOTEL_MAP_ELEM.style.display = 'none';
@@ -185,7 +185,7 @@ async function saveTrip(hotelID, hotelRef, hotelName, timestamp) {
     body: JSON.stringify(requestBody),
   });
 
-  resetPage(response);
+  resetPage(response, timestamp, tripTitle);
 }
 
 function openHotelModal() {
