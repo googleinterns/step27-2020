@@ -13,6 +13,9 @@ let locationPlaceObjects;
 let mapInitialized;
 let markers;
 
+const HOTEL_MAP_ELEM = document.getElementById('hotel-map');
+const HOTEL_RESULTS = document.getElementById('hotel-results');
+
 /**
  * Adds a trip editor interface to the DOM, which the user can use to add a trip.
  * @param {string|null} timestamp timestamp string of the trip to be updated.
@@ -382,9 +385,9 @@ async function findHotel(timestamp) {
     return;
   }
 
-  document.getElementById('hotel-results').innerHTML = LOADING_ANIMATION_HTML;
-  document.getElementById('hotel-map').innerHTML = '';
-  document.getElementById('hotel-map').style.display = 'none';
+  HOTEL_RESULTS.innerHTML = LOADING_ANIMATION_HTML;
+  HOTEL_MAP_ELEM.innerHTML = '';
+  HOTEL_MAP_ELEM.style.display = 'none';
   openHotelModal();
 
   // Get center point from which to start searching for hotels
@@ -408,17 +411,15 @@ async function findHotel(timestamp) {
  *                                Null if this is a new trip.
  */
 async function parseAndRenderHotelResults(json, centerPoint, timestamp) {
-  const modalContent = document.getElementById('hotel-results');
-  const hotelsMapElem = document.getElementById('hotel-map');
-  hotelsMapElem.style.height = '';
+  HOTEL_MAP_ELEM.style.height = '';
 
   if (!json || json.length === 0) {
-    modalContent.innerText =
+    HOTEL_RESULTS.innerText =
       "We couldn't find any hotels nearby. Sorry about that.";
   } else {
     json = json.slice(0, 10);
     const hotelMap = new google.maps.Map(
-      document.getElementById('hotel-map'),
+      HOTEL_MAP_ELEM,
       {
         center: centerPoint,
         zoom: 12,
@@ -470,11 +471,11 @@ async function parseAndRenderHotelResults(json, centerPoint, timestamp) {
     json = await Promise.all(json);
     json.sort((a, b) => a.distance_center - b.distance_center);
 
-    hotelsMapElem.style.display = 'block';
-    hotelsMapElem.style.width = '100%';
-    hotelsMapElem.style.height = '400px';
-    hotelsMapElem.style.marginBottom = '2em';
-    modalContent.innerHTML = json
+    HOTEL_MAP_ELEM.style.display = 'block';
+    HOTEL_MAP_ELEM.style.width = '100%';
+    HOTEL_MAP_ELEM.style.height = '400px';
+    HOTEL_MAP_ELEM.style.marginBottom = '2em';
+    HOTEL_RESULTS.innerHTML = json
       .map(
         ({ name, formatted_address, rating, place_id, photo_url, photo_ref }) =>
           `
