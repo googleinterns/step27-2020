@@ -3,7 +3,6 @@ package com.google.sps.util;
 import javax.servlet.http.HttpServletResponse;
 
 import com.google.appengine.api.users.UserService;
-import com.google.appengine.api.users.UserServiceFactory;
 
 public class AuthChecker {
 
@@ -15,8 +14,7 @@ public class AuthChecker {
    * @return the user's email as a String, or if the user is not logged in then
    *         null.
    */
-  public static String getUserEmail(HttpServletResponse response) {
-    UserService userService = UserServiceFactory.getUserService();
+  public static String getUserEmail(HttpServletResponse response, UserService userService) {
     if (userService.isUserLoggedIn()) {
       return userService.getCurrentUser().getEmail();
     } else {
