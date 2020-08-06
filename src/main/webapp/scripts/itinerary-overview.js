@@ -1,3 +1,8 @@
+document.addEventListener('DOMContentLoaded', function() {
+    const tooltipElems = document.querySelectorAll('.tooltipped');
+    M.Tooltip.init(tooltipElems, undefined);
+});
+
 let start;
 let waypoints;
 let end;
@@ -16,24 +21,24 @@ let placeDetailsArray = [];
 let waypointsLength = 0;
 let addressLength = 0;
 
+let currentMode = "DRIVING";
+
+const DRIVING = "DRIVING";
+const WALKING = "WALKING";
+const BICYCLING = "BICYCLING";
+const TRANSIT = "TRANSIT";
+
 const PLACE_CARDS_CONTAINER = document.getElementById('place-cards-container');
+const DEFAULT_PLACE_IMAGE = '../assets/img/Building.jpg';
 
 function init() {
     document.getElementById('itinerary-link').classList.add('active');
+
     document.getElementById('itinerary-link-m').classList.add('active');
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    const elems = document.querySelectorAll('select');
-    const instances = M.FormSelect.init(elems, undefined);
-});
-
-async function displayMap() {
+async function displayInfo() {
     await getTripData();
-
-    document.getElementById("mode").addEventListener("change", function() {
-        displayRoute(start, waypoints, end);
-    });
 }
 
 /**
@@ -208,14 +213,13 @@ function displayRoute(start, waypoints, end) {
         })
     }
 
-    const selectedMode = document.getElementById("mode").value;
     directionsService.route(
         {
             origin: start,
             destination: end,
             waypoints: waypointArray,
             optimizeWaypoints: true,
-            travelMode: google.maps.TravelMode[selectedMode]
+            travelMode: google.maps.TravelMode[currentMode]
         },
         function(response, status) {
             if (status === "OK") {
@@ -227,6 +231,35 @@ function displayRoute(start, waypoints, end) {
     );
 }
 
+/**
+ * Method that changes the travel mode that the user will be using on their trip.
+ * @param travelMode{String} one of the accepted modes of travel by displayRoute() (DRIVING,WALKING,BICYCLING,TRANSIT)
+ */
+function changeTravelMode(travelMode){
+    currentMode = travelMode;
+    displayRoute(start, waypoints, end);
+}
+
+/**
+ * Gets URL for photo of place or assigns it a default one if there are no photos available
+ * @param {Array} photos array of photos from PlaceResult object
+ */
+async function imageURLFromPhotos(photos) {
+    const photoRef =
+        photos && Array.isArray(photos)
+            ? photos[0].photo_reference
+            : undefined;
+
+    if(photoRef) {
+        const photoResponse = await fetch(
+            `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/photo?maxheight=300&photoreference=${photoRef}&key=${GOOGLE_API_KEY}`
+        );
+        const blob = await photoResponse.blob();
+        return URL.createObjectURL(blob);
+    } else {
+        return DEFAULT_PLACE_IMAGE;
+    }
+}
 
 /**
  * Fetches more details about place such as phone number and website and puts it all into an object
@@ -238,11 +271,14 @@ async function getPlaceDetails(placeIDArray) {
         `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/details/json?place_id=${hotel_ID}&key=${GOOGLE_API_KEY}`
     )
     const { result } = await detailsResponse.json();
-    const { international_phone_number, name, vicinity, website } = result;
+    const { international_phone_number, name, photos, vicinity, website } = result;
+    const photoUrl = await imageURLFromPhotos(photos);
+
 
     const placeDetails = {
         phoneNumber: international_phone_number,
         name: name,
+        photoUrl: photoUrl,
         address: vicinity,
         website: website
     }
@@ -253,11 +289,13 @@ async function getPlaceDetails(placeIDArray) {
             `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeID}&key=${GOOGLE_API_KEY}`
         )
         const { result } = await detailsResponse.json();
-        const { international_phone_number, name, vicinity, website } = result;
+        const { international_phone_number, name, photos, vicinity, website } = result;
+        const photoUrl = await imageURLFromPhotos(photos);
 
         const placeDetails = {
             phoneNumber: international_phone_number,
             name: name,
+            photoUrl: photoUrl,
             address: vicinity,
             website: website
         }
@@ -266,13 +304,13 @@ async function getPlaceDetails(placeIDArray) {
 }
 
 function storePlaceCardDetails(placeDetails){
-    placeDetailsArray.push(placeDetails)
-    isReadyPlaces()
+    placeDetailsArray.push(placeDetails);
+    isReadyPlaces();
 }
 
 function isReadyPlaces(){
     if(placeDetailsArray.length === (waypointIDs.length + 1)){
-        renderPlaceCards(placeDetailsArray)
+        renderPlaceCards(placeDetailsArray);
     }
 }
 
@@ -283,33 +321,33 @@ function isReadyPlaces(){
 function renderPlaceCards(places) {
     let placeCards = [];
     for(let i = 0; i < places.length; i++) {
-        const { phoneNumber, name, address, website } = places[i];
+        const { phoneNumber, name, photoUrl, address, website } = places[i];
 
         placeCards.push(
             `
         <div class="col s12">
             <div class="card horizontal">
-                <div class="card-image">
-        <img src="../assets/img/Building.jpg">
-                </div>
         <div class="card-stacked">
             <div class="card-content">
             ` +
             (name
-                ? `<p>${name}</p>`
+                ? `<h5 style="font-size: large;">${name}</h5>`
                 : '') +
+            (photoUrl
+                ?`<img src="${photoUrl}" style="width: 50px;height: 50px; float: right; border-radius: 8px;" alt="${name}">`
+                : '')+
             (address
-                ? `<p>${address}</p>`
+                ? `<h6 style="font-size: medium;">${address}</h6>`
                 : '') +
             (phoneNumber
-                ? `<p>${phoneNumber}</p>`
+                ? `<h6 style="font-size: medium;">${phoneNumber}</h6>`
                 : '') +
             (website
-                ? `<p><a href="${website}">Website</a></p>`
+                ? `<h6 style="font-size: medium;"><a href="${website}">Website</a></h6>`
                 : '') +
-            `
+            `            
             </div>
-            </div>
+        </div>
         </div>
     </div>
       `
@@ -332,7 +370,7 @@ function setCenter(coords) {
  */
 function dropMarker(lat,lng) {
     const location = {lat: lat, lng: lng};
-    const marker = new google.maps.Marker({
+    new google.maps.Marker({
         map: map,
         position: location, //Default coords if geolocation fails
         animation: google.maps.Animation.DROP,

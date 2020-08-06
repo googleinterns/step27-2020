@@ -19,28 +19,63 @@
             href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
     />
 </head>
-<body onload="init(); displayMap()">
-<nav class="blue darken-2" role="navigation" id="navbar-section"></nav>
-<ul class="sidenav" id="mobile-demo"></ul>
+<body onload="displayInfo()">
 
-<div id="map"></div>
+<div class="map-container" id="map"></div>
 
 <div class="row">
     <div class="col s3">
         <div id="itinerary-panel">
-            <div id="mode-panel">
-                <select id="mode">
-                    <option value="DRIVING">Driving</option>
-                    <option value="WALKING">Walking</option>
-                    <option value="BICYCLING">Bicycling</option>
-                    <option value="TRANSIT">Transit</option>
-                </select>
+            <div class="container">
+                <a href="index.html">
+                    <img class="site-icon" src="favicon/favicon-32x32.png" alt="Logo">
+                </a>
+                <div id="mode-panel">
+                    <button type="button"
+                            class="btn-floating btn-small waves-effect waves-light red tooltipped"
+                            id="driving-button"
+                            onclick="changeTravelMode(DRIVING)"
+                            data-position="bottom"
+                            data-tooltip="Use this if you plan on Driving to your locations"
+                    >
+                        <i class="material-icons">directions_car</i>
+                    </button>
+
+                    <button type="button"
+                            class="btn-floating btn-small waves-effect waves-light green tooltipped"
+                            id="transit-button"
+                            onclick="changeTravelMode(TRANSIT)"
+                            data-position="bottom"
+                            data-tooltip="Use this if you plan on taking public transit to your locations"
+                    >
+                        <i class="material-icons">directions_transit</i>
+                    </button>
+
+                    <button type="button"
+                            class="btn-floating btn-small waves-effect waves-light blue tooltipped"
+                            id="walking-button"
+                            onclick="changeTravelMode(WALKING)"
+                            data-position="bottom"
+                            data-tooltip="Use this if you plan on Walking to your locations"
+                    >
+                        <i class="material-icons">directions_walk</i>
+                    </button>
+                    <button type="button"
+                            class="btn-floating btn-small waves-effect waves-light yellow tooltipped"
+                            id="bicycling-button"
+                            onclick="changeTravelMode(BICYCLING)"
+                            data-position="bottom"
+                            data-tooltip="Use this if you plan on Biking to your locations"
+                    >
+                        <i class="material-icons">directions_bike</i>
+                    </button>
+                </div>
             </div>
-            <div id="place-cards-container"></div>
+            <div class="cards" id="place-cards-container"></div>
         </div>
     </div>
 </div>
-<div id="footer-section"></div>
+
 <script
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDlLtx69Y4-65_dCK67ZX3lzKTYpyc5CWI&libraries=&v=weekly"
         defer
