@@ -165,17 +165,17 @@ function openCurrentTrip() {
   const currTripModalElem = document.getElementById('current-trip-modal');
   const currTripModalInstance = M.Modal.getInstance(currTripModalElem);
 
+  currTripStatus.innerHTML = '';
+  currTripPlacesCollection.innerHTML = '';
   if(locationPlaceObjects.length <= 0 || !locationPlaceObjects) {
     currTripStatus.innerHTML = "<p>It's lonely in here, add some places!</p>";
     currTripModalInstance.open();
     return;
   }
 
-  currTripStatus.innerHTML = '';
   currTripStatus.innerHTML = LOADING_ANIMATION_HTML;
   currTripModalInstance.open();
 
-  currTripPlacesCollection.innerHTML = '';
   let currTripPlaceCards = []
   for(let location of locationPlaceObjects) {
     const { name } = location;
@@ -196,7 +196,18 @@ function openCurrentTrip() {
 }
 
 function resetPage(response) {
-
+  if (response.ok) {
+    M.toast({
+      html: 'Successfully saved trip',
+    });
+    locationPlaceObjects.length = 0;
+    openCurrentTrip();
+  } else {
+    M.toast({
+      html:
+        'There was an error while saving your trip. Please try again.',
+    });
+  }
 }
 /*
 function findHotel() {
