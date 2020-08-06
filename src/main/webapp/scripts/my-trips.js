@@ -2,8 +2,8 @@
  * Function run on page load that runs auth checking and other functions
  */
 function init() {
-  document.getElementById('my-trips-link').classList.add('active');
-  document.getElementById('my-trips-link-m').classList.add('active');
+  document.getElementById("my-trips-link").classList.add("active");
+  document.getElementById("my-trips-link-m").classList.add("active");
   authReload();
   fetchAndRenderTripsFromDB();
 }
@@ -24,7 +24,7 @@ let markers;
  *                                if this is a new trip.
  */
 function openTripEditor(timestamp, locationData, title) {
-  document.getElementById('open-close-button-area').innerHTML = `
+  document.getElementById("open-close-button-area").innerHTML = `
     <button
       onclick="cancelTripCreation()"
       class="btn-large add-trip-button waves-effect red darken-1"
@@ -33,7 +33,7 @@ function openTripEditor(timestamp, locationData, title) {
     </button>
   `;
 
-  document.getElementById('trip-editor-container').innerHTML = `
+  document.getElementById("trip-editor-container").innerHTML = `
     <div class="row">
       <div class="col s12 m8">
         <div class="card">
@@ -116,33 +116,33 @@ function openTripEditor(timestamp, locationData, title) {
   `;
   if (timestamp === null) {
     numLocations = 1;
-    locationPlaceObjects = [''];
+    locationPlaceObjects = [""];
     mapInitialized = false;
-    markers = [''];
+    markers = [""];
 
     // add autocomplete through Places API for first location
-    const location1 = document.getElementById('location-1');
+    const location1 = document.getElementById("location-1");
     const autocomplete = new google.maps.places.Autocomplete(location1);
     createPlaceHandler(autocomplete, 1);
   } else {
-    const findHotelButton = document.getElementById('find-hotel-button');
+    const findHotelButton = document.getElementById("find-hotel-button");
     findHotelButton.onclick = () => findHotel(timestamp);
-    findHotelButton.innerText = 'Update';
+    findHotelButton.innerText = "Update";
     locationPlaceObjects = [];
     markers = [];
     numLocations = locationData.length;
 
     mapInitialized = false;
     // Populate frontend fields with existing data
-    document.getElementById('trip-title').value = title;
-    document.getElementById('location-1').value = locationData[0].placeName;
-    document.getElementById('location-1-weight').value = locationData[0].weight;
-    const location = document.getElementById('location-1');
+    document.getElementById("trip-title").value = title;
+    document.getElementById("location-1").value = locationData[0].placeName;
+    document.getElementById("location-1-weight").value = locationData[0].weight;
+    const location = document.getElementById("location-1");
     const autocomplete = new google.maps.places.Autocomplete(location);
     createPlaceHandler(autocomplete, 1);
     for (let i = 2; i <= numLocations; i++) {
-      document.getElementById('trip-locations-container').insertAdjacentHTML(
-        'beforeend',
+      document.getElementById("trip-locations-container").insertAdjacentHTML(
+        "beforeend",
         `<div class="row" id="location-${i}-container">
           <div class="col s12 m6">
             <label for="location-${i}" id="location-${i}-label">Location ${i}</label>
@@ -199,7 +199,7 @@ function openTripEditor(timestamp, locationData, title) {
           const { geometry, name } = place;
           const { location, viewport } = geometry;
           if (!mapInitialized) {
-            map = new google.maps.Map(document.getElementById('editor-map'), {
+            map = new google.maps.Map(document.getElementById("editor-map"), {
               center: location,
               zoom: 13,
             });
@@ -216,7 +216,7 @@ function openTripEditor(timestamp, locationData, title) {
             content: `<h5 class="infowindow-text">${name}</h5>
                 <p class="infowindow-text">Location ${index + 1}</p>`,
           });
-          google.maps.event.addListener(marker, 'click', () => {
+          google.maps.event.addListener(marker, "click", () => {
             infoWindow.open(map, marker);
           });
           fitMapToMarkers(map, markers);
@@ -224,7 +224,7 @@ function openTripEditor(timestamp, locationData, title) {
           M.Toast.dismissAll();
           M.toast({
             html:
-              'There was an error while loading one of your locations. Please try again.',
+              "There was an error while loading one of your locations. Please try again.",
           });
         }
       });
@@ -232,12 +232,12 @@ function openTripEditor(timestamp, locationData, title) {
   }
 
   // initialize tooltip for Add Location button
-  const tooltipElems = document.querySelectorAll('.tooltipped');
+  const tooltipElems = document.querySelectorAll(".tooltipped");
   const tooltipInstances = M.Tooltip.init(tooltipElems, undefined);
 
   // prevent page reload on form submit
-  const form = document.getElementById('trip-editor-form');
-  form.addEventListener('submit', (e) => e.preventDefault());
+  const form = document.getElementById("trip-editor-form");
+  form.addEventListener("submit", (e) => e.preventDefault());
 }
 
 /**
@@ -246,8 +246,8 @@ function openTripEditor(timestamp, locationData, title) {
  */
 function addLocation() {
   numLocations++;
-  document.getElementById('trip-locations-container').insertAdjacentHTML(
-    'beforeend',
+  document.getElementById("trip-locations-container").insertAdjacentHTML(
+    "beforeend",
     `<div class="row" id="location-${numLocations}-container">
       <div class="col s12 m6">
         <label for="location-${numLocations}" id="location-${numLocations}-label">Location ${numLocations}</label>
@@ -289,11 +289,11 @@ function addLocation() {
   const autocomplete = new google.maps.places.Autocomplete(location);
 
   // initialize tooltips for new locations
-  const tooltipElems = document.querySelectorAll('.tooltipped');
+  const tooltipElems = document.querySelectorAll(".tooltipped");
   const tooltipInstances = M.Tooltip.init(tooltipElems, undefined);
   createPlaceHandler(autocomplete, numLocations);
-  markers.push('');
-  locationPlaceObjects.push('');
+  markers.push("");
+  locationPlaceObjects.push("");
 }
 
 /**
@@ -303,7 +303,7 @@ function addLocation() {
  */
 function deleteLocation(locationNum) {
   if (locationNum > markers.length || locationNum < 1) {
-    throw new Error('Cannot delete invalid location');
+    throw new Error("Cannot delete invalid location");
   }
   const index = locationNum - 1;
   // Close current tooltip
@@ -343,7 +343,7 @@ function deleteLocation(locationNum) {
   }
 
   // Remove marker from map and also the array
-  if (markers[index] !== '') {
+  if (markers[index] !== "") {
     markers[index].setMap(null);
   }
   numLocations--;
@@ -357,8 +357,8 @@ function deleteLocation(locationNum) {
  * view.
  */
 function cancelTripCreation() {
-  document.getElementById('trip-editor-container').innerHTML = '';
-  document.getElementById('open-close-button-area').innerHTML = `
+  document.getElementById("trip-editor-container").innerHTML = "";
+  document.getElementById("open-close-button-area").innerHTML = `
     <button
       onclick="openTripEditor(null, null, null)"
       class="btn-large add-trip-button waves-effect green darken-1"
@@ -374,23 +374,23 @@ function cancelTripCreation() {
  *                                Null if this is a new trip.
  */
 async function findHotel(timestamp) {
-  document.getElementById('hotel-results').innerHTML = LOADING_ANIMATION_HTML;
+  document.getElementById("hotel-results").innerHTML = LOADING_ANIMATION_HTML;
   if (numLocations !== getNumPlaceObjectsInArray(locationPlaceObjects)) {
     M.Toast.dismissAll();
     M.toast({
-      html: 'Not all of your places are selected through autocomplete.',
+      html: "Not all of your places are selected through autocomplete.",
     });
     return;
   }
-  const elem = document.getElementById('hotel-modal');
+  const elem = document.getElementById("hotel-modal");
   const instance = M.Modal.getInstance(elem);
   instance.open();
 
   // Get center point from which to start searching for hotels
   const coords = placesToCoordsWeightArray(locationPlaceObjects);
   const [lat, lng] = centerOfMass(coords);
-  document.getElementById('hotels-map').innerHTML = '';
-  document.getElementById('hotels-map').style.display = 'none';
+  document.getElementById("hotels-map").innerHTML = "";
+  document.getElementById("hotels-map").style.display = "none";
 
   const response = await fetch(
     `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/textsearch/json?type=lodging&location=${lat},${lng}&radius=10000&key=${GOOGLE_API_KEY}&output=json`
@@ -408,9 +408,9 @@ async function findHotel(timestamp) {
  *                                Null if this is a new trip.
  */
 async function parseAndRenderHotelResults(json, centerPoint, timestamp) {
-  const modalContent = document.getElementById('hotel-results');
-  const hotelsMapElem = document.getElementById('hotels-map');
-  hotelsMapElem.style.height = '';
+  const modalContent = document.getElementById("hotel-results");
+  const hotelsMapElem = document.getElementById("hotels-map");
+  hotelsMapElem.style.height = "";
 
   if (!json || json.length === 0) {
     modalContent.innerText =
@@ -418,7 +418,7 @@ async function parseAndRenderHotelResults(json, centerPoint, timestamp) {
   } else {
     json = json.slice(0, 10);
     const hotelMap = new google.maps.Map(
-      document.getElementById('hotels-map'),
+      document.getElementById("hotels-map"),
       {
         center: centerPoint,
         zoom: 12,
@@ -444,14 +444,14 @@ async function parseAndRenderHotelResults(json, centerPoint, timestamp) {
         map: hotelMap,
         title: obj.name,
         label: {
-          fontFamily: 'Material Icons',
-          text: 'hotel',
+          fontFamily: "Material Icons",
+          text: "hotel",
         },
       });
       const infoWindow = new google.maps.InfoWindow({
         content: `<h5 class="infowindow-text">${obj.name}</h5>`,
       });
-      marker.addListener('click', () => infoWindow.open(hotelMap, marker));
+      marker.addListener("click", () => infoWindow.open(hotelMap, marker));
       obj.distance_center = distanceBetween(location, centerPoint);
       const photoRef =
         obj.photos && Array.isArray(obj.photos)
@@ -463,17 +463,17 @@ async function parseAndRenderHotelResults(json, centerPoint, timestamp) {
         obj.photo_ref = photoRef;
       } else {
         obj.photo_url = undefined;
-        obj.photo_ref = '';
+        obj.photo_ref = "";
       }
       return await obj;
     });
     json = await Promise.all(json);
     json.sort((a, b) => a.distance_center - b.distance_center);
 
-    hotelsMapElem.style.display = 'block';
-    hotelsMapElem.style.width = '100%';
-    hotelsMapElem.style.height = '400px';
-    hotelsMapElem.style.marginBottom = '2em';
+    hotelsMapElem.style.display = "block";
+    hotelsMapElem.style.width = "100%";
+    hotelsMapElem.style.height = "400px";
+    hotelsMapElem.style.marginBottom = "2em";
     modalContent.innerHTML = json
       .map(
         ({ name, formatted_address, rating, place_id, photo_url, photo_ref }) =>
@@ -486,7 +486,7 @@ async function parseAndRenderHotelResults(json, centerPoint, timestamp) {
                 <div class="card-image">
                   <img src="${photo_url}" alt="photo of ${name} from Google" loading="lazy" />
                 </div> `
-            : '') +
+            : "") +
           `
                 <div class="card-content black-text">
                   <span class="card-title"><strong>${name}</strong></span>
@@ -509,15 +509,14 @@ async function parseAndRenderHotelResults(json, centerPoint, timestamp) {
               <div class="card large white">
                 <div class="card-content black-text">
                   <span class="card-title"><i class="material-icons">info</i>Info</span>
-                  <p>Rating: ${rating}</p>
-                  <p class="placeholder-text">More coming soon!</p>
+                   <h4>Rating: ${rating}</h4>
                 </div>            
               </div>
             </div>
           </div>
         `
       )
-      .join('');
+      .join("");
   }
 }
 
@@ -531,7 +530,7 @@ async function parseAndRenderHotelResults(json, centerPoint, timestamp) {
  *                                          Null/undefined if this is a new trip.
  */
 async function saveTrip(hotelID, hotelRef, hotelName, timestamp) {
-  const elem = document.getElementById('hotel-modal');
+  const elem = document.getElementById("hotel-modal");
   const instance = M.Modal.getInstance(elem);
   instance.close();
 
@@ -546,7 +545,7 @@ async function saveTrip(hotelID, hotelRef, hotelName, timestamp) {
     });
   }
 
-  const tripTitle = document.getElementById('trip-title').value;
+  const tripTitle = document.getElementById("trip-title").value;
   const requestBody = {
     title: tripTitle,
     hotel_id: hotelID,
@@ -560,10 +559,10 @@ async function saveTrip(hotelID, hotelRef, hotelName, timestamp) {
     requestBody.timestamp = timestamp;
   }
 
-  const response = await fetch('/trip-data', {
-    method: timestamp ? 'PUT' : 'POST',
+  const response = await fetch("/trip-data", {
+    method: timestamp ? "PUT" : "POST",
     headers: {
-      'content-type': 'application/json',
+      "content-type": "application/json",
     },
     body: JSON.stringify(requestBody),
   });
@@ -577,7 +576,7 @@ async function saveTrip(hotelID, hotelRef, hotelName, timestamp) {
     fetchAndRenderTripsFromDB();
   } else {
     M.toast({
-      html: 'There was an error when saving your trip. Please try again.',
+      html: "There was an error when saving your trip. Please try again.",
     });
   }
 }
@@ -589,20 +588,20 @@ async function saveTrip(hotelID, hotelRef, hotelName, timestamp) {
  */
 async function deleteTrip(timestamp) {
   const response = await fetch(`/trip-data?timestamp=${timestamp}`, {
-    method: 'DELETE',
+    method: "DELETE",
     headers: {
-      'content-type': 'application/json',
+      "content-type": "application/json",
     },
   });
   if (response.ok) {
     M.toast({
-      html: 'Trip successfully deleted.',
+      html: "Trip successfully deleted.",
     });
     fetchAndRenderTripsFromDB();
   } else {
     M.toast({
       html:
-        'There was a problem when attempting to delete your trip. Please try again.',
+        "There was a problem when attempting to delete your trip. Please try again.",
     });
   }
 }
@@ -613,9 +612,9 @@ async function deleteTrip(timestamp) {
  * @param {string} timestamp The timestamp string for the trip to delete.
  */
 function openDeleteModal(timestamp) {
-  const deleteConfirmElem = document.getElementById('modal-delete-btn');
+  const deleteConfirmElem = document.getElementById("modal-delete-btn");
   deleteConfirmElem.onclick = () => deleteTrip(timestamp);
-  const elem = document.getElementById('delete-modal');
+  const elem = document.getElementById("delete-modal");
   const instance = M.Modal.getInstance(elem);
   instance.open();
 }
@@ -637,13 +636,13 @@ async function fetchAndRenderTripsFromDB() {
   `;
 
   const plannedTripsHTMLElement = document.getElementById(
-    'planned-trips-container'
+    "planned-trips-container"
   );
-  const pastTripsHTMLElement = document.getElementById('past-trips-container');
+  const pastTripsHTMLElement = document.getElementById("past-trips-container");
   plannedTripsHTMLElement.innerHTML = LOADING_ANIMATION_HTML;
   pastTripsHTMLElement.innerHTML = LOADING_ANIMATION_HTML;
-  const response = await fetch('/trip-data', {
-    method: 'GET',
+  const response = await fetch("/trip-data", {
+    method: "GET",
   });
   const tripsData = await response.json();
   const keys = Object.keys(tripsData);
@@ -656,8 +655,8 @@ async function fetchAndRenderTripsFromDB() {
     (a, b) =>
       parseSerializedJson(b).timestamp - parseSerializedJson(a).timestamp
   );
-  plannedTripsHTMLElement.innerHTML = '';
-  pastTripsHTMLElement.innerHTML = '';
+  plannedTripsHTMLElement.innerHTML = "";
+  pastTripsHTMLElement.innerHTML = "";
   let isPlannedTripsEmpty = true;
   let isPastTripsEmpty = true;
   for (key of keys) {
@@ -673,7 +672,7 @@ async function fetchAndRenderTripsFromDB() {
     } = parseSerializedJson(key);
     const locations = tripsData[key];
     let HTMLElementToUpdate;
-    if (isPastTrip === 'true') {
+    if (isPastTrip === "true") {
       isPastTripsEmpty = false;
       HTMLElementToUpdate = pastTripsHTMLElement;
     } else {
@@ -712,15 +711,19 @@ async function fetchAndRenderTripsFromDB() {
               <div id="trip-${timestamp}-locations"></div>
               <div id="trip-${timestamp}-map" class="trip-map"></div>
             </div>` +
-      (isPastTrip === 'false'
+      (isPastTrip === "false"
         ? `<div class="card-action center">
                 <a class="btn indigo waves-effect" onclick="setTripToPastOrPlanned('${timestamp}', 'true')">Mark Trip Completed</a>
               </div>`
         : `<div class="card-action center">
                 <a class="btn indigo waves-effect" onclick="setTripToPastOrPlanned('${timestamp}', 'false')">Mark Trip Planned</a>
-                <a class="btn indigo waves-effect" onclick="openTripsNetworkModal('${timestamp}')">Post on Trips Network</a>
-              </div>`) +
-      `
+                ` +
+          (isPublic === "true"
+            ? `<a class="btn indigo waves-effect disabled" onclick="openTripsNetworkModal('${timestamp}')">Post on Trips Network</a>`
+            : `<a class="btn indigo waves-effect" onclick="openTripsNetworkModal('${timestamp}')">Post on Trips Network</a>`
+          )
+      ) + `
+            </div>
           </div>
         </div>
         <div class="col s12 m4" id="trip-${timestamp}-hotel-card">
@@ -737,7 +740,7 @@ async function fetchAndRenderTripsFromDB() {
       </div>
     `;
     // initialize tooltips for edit and delete trip buttons
-    const tooltipElems = document.querySelectorAll('.tooltipped');
+    const tooltipElems = document.querySelectorAll(".tooltipped");
     const tooltipInstances = M.Tooltip.init(tooltipElems, undefined);
     document.getElementById(`trip-${timestamp}-locations`).innerHTML = locations
       .map(({ weight, placeName }, index) => {
@@ -756,7 +759,7 @@ async function fetchAndRenderTripsFromDB() {
           </div>
         `;
       })
-      .join('');
+      .join("");
   }
 
   // Iterate through keys again to load the map for each trip and load edit button functionality
@@ -781,8 +784,8 @@ async function fetchAndRenderTripsFromDB() {
           map: tripMap,
           position: location,
           label: {
-            fontFamily: 'Material Icons',
-            text: 'hotel',
+            fontFamily: "Material Icons",
+            text: "hotel",
           },
         });
         tripMarkers.push(marker);
@@ -791,7 +794,7 @@ async function fetchAndRenderTripsFromDB() {
           content: `<h5 class="infowindow-text">${name}</h5>
               <p class="infowindow-text">Hotel for Trip</p>`,
         });
-        google.maps.event.addListener(marker, 'click', () => {
+        google.maps.event.addListener(marker, "click", () => {
           infoWindow.open(tripMap, marker);
         });
         tripMap.fitBounds(viewport);
@@ -800,7 +803,7 @@ async function fetchAndRenderTripsFromDB() {
           <p>${formatted_address}</p>` +
           (website != undefined
             ? `<div class="card-action center"><a class="btn indigo waves-effect" href="${website}" target="_blank">Website</a></div>`
-            : '');
+            : "");
       }
     });
 
@@ -819,7 +822,7 @@ async function fetchAndRenderTripsFromDB() {
           const infoWindow = new google.maps.InfoWindow({
             content: `<h5 class="infowindow-text">${placeName}</h5>`,
           });
-          google.maps.event.addListener(placeMarker, 'click', () => {
+          google.maps.event.addListener(placeMarker, "click", () => {
             infoWindow.open(tripMap, placeMarker);
           });
           tripMap.fitBounds(viewport);
@@ -850,7 +853,7 @@ async function fetchAndRenderTripsFromDB() {
  * @param {number} locationNum the number identifying the field
  */
 function createPlaceHandler(element, locationNum) {
-  google.maps.event.addListener(element, 'place_changed', () => {
+  google.maps.event.addListener(element, "place_changed", () => {
     const obj = element.getPlace();
     obj.locationNum = locationNum;
 
@@ -862,17 +865,17 @@ function createPlaceHandler(element, locationNum) {
       lng: lng(),
     };
     if (!mapInitialized) {
-      map = new google.maps.Map(document.getElementById('editor-map'), {
+      map = new google.maps.Map(document.getElementById("editor-map"), {
         center: coords,
         zoom: 13,
         disableDefaultUI: true,
       });
       mapInitialized = true;
     }
-    if (markers[locationNum - 1] !== '') {
+    if (markers[locationNum - 1] !== "") {
       const currMarkerForLocation = markers[locationNum - 1];
       if (currMarkerForLocation === undefined || locationNum > markers.length) {
-        google.maps.event.clearInstanceListeners(element, 'place_changed');
+        google.maps.event.clearInstanceListeners(element, "place_changed");
         return;
       }
       currMarkerForLocation.setMap(null);
@@ -887,7 +890,7 @@ function createPlaceHandler(element, locationNum) {
       content: `<h5 class="infowindow-text">${obj.name}</h5>
           <p class="infowindow-text">Location ${locationNum}</p>`,
     });
-    marker.addListener('click', () => infoWindow.open(map, marker));
+    marker.addListener("click", () => infoWindow.open(map, marker));
     locationPlaceObjects[locationNum - 1] = obj;
     markers[locationNum - 1] = marker;
 
@@ -906,7 +909,7 @@ function createPlaceHandler(element, locationNum) {
 function fitMapToMarkers(mapRef, markers) {
   const bounds = new google.maps.LatLngBounds(null);
   for (marker of markers) {
-    if (marker !== '') {
+    if (marker !== "") {
       bounds.extend(marker.getPosition());
     }
   }
@@ -937,9 +940,9 @@ async function setTripToPastOrPlanned(timestamp, isPastTrip) {
   const response = await fetch(
     `/trips-network?timestamp=${timestamp}&is_past_trip=${isPastTrip}`,
     {
-      method: 'PUT',
+      method: "PUT",
       headers: {
-        'content-type': 'application/json',
+        "content-type": "application/json",
       },
     }
   );
@@ -947,14 +950,14 @@ async function setTripToPastOrPlanned(timestamp, isPastTrip) {
   if (response.ok) {
     M.toast({
       html:
-        'Successfully marked trip as ' +
-        (isPastTrip === 'true' ? 'completed.' : 'planned'),
+        "Successfully marked trip as " +
+        (isPastTrip === "true" ? "completed." : "planned"),
     });
     fetchAndRenderTripsFromDB();
   } else {
     M.toast({
       html:
-        'There was an error while setting your trip to a past trip. Please try again.',
+        "There was an error while setting your trip to a past trip. Please try again.",
     });
   }
 }
@@ -964,15 +967,15 @@ async function setTripToPastOrPlanned(timestamp, isPastTrip) {
  * @param {string} timestamp
  */
 function openTripsNetworkModal(timestamp) {
-  const elem = document.getElementById('trips-network-modal');
+  const elem = document.getElementById("trips-network-modal");
   const instance = M.Modal.getInstance(elem);
   instance.open();
-  const submitButton = document.getElementById('post-trip-button');
+  const submitButton = document.getElementById("post-trip-button");
   submitButton.onclick = () => postTripToTripsNetwork(timestamp);
 
   // prevent page reload on form submit
-  const form = document.getElementById('trips-network-form');
-  form.addEventListener('submit', (e) => e.preventDefault());
+  const form = document.getElementById("trips-network-form");
+  form.addEventListener("submit", (e) => e.preventDefault());
 }
 
 /**
@@ -980,12 +983,12 @@ function openTripsNetworkModal(timestamp) {
  * @param {string} timestamp
  */
 async function postTripToTripsNetwork(timestamp) {
-  const desc = document.getElementById('trip-description').value;
-  const rating = document.getElementById('trip-rating').value;
-  const response = await fetch('/trips-network', {
-    method: 'POST',
+  const desc = document.getElementById("trip-description").value;
+  const rating = document.getElementById("trip-rating").value;
+  const response = await fetch("/trips-network", {
+    method: "POST",
     headers: {
-      'content-type': 'application/json',
+      "content-type": "application/json",
     },
     body: JSON.stringify({
       description: desc,
@@ -996,15 +999,15 @@ async function postTripToTripsNetwork(timestamp) {
 
   if (response.ok) {
     M.toast({
-      html: 'Successfully posted trip to the Trips Network',
+      html: "Successfully posted trip to the Trips Network",
     });
-    const elem = document.getElementById('trips-network-modal');
+    const elem = document.getElementById("trips-network-modal");
     const instance = M.Modal.getInstance(elem);
     instance.close();
   } else {
     M.toast({
       html:
-        'There was an error while posting your trip to the Trips Network. Please try again.',
+        "There was an error while posting your trip to the Trips Network. Please try again.",
     });
   }
 }
