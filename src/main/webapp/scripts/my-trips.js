@@ -383,16 +383,14 @@ async function findHotel(timestamp) {
   }
 
   document.getElementById('hotel-results').innerHTML = LOADING_ANIMATION_HTML;
-  const elem = document.getElementById('hotel-modal');
-  const instance = M.Modal.getInstance(elem);
-  instance.open();
+  document.getElementById('hotel-map').innerHTML = '';
+  document.getElementById('hotel-map').style.display = 'none';
+  openHotelModal();
 
   // Get center point from which to start searching for hotels
   getPlaceWeights(locationPlaceObjects);
   const coords = placesToCoordsWeightArray(locationPlaceObjects);
   const [lat, lng] = centerOfMass(coords);
-  document.getElementById('hotel-map').innerHTML = '';
-  document.getElementById('hotel-map').style.display = 'none';
 
   const response = await fetch(
     `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/textsearch/json?type=lodging&location=${lat},${lng}&radius=10000&key=${GOOGLE_API_KEY}&output=json`
@@ -533,12 +531,10 @@ async function parseAndRenderHotelResults(json, centerPoint, timestamp) {
  *                                          Null/undefined if this is a new trip.
  */
 async function saveTrip(hotelID, hotelRef, hotelName, timestamp) {
-  const elem = document.getElementById('hotel-modal');
-  const instance = M.Modal.getInstance(elem);
-  instance.close();
+  closeHotelModal();
 
   // Build location and weight arrays
-  getPlaceWeights(locationPlaceObjects);
+  getPlaceWeights(locationPlaceObjects); //in case user 
   const locationData = [];
   for (let i = 1; i <= numLocations; i++) {
     locationData.push({
@@ -1019,4 +1015,16 @@ function getPlaceWeights(arr) {
   for(let obj of arr) {
     obj.weight = document.getElementById(`location-${obj.locationNum}-weight`).value;
   }
+}
+
+function openHotelModal() {
+  const HOTEL_MODAL_ELEM = document.getElementById('hotel-modal');
+  const HOTEL_MODAL_INSTANCE = M.Modal.getInstance(HOTEL_MODAL_ELEM);
+  HOTEL_MODAL_INSTANCE.open();
+}
+
+function closeHotelModal() {
+  const HOTEL_MODAL_ELEM = document.getElementById('hotel-modal');
+  const HOTEL_MODAL_INSTANCE = M.Modal.getInstance(HOTEL_MODAL_ELEM);
+  HOTEL_MODAL_INSTANCE.close();
 }
