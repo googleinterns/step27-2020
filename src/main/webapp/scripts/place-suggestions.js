@@ -3,7 +3,6 @@ let filter;
 let placeDetailsMap = new Map();
 
 //util functions rely on these specific variable names
-//kinda crappy...too bad! 
 let locationPlaceObjects = [];
 let markers = [];
 let numLocations = 0;
@@ -12,6 +11,9 @@ const DEFAULT_WEIGHT = 3;
 const PLACE_CARDS_CONTAINER = document.getElementById('place-cards-container');
 const DEFAULT_PLACE_IMAGE = '../assets/img/jason-dent-blue.jpg'
 
+/**
+ * Runs on page load. Adds auth wall and event listeners for input forms
+ */
 function init() {
   document.getElementById('plan-for-me-link').classList.add('active');
   document.getElementById('plan-for-me-link-m').classList.add('active');
@@ -20,6 +22,10 @@ function init() {
   addFilterHandler();
 }
 
+/**
+ * Adds event listener to city input form so user can select a city from
+ * autocomplete suggestions.
+ */
 function addCityAutocomplete() {
   const cityInputField = document.getElementById('city-input')
   const options = {
@@ -34,6 +40,9 @@ function addCityAutocomplete() {
   });
 }
 
+/**
+ * adds event listener to when user selects a filter
+ */
 function addFilterHandler() {
   const filterForm = document.getElementById('filters');
   filterForm.addEventListener('change', () => {
@@ -144,10 +153,17 @@ function renderPlaceCards(placeDetailsMap) {
   PLACE_CARDS_CONTAINER.innerHTML = placeCards.join('');
 }
 
+/**
+ * Adds place to array of places for trip as well as creates marker for this trip
+ * and adds it to a markers array
+ * @param {string} placeId place ID of place they want to add to trip
+ */
 function addPlaceToTrip(placeId) {
+  //add place details to array of trip locations
   const placeDetails = placeDetailsMap.get(placeId);
   locationPlaceObjects.push(placeDetails);
 
+  //add marker for each trip location to array
   const { geometry, name } = placeDetails;
   const { location } = geometry;
   const marker = {
@@ -159,6 +175,9 @@ function addPlaceToTrip(placeId) {
   numLocations++;
 }
 
+/**
+ * Opens current trip modal that user saves locations they want to visit to
+ */
 function openCurrentTrip() {
   const currTripStatus = document.getElementById('current-trip-status');
   const currTripPlacesCollection = document.getElementById('current-trip-places');
@@ -195,7 +214,29 @@ function openCurrentTrip() {
   }
 }
 
-function resetPage(response) {
+/**
+ * Opens modal with results for user to confirm and save trip.
+ */
+function findHotel() {
+  if(locationPlaceObjects.length <= 0 || !locationPlaceObjects) {
+    M.Toast.dismissAll();
+    M.toast({
+      html: 'Select some places first!',
+    });
+    return;
+  }
+
+  //null input to account for no timestamp as this is a new trip
+  fetchHotelResults(null);
+}
+
+/**
+ * Resets page to default following saving trip
+ * @param {Object} response HTTP response after saving trip
+ * @param {string|null} timestamp timestamp string of trip to be updates. Null if new trip
+ * @param {string} tripTitle title of trip (null for Plan For Me page)
+ */
+function resetPage(response, timestamp, tripTitle) {
   if (response.ok) {
     M.toast({
       html: 'Successfully saved trip',
@@ -209,17 +250,7 @@ function resetPage(response) {
     });
   }
 }
-/*
-function findHotel() {
-  if(locationData.length <= 0 || !locationData) {
-    M.Toast.dismissAll();
-    M.toast({
-      html: 'Select some places first!',
-    });
-    return;
-  }
-}
-*/
+
 /**
  * Fetches more details about place such as phone number and website and puts it all into an object
  * @param {String} placeId place ID of place to get details about 

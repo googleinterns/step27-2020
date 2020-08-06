@@ -382,13 +382,17 @@ async function findHotel(timestamp) {
     return;
   }
 
-  console.log(locationPlaceObjects);
-
   getPlaceWeights(locationPlaceObjects);
   convertLatLngFunctionsToValues(locationPlaceObjects, markers);
   fetchHotelResults(timestamp);
 }
 
+/**
+ * Resets page to default following saving trip
+ * @param {Object} response HTTP response after saving trip
+ * @param {string|null} timestamp timestamp string of trip to be updates. Null if new trip
+ * @param {string} tripTitle title of trip 
+ */
 function resetPage(response, timestamp, tripTitle) {
   if (response.ok) {
     if (timestamp) {
@@ -842,6 +846,12 @@ function getPlaceWeights(arr) {
   }
 }
 
+/**
+ * Converts lat and lng properties in place and marker objects from their getter functions
+ * to the values these functions return instead
+ * @param {Array} locationPlaceObjects array of place objects
+ * @param {Array} markers array of marker objects 
+ */
 function convertLatLngFunctionsToValues(locationPlaceObjects, markers) {
   for(let location of locationPlaceObjects) {
     const { lat, lng } = location.geometry.location;
