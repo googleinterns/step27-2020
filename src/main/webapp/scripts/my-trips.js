@@ -333,6 +333,7 @@ function deleteLocation(locationNum) {
     locationContainer.id = `${locationShift}-container`;
     locationLabel.id = `${locationShift}-label`;
     location.id = `${locationShift}`;
+    weight.id = `${locationShift}-weight`;
 
     weightLabel.id = `${locationShift}-weight-label`;
     weight.id = `${locationShift}-weight`;
