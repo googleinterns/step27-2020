@@ -392,7 +392,7 @@ async function findHotel(timestamp) {
  * Resets page to default following saving trip
  * @param {Object} response HTTP response after saving trip
  * @param {string|null} timestamp timestamp string of trip to be updates. Null if new trip
- * @param {string} tripTitle title of trip 
+ * @param {string} tripTitle title of trip
  */
 function resetPage(response, timestamp, tripTitle) {
   if (response.ok) {
@@ -539,17 +539,18 @@ async function fetchAndRenderTripsFromDB() {
               </div>
               <div id="trip-${timestamp}-locations"></div>
               <div id="trip-${timestamp}-map" class="trip-map"></div>
-            </div>` +
-      (isPastTrip === 'false'
-        ? `<div class="card-action center">
-                <a class="btn indigo waves-effect" onclick="setTripToPastOrPlanned('${timestamp}', 'true')">Mark Trip Completed</a>
-              </div>`
-        : `<div class="card-action center">
-                <a class="btn indigo waves-effect" onclick="setTripToPastOrPlanned('${timestamp}', 'false')">Mark Trip Planned</a>
-                <a class="btn indigo waves-effect" onclick="openTripsNetworkModal('${timestamp}')">Post on Trips Network</a>
-              </div>`) +
-      `
+            </div>
+          <div class="card-action center">` +
+            (isPastTrip === 'false'
+              ? `<a class="btn indigo waves-effect action-btn" onclick="setTripToPastOrPlanned('${timestamp}', 'true')">Mark Trip Completed</a>`
+              : `<a class="btn indigo waves-effect action-btn" onclick="setTripToPastOrPlanned('${timestamp}', 'false')">Mark Trip Planned</a>`
+              + (isPublic === 'true'
+                    ? `<a class="btn indigo disabled action-btn" onclick="openTripsNetworkModal('${timestamp}')">Trip Posted</a>`
+                    : `<a class="btn indigo waves-effect action-btn" onclick="openTripsNetworkModal('${timestamp}')">Post on Trips Network</a>`
+                )
+            ) + `   
           </div>
+        </div>
         </div>
         <div class="col s12 m4" id="trip-${timestamp}-hotel-card">
           <div class="card large">
@@ -842,8 +843,10 @@ async function postTripToTripsNetwork(timestamp) {
  * @param {Array} arr an array of places
  */
 function getPlaceWeights(arr) {
-  for(let obj of arr) {
-    obj.weight = document.getElementById(`location-${obj.locationNum}-weight`).value;
+  for (let obj of arr) {
+    obj.weight = document.getElementById(
+      `location-${obj.locationNum}-weight`
+    ).value;
   }
 }
 
@@ -851,25 +854,25 @@ function getPlaceWeights(arr) {
  * Converts lat and lng properties in place and marker objects from their getter functions
  * to the values these functions return instead
  * @param {Array} locationPlaceObjects array of place objects
- * @param {Array} markers array of marker objects 
+ * @param {Array} markers array of marker objects
  */
 function convertLatLngFunctionsToValues(locationPlaceObjects, markers) {
-  for(let location of locationPlaceObjects) {
+  for (let location of locationPlaceObjects) {
     const { lat, lng } = location.geometry.location;
-    if(typeof lat === 'function') {
-      location.geometry.location.lat= lat();
+    if (typeof lat === 'function') {
+      location.geometry.location.lat = lat();
     }
-    if(typeof lng === 'function') {
+    if (typeof lng === 'function') {
       location.geometry.location.lng = lng();
     }
   }
 
-  for(let marker of markers) {
+  for (let marker of markers) {
     const { lat, lng } = marker.position;
-    if(typeof lat === 'function') {
+    if (typeof lat === 'function') {
       marker.position.lat = lat();
     }
-    if(typeof lng === 'function') {
+    if (typeof lng === 'function') {
       marker.position.lng = lng();
     }
   }
