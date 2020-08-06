@@ -65,11 +65,11 @@
       <div id="current-trip-modal" class="modal bottom-sheet">
         <div id="current-trip-content" class="modal-content">
           <h4>Current Trip</h4>
-          <div id='current-trip-updates'></div>
+          <div id='current-trip-status'></div>
           <ul id="current-trip-places" class="collection"></ul>
         </div>
         <div class="modal-footer">
-          <a class="modal-close waves-effect btn-flat" onclick="findHotel();">Find Hotel</a>
+          <a class="modal-close waves-effect btn-flat" onclick="findHotel(null);">Find Hotel</a>
         </div>
       </div>
 
@@ -135,6 +135,7 @@
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDlLtx69Y4-65_dCK67ZX3lzKTYpyc5CWI&libraries=places"></script>
     <script src="scripts/common-dom.js"></script>
     <script src="scripts/common-util.js"></script>
+    <script src="scripts/hotel-selection.js"></script>
     <script src="scripts/place-suggestions.js"></script>
     <script src="scripts/service-account.js"></script>
   </body>
