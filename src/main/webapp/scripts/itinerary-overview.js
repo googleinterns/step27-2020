@@ -3,10 +3,6 @@ document.addEventListener('DOMContentLoaded', function() {
     M.Tooltip.init(tooltipElems, undefined);
 });
 
-let start;
-let waypoints;
-let end;
-
 let hotel_ID = "";
 let hotelAddress = "";
 
@@ -74,14 +70,13 @@ async function getTripData(){
         waypointsLength++;
     }
 
-    await getTravelTimes(hotel_ID,waypointIDs)
+    await getTravelTimes(hotel_ID,waypointIDs);
 }
 
+//<------ Map Section ------>
 async function getTravelTimes(){
     let longestDuration = 0;
     let longestDurationWaypointID = "";
-
-    console.log("Waypoint ID Array: " + waypointIDs)
 
     for(let waypointID of waypointIDs){
 
@@ -93,8 +88,7 @@ async function getTravelTimes(){
 
         for (const key in routes) {
             if (routes.hasOwnProperty(key)) {
-                 let tripDuration = (routes[key]["legs"][0]["duration"]["value"]) //In Seconds
-                 console.log("Trip Duration: " +  tripDuration)
+                 let tripDuration = (routes[key]["legs"][0]["duration"]["value"]); //In Seconds
                     if(tripDuration > longestDuration){
                         longestDuration = tripDuration;
                         longestDurationWaypointID = waypointID;
@@ -107,21 +101,17 @@ async function getTravelTimes(){
     if (index > -1){
         destinationID += waypointIDs.splice(index, 1);
         waypointsLength--;
-        console.log("Removed Longest")
     }
 
-    console.log(("New Waypoint ID Array: " + waypointIDs))
-
-
-    console.log("Longest Duration: " + longestDuration);
-    console.log("Longest Waypoint: " + longestDurationWaypointID);
-    console.log("DestinationID: " + destinationID);
-
-    await getPlaceDetails(waypointIDs)
-    geocodeHotelID(hotel_ID)
+    //Map Calls
+    geocodeHotelID(hotel_ID);
     geocodeWaypointIDs(waypointIDs);
-    geocodeDestinationID(destinationID)
+    geocodeDestinationID(destinationID);
 
+    //Place Card Calls
+    await getHotelDetails(hotel_ID);
+    await getWaypointDetails(waypointIDs);
+    await getDestinationDetails(destinationID);
 }
 
 
@@ -136,7 +126,7 @@ function geocodeHotelID(hotelID){
     geocoder.geocode({ placeId: hotelID }, (results, status) => {
         if (status === "OK") {
             if (results[0]) {
-                storeHotelAddress(results[0].formatted_address)
+                storeHotelAddress(results[0].formatted_address);
             } else {
                 M.toast({html:"No results found"});
             }
@@ -159,7 +149,7 @@ function geocodeWaypointIDs(waypointIDs) {
         geocoder.geocode({ placeId: placeId }, (results, status) => {
             if (status === "OK") {
                 if (results[0]) {
-                    storeWaypointsAddress(results[0].formatted_address)
+                    storeWaypointsAddress(results[0].formatted_address);
                 } else {
                     M.toast({html:"No results found"});
                 }
@@ -181,7 +171,7 @@ function geocodeDestinationID(destinationID){
     geocoder.geocode({ placeId: destinationID }, (results, status) => {
         if (status === "OK") {
             if (results[0]) {
-                storeDestinationAddress(results[0].formatted_address)
+                storeDestinationAddress(results[0].formatted_address);
             } else {
                 M.toast({html:"No results found"});
             }
@@ -219,8 +209,7 @@ function storeWaypointsAddress(waypointAddress){
  */
 function storeDestinationAddress(address){
     destinationAddress = address;
-    console.log("Store Address: " +  destinationAddress)
-    isReadyRoutes()
+    isReadyRoutes();
 }
 
 /**
@@ -286,9 +275,10 @@ function displayRoute(start, waypoints, end) {
  */
 function changeTravelMode(travelMode){
     currentMode = travelMode;
-    displayRoute(start, waypoints, end);
+    displayRoute(hotelAddress, waypointAddresses, destinationAddress);
 }
 
+//<------ Place Card Section ------>
 /**
  * Gets URL for photo of place or assigns it a default one if there are no photos available
  * @param {Array} photos array of photos from PlaceResult object
@@ -310,14 +300,9 @@ async function imageURLFromPhotos(photos) {
     }
 }
 
-/**
- * Fetches more details about place such as phone number and website and puts it all into an object
- * @param {Array} placeIDArray place ID of place to get details about
- */
-async function getPlaceDetails(placeIDArray) {
-
+async function getHotelDetails(hotelID){
     const detailsResponse = await fetch(
-        `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/details/json?place_id=${hotel_ID}&key=${GOOGLE_API_KEY}`
+        `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/details/json?place_id=${hotelID}&key=${GOOGLE_API_KEY}`
     )
     const { result } = await detailsResponse.json();
     const { international_phone_number, name, photos, vicinity, website } = result;
@@ -332,8 +317,13 @@ async function getPlaceDetails(placeIDArray) {
         website: website
     }
     storePlaceCardDetails(placeDetails);
+}
 
-
+/**
+ * Fetches more details about the waypoints such as phone number and website and puts it all into an object
+ * @param {Array} placeIDArray place ID of place to get details about
+ */
+async function getWaypointDetails(placeIDArray) {
     for(let placeID of placeIDArray){
         const detailsResponse = await fetch(
             `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeID}&key=${GOOGLE_API_KEY}`
@@ -353,13 +343,32 @@ async function getPlaceDetails(placeIDArray) {
     }
 }
 
+async function getDestinationDetails(destinationID){
+    const detailsResponse = await fetch(
+        `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/details/json?place_id=${destinationID}&key=${GOOGLE_API_KEY}`
+    )
+    const { result } = await detailsResponse.json();
+    const { international_phone_number, name, photos, vicinity, website } = result;
+    const photoUrl = await imageURLFromPhotos(photos);
+
+
+    const placeDetails = {
+        phoneNumber: international_phone_number,
+        name: name,
+        photoUrl: photoUrl,
+        address: vicinity,
+        website: website
+    }
+    storePlaceCardDetails(placeDetails);
+}
+
 function storePlaceCardDetails(placeDetails){
     placeDetailsArray.push(placeDetails);
     isReadyPlaces();
 }
 
 function isReadyPlaces(){
-    if(placeDetailsArray.length === (waypointIDs.length + 1)){
+    if(placeDetailsArray.length === (waypointIDs.length + 2)){ //+2 For Hotel and Destination
         renderPlaceCards(placeDetailsArray);
     }
 }
