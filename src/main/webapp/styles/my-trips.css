@@ -6,6 +6,10 @@
   min-height: 400px;
 }
 
+.action-btn {
+  margin: 0 0.5em 0 0.5em;
+}
+
 .trip-title-section {
   margin-left: 0 !important;
 }
