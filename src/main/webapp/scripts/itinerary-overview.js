@@ -3,18 +3,14 @@ document.addEventListener('DOMContentLoaded', function() {
     M.Tooltip.init(tooltipElems, undefined);
 });
 
-let start;
-let waypoints;
-let end;
-
-let hotel_name = "";
 let hotel_ID = "";
 let hotelAddress = "";
 
-
-let waypointNames = [];
 let waypointIDs = [];
 let waypointAddresses = [];
+
+let destinationID = "";
+let destinationAddress = "";
 
 let placeDetailsArray = [];
 
@@ -22,6 +18,9 @@ let waypointsLength = 0;
 let addressLength = 0;
 
 let currentMode = "DRIVING";
+let lastMode = "";
+let invalidCount = 0;
+let INVALID_TOLERANCE = 2;
 
 const DRIVING = "DRIVING";
 const WALKING = "WALKING";
@@ -31,12 +30,9 @@ const TRANSIT = "TRANSIT";
 const PLACE_CARDS_CONTAINER = document.getElementById('place-cards-container');
 const DEFAULT_PLACE_IMAGE = '../assets/img/Building.jpg';
 
-function init() {
-    document.getElementById('itinerary-link').classList.add('active');
-
-    document.getElementById('itinerary-link-m').classList.add('active');
-}
-
+/**
+ * Shows all the information for the itinerary page
+ */
 async function displayInfo() {
     await getTripData();
 }
@@ -60,12 +56,10 @@ async function getTripData(){
         // Deserialize using parseSerializedJson.
         const {
             hotelID,
-            hotelName,
         } = parseSerializedJson(key);
         const locations = tripsData[key];
 
         hotel_ID = hotelID;
-        hotel_name = hotelName;
         waypointArray = locations;
     }
 
@@ -73,8 +67,6 @@ async function getTripData(){
         for (let key of Object.keys(object)){
             if(key === "placeID"){
                 waypointIDs.push(object[key]);
-            }else if(key === "placeName"){
-                waypointNames.push(object[key]);
             }
         }
     }
@@ -83,17 +75,82 @@ async function getTripData(){
         waypointsLength++;
     }
 
-    await getPlaceDetails(waypointIDs)
-    geocodePlaceId(hotel_ID, waypointIDs);
+    await getTravelTimes(hotel_ID,waypointIDs);
+}
+
+//<------ Map Section ------>
+/**
+ * This function takes the waypointID's from getTripData and runs them through a directions API fetch to see which one
+ * of the waypoints is this furthest away from the hotel. This waypoint is then set is the destination(end) of the route
+ * Then the function calls the geocoding and place details functions.
+ */
+async function getTravelTimes(){
+    let longestDuration = 0;
+    let longestDurationWaypointID = "";
+
+    for(let waypointID of waypointIDs){
+
+        const directionsResponse = await fetch(
+            `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/directions/json?origin=place_id:${hotel_ID}&destination=place_id:${waypointID}&key=${GOOGLE_API_KEY}`
+        )
+
+        const { routes } = await directionsResponse.json();
+
+        for (const key in routes) {
+            if (routes.hasOwnProperty(key)) {
+                let tripDuration = (routes[key]["legs"][0]["duration"]["value"]); //In Seconds
+                if(tripDuration > longestDuration){
+                    longestDuration = tripDuration;
+                    longestDurationWaypointID = waypointID;
+                }
+            }
+        }
+    }
+
+    const index = waypointIDs.indexOf(longestDurationWaypointID)
+    if (index > -1){
+        destinationID += waypointIDs.splice(index, 1);
+        waypointsLength--;
+    }
+
+    //Map Calls
+    geocodeHotelID(hotel_ID);
+    geocodeWaypointIDs(waypointIDs);
+    geocodeDestinationID(destinationID);
+
+    //Place Card Calls
+    await getHotelDetails(hotel_ID);
+    await getWaypointDetails(waypointIDs);
+    await getDestinationDetails(destinationID);
 }
 
 /**
- * Takes the hotel PlaceID and the waypoints PlaceID Array from getTripData and works to convert them from placeID's to
+ * Takes the Hotel PlaceID Array from getTripData and works to convert it from placeID's to
  * addresses that will be used in calculateRoute()
  * @param hotelID - The hotel placeID that was obtained from getTripData()
+ */
+function geocodeHotelID(hotelID){
+    const geocoder = new google.maps.Geocoder();
+
+    geocoder.geocode({ placeId: hotelID }, (results, status) => {
+        if (status === "OK") {
+            if (results[0]) {
+                storeHotelAddress(results[0].formatted_address);
+            } else {
+                M.toast({html:"No results found"});
+            }
+        } else {
+            M.toast({html:"Geocoder failed due to: " + status});
+        }
+    });
+}
+
+/**
+ * Takes the waypoints PlaceID Array from getTripData and works to convert them from placeID's to
+ * addresses that will be used in calculateRoute()
  * @param waypointIDs - The waypoint placeID's that are obtained from getTripData()
  */
-function geocodePlaceId(hotelID, waypointIDs) {
+function geocodeWaypointIDs(waypointIDs) {
 
     const geocoder = new google.maps.Geocoder();
 
@@ -101,7 +158,7 @@ function geocodePlaceId(hotelID, waypointIDs) {
         geocoder.geocode({ placeId: placeId }, (results, status) => {
             if (status === "OK") {
                 if (results[0]) {
-                    storeWaypointsAddress(results[0].formatted_address)
+                    storeWaypointsAddress(results[0].formatted_address);
                 } else {
                     M.toast({html:"No results found"});
                 }
@@ -110,11 +167,20 @@ function geocodePlaceId(hotelID, waypointIDs) {
             }
         });
     }
+}
 
-    geocoder.geocode({ placeId: hotelID }, (results, status) => {
+/**
+ * Takes the Destination PlaceID Array from getTripData and works to convert it from placeID's to
+ * addresses that will be used in calculateRoute()
+ * @param destinationID - The end location for the users trip obtained from getTravelTimes()
+ */
+function geocodeDestinationID(destinationID){
+    const geocoder = new google.maps.Geocoder();
+
+    geocoder.geocode({ placeId: destinationID }, (results, status) => {
         if (status === "OK") {
             if (results[0]) {
-                storeHotelAddress(results[0].formatted_address)
+                storeDestinationAddress(results[0].formatted_address);
             } else {
                 M.toast({html:"No results found"});
             }
@@ -122,6 +188,16 @@ function geocodePlaceId(hotelID, waypointIDs) {
             M.toast({html:"Geocoder failed due to: " + status});
         }
     });
+}
+
+/**
+ * Used to store the hotel address given from geocodePlaceID() in the global string to avoid from unordered execution
+ * within the geocode function. Calls isReadyRoutes() to test if the string is set up to be used in calculateRoute().
+ * @param address - The hotel address from geocodePlaceID()
+ */
+function storeHotelAddress(address) {
+    hotelAddress = address;
+    isReadyRoutes();
 }
 
 /**
@@ -136,12 +212,12 @@ function storeWaypointsAddress(waypointAddress){
 }
 
 /**
- * Used to store the hotel address given from geocodePlaceID() in the global string to avoid from unordered execution
+ * Used to store the destination address given from geocodePlaceID() in the global string to avoid from unordered execution
  * within the geocode function. Calls isReadyRoutes() to test if the string is set up to be used in calculateRoute().
  * @param address - The hotel address from geocodePlaceID()
  */
-function storeHotelAddress(address) {
-    hotelAddress = address;
+function storeDestinationAddress(address){
+    destinationAddress = address;
     isReadyRoutes();
 }
 
@@ -150,38 +226,9 @@ function storeHotelAddress(address) {
  * values in them to be used in route calculation to prevent from unexpected actions.
  */
 function isReadyRoutes(){
-    if(waypointsLength === addressLength && hotelAddress !== ""){
-        calculateRoute(hotelAddress, waypointAddresses);
+    if(waypointsLength === addressLength && hotelAddress !== "" && destinationAddress !== ""){
+        displayRoute(hotelAddress, waypointAddresses, destinationAddress);
     }
-}
-
-/**
- * Takes the locations and hotel addresses that were given by the geoCodingPlaceID() function
- * and organizes it into a start, waypoints which are placed into a Array in travel order and an end point
- * which are used for the displayRoute() function
- * @param hotel - The address of the hotel received from geocodePlaceID()
- * @param waypointsArray - The addresses of the waypoints/locations of the users trip received from geocodePlaceID()
- */
-function calculateRoute(hotel, waypointsArray) {
-    start = hotel;
-    waypoints = [];
-    end = "";
-
-    let length = waypointsArray.length;
-
-    while(waypointsArray.length > 1){
-        for(let i = 0; i < waypointsArray.length; i++){
-            if(waypoints.length !== (length - 1)){
-                waypoints.push(waypointsArray[0]);
-                waypointsArray.splice(0, 1);
-            }
-        }
-    }
-
-    end += waypointsArray.pop(0);
-
-
-    displayRoute(start,waypoints,end);
 }
 
 /**
@@ -225,7 +272,16 @@ function displayRoute(start, waypoints, end) {
             if (status === "OK") {
                 directionsRenderer.setDirections(response);
             } else {
-                M.toast({html:"Directions request failed due to " + status});
+                invalidCount++
+                if(invalidCount < INVALID_TOLERANCE){
+                    M.toast({html:"Request failed because this mode of travel is not available on this trip " +
+                            "your mode was changed back to: " + lastMode});
+                    changeTravelMode(lastMode)
+                }else {
+                    M.toast({html:"Request failed because this mode of travel is not available on this trip " +
+                            "your mode was changed back to: DRIVING"});
+                    changeTravelMode(DRIVING)
+                }
             }
         }
     );
@@ -236,10 +292,12 @@ function displayRoute(start, waypoints, end) {
  * @param travelMode{String} one of the accepted modes of travel by displayRoute() (DRIVING,WALKING,BICYCLING,TRANSIT)
  */
 function changeTravelMode(travelMode){
+    lastMode = currentMode;
     currentMode = travelMode;
-    displayRoute(start, waypoints, end);
+    displayRoute(hotelAddress, waypointAddresses, destinationAddress);
 }
 
+//<------ Place Card Section ------>
 /**
  * Gets URL for photo of place or assigns it a default one if there are no photos available
  * @param {Array} photos array of photos from PlaceResult object
@@ -262,13 +320,12 @@ async function imageURLFromPhotos(photos) {
 }
 
 /**
- * Fetches more details about place such as phone number and website and puts it all into an object
- * @param {Array} placeIDArray place ID of place to get details about
+ * Fetches more details about the hotel such as phone number and website and puts it all into an object
+ * @param {String} hotelID place ID of place to get details about
  */
-async function getPlaceDetails(placeIDArray) {
-
+async function getHotelDetails(hotelID){
     const detailsResponse = await fetch(
-        `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/details/json?place_id=${hotel_ID}&key=${GOOGLE_API_KEY}`
+        `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/details/json?place_id=${hotelID}&key=${GOOGLE_API_KEY}`
     )
     const { result } = await detailsResponse.json();
     const { international_phone_number, name, photos, vicinity, website } = result;
@@ -283,7 +340,13 @@ async function getPlaceDetails(placeIDArray) {
         website: website
     }
     storePlaceCardDetails(placeDetails);
+}
 
+/**
+ * Fetches more details about the waypoints such as phone number and website and puts it all into an object
+ * @param {Array} placeIDArray place ID of place to get details about
+ */
+async function getWaypointDetails(placeIDArray) {
     for(let placeID of placeIDArray){
         const detailsResponse = await fetch(
             `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeID}&key=${GOOGLE_API_KEY}`
@@ -303,13 +366,41 @@ async function getPlaceDetails(placeIDArray) {
     }
 }
 
+/**
+ * Fetches more details about the destination such as phone number and website and puts it all into an object
+ * @param {String} destinationID place ID of place to get details about
+ */
+async function getDestinationDetails(destinationID){
+    const detailsResponse = await fetch(
+        `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/details/json?place_id=${destinationID}&key=${GOOGLE_API_KEY}`
+    )
+    const { result } = await detailsResponse.json();
+    const { international_phone_number, name, photos, vicinity, website } = result;
+    const photoUrl = await imageURLFromPhotos(photos);
+
+    const placeDetails = {
+        phoneNumber: international_phone_number,
+        name: name,
+        photoUrl: photoUrl,
+        address: vicinity,
+        website: website
+    }
+    storePlaceCardDetails(placeDetails);
+}
+
+/**
+ * Stores the locations place card info into an array.
+ */
 function storePlaceCardDetails(placeDetails){
     placeDetailsArray.push(placeDetails);
     isReadyPlaces();
 }
 
+/**
+ * Checks if the place cards are ready to be displayed
+ */
 function isReadyPlaces(){
-    if(placeDetailsArray.length === (waypointIDs.length + 1)){
+    if(placeDetailsArray.length === (waypointIDs.length + 2)){ //+2 For Hotel and Destination
         renderPlaceCards(placeDetailsArray);
     }
 }
@@ -331,19 +422,19 @@ function renderPlaceCards(places) {
             <div class="card-content">
             ` +
             (name
-                ? `<h5 style="font-size: large;">${name}</h5>`
+                ? `<h5 class="place-large-text">${name}</h5>`
                 : '') +
             (photoUrl
-                ?`<img src="${photoUrl}" style="width: 50px;height: 50px; float: right; border-radius: 8px;" alt="${name}">`
+                ?`<img src="${photoUrl}" class="place-photo" alt="${name}">`
                 : '')+
             (address
-                ? `<h6 style="font-size: medium;">${address}</h6>`
+                ? `<h6 class="place-medium-text" >${address}</h6>`
                 : '') +
             (phoneNumber
-                ? `<h6 style="font-size: medium;">${phoneNumber}</h6>`
+                ? `<h6 class="place-medium-text">${phoneNumber}</h6>`
                 : '') +
             (website
-                ? `<h6 style="font-size: medium;"><a href="${website}">Website</a></h6>`
+                ? `<h6 class="place-medium-text"><a href="${website}">Website</a></h6>`
                 : '') +
             `            
             </div>
@@ -378,6 +469,9 @@ function dropMarker(lat,lng) {
     });
 }
 
+/**
+ * Centers and makers the users location on a map.
+ */
 function markUserLocation() {
     navigator.geolocation.getCurrentPosition(function(position) {
         const lat = position.coords.latitude;
@@ -395,6 +489,12 @@ function markUserLocation() {
     });
 }
 
+/**
+ * The error handler for markUserLocation() if the users geolocation is not available.
+ * @param browserHasGeolocation
+ * @param infoWindow
+ * @param pos
+ */
 function handleLocationError(browserHasGeolocation, infoWindow, pos) {
     infoWindow.setPosition(pos);
     infoWindow.setContent(browserHasGeolocation ?

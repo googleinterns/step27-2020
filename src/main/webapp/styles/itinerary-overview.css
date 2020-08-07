@@ -26,6 +26,21 @@
     overflow-y: scroll;
 }
 
+.place-photo{
+    width: 50px;
+    height: 50px;
+    float: right;
+    border-radius: 8px;
+}
+
+.place-medium-text{
+    font-size: medium;
+}
+
+.place-large-text{
+    font-size: large;
+}
+
 html,
 body {
     height: 100%;
