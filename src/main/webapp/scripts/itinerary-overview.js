@@ -19,6 +19,9 @@ let waypointsLength = 0;
 let addressLength = 0;
 
 let currentMode = "DRIVING";
+let lastMode = "";
+let invalidCount = 0;
+let INVALID_TOLERANCE = 2;
 
 const DRIVING = "DRIVING";
 const WALKING = "WALKING";
@@ -113,7 +116,6 @@ async function getTravelTimes(){
     await getWaypointDetails(waypointIDs);
     await getDestinationDetails(destinationID);
 }
-
 
 /**
  * Takes the Hotel PlaceID Array from getTripData and works to convert it from placeID's to
@@ -263,7 +265,16 @@ function displayRoute(start, waypoints, end) {
             if (status === "OK") {
                 directionsRenderer.setDirections(response);
             } else {
-                M.toast({html:"Directions request failed due to " + status});
+                invalidCount++
+                if(invalidCount < INVALID_TOLERANCE){
+                    M.toast({html:"Request failed because this mode of travel is not available on this trip " +
+                            "your mode was changed back to: " + lastMode});
+                    changeTravelMode(lastMode)
+                }else {
+                    M.toast({html:"Request failed because this mode of travel is not available on this trip " +
+                            "your mode was changed back to: DRIVING"});
+                    changeTravelMode(DRIVING)
+                }
             }
         }
     );
@@ -274,6 +285,7 @@ function displayRoute(start, waypoints, end) {
  * @param travelMode{String} one of the accepted modes of travel by displayRoute() (DRIVING,WALKING,BICYCLING,TRANSIT)
  */
 function changeTravelMode(travelMode){
+    lastMode = currentMode;
     currentMode = travelMode;
     displayRoute(hotelAddress, waypointAddresses, destinationAddress);
 }
@@ -350,7 +362,6 @@ async function getDestinationDetails(destinationID){
     const { result } = await detailsResponse.json();
     const { international_phone_number, name, photos, vicinity, website } = result;
     const photoUrl = await imageURLFromPhotos(photos);
-
 
     const placeDetails = {
         phoneNumber: international_phone_number,
