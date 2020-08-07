@@ -98,11 +98,11 @@ async function getTravelTimes(){
 
         for (const key in routes) {
             if (routes.hasOwnProperty(key)) {
-                 let tripDuration = (routes[key]["legs"][0]["duration"]["value"]); //In Seconds
-                    if(tripDuration > longestDuration){
-                        longestDuration = tripDuration;
-                        longestDurationWaypointID = waypointID;
-                    }
+                let tripDuration = (routes[key]["legs"][0]["duration"]["value"]); //In Seconds
+                if(tripDuration > longestDuration){
+                    longestDuration = tripDuration;
+                    longestDurationWaypointID = waypointID;
+                }
             }
         }
     }
@@ -422,19 +422,19 @@ function renderPlaceCards(places) {
             <div class="card-content">
             ` +
             (name
-                ? `<h5 style="font-size: large;">${name}</h5>`
+                ? `<h5 class="place-large-text">${name}</h5>`
                 : '') +
             (photoUrl
-                ?`<img src="${photoUrl}" style="width: 50px;height: 50px; float: right; border-radius: 8px;" alt="${name}">`
+                ?`<img src="${photoUrl}" class="place-photo" alt="${name}">`
                 : '')+
             (address
-                ? `<h6 style="font-size: medium;">${address}</h6>`
+                ? `<h6 class="place-medium-text" >${address}</h6>`
                 : '') +
             (phoneNumber
-                ? `<h6 style="font-size: medium;">${phoneNumber}</h6>`
+                ? `<h6 class="place-medium-text">${phoneNumber}</h6>`
                 : '') +
             (website
-                ? `<h6 style="font-size: medium;"><a href="${website}">Website</a></h6>`
+                ? `<h6 class="place-medium-text"><a href="${website}">Website</a></h6>`
                 : '') +
             `            
             </div>
