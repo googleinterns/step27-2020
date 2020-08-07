@@ -1,11 +1,19 @@
 let city;
 let filter;
-let placesMap = new Map();
-let locationData = [];
+let placeDetailsMap = new Map();
 
+//util functions rely on these specific variable names
+let locationPlaceObjects = [];
+let markers = [];
+let numLocations = 0;
+
+const DEFAULT_WEIGHT = 3;
 const PLACE_CARDS_CONTAINER = document.getElementById('place-cards-container');
 const DEFAULT_PLACE_IMAGE = '../assets/img/jason-dent-blue.jpg'
 
+/**
+ * Runs on page load. Adds auth wall and event listeners for input forms
+ */
 function init() {
   document.getElementById('plan-for-me-link').classList.add('active');
   document.getElementById('plan-for-me-link-m').classList.add('active');
@@ -14,6 +22,10 @@ function init() {
   addFilterHandler();
 }
 
+/**
+ * Adds event listener to city input form so user can select a city from
+ * autocomplete suggestions.
+ */
 function addCityAutocomplete() {
   const cityInputField = document.getElementById('city-input')
   const options = {
@@ -28,6 +40,9 @@ function addCityAutocomplete() {
   });
 }
 
+/**
+ * adds event listener to when user selects a filter
+ */
 function addFilterHandler() {
   const filterForm = document.getElementById('filters');
   filterForm.addEventListener('change', () => {
@@ -68,25 +83,25 @@ async function findPlacesInCity(city, filter) {
  * @param {Array} places array of PlaceResult objects returned from Places API
  */
 async function getPlaceCardInformation(places) {
-  placesMap.clear();
+  placeDetailsMap.clear();
   places = places.slice(0, 5);
   for(let i = 0; i < places.length; i++) {
     const { place_id } = places[i];
     const placeDetails = await getPlaceDetails(place_id);
-    placeDetails.placeId = place_id;
-    placesMap.set(place_id, placeDetails);
+    placeDetails.place_id = place_id;
+    placeDetailsMap.set(place_id, placeDetails);
   }
 
-  renderPlaceCards(placesMap);
+  renderPlaceCards(placeDetailsMap);
 }
 
 /**
  * Renders information cards to DOM for each place suggestion
  * @param {Array} places array of objects containing information and photo URLs about each place
  */
-function renderPlaceCards(placesMap) {
+function renderPlaceCards(placeDetailsMap) {
   let placeCards = [];
-  for(let [placeId, placeDetails] of placesMap.entries()) {   
+  for(let [placeId, placeDetails] of placeDetailsMap.entries()) {   
     const { phoneNumber, name, photoUrl, priceLevel, rating, address, website } = placeDetails;
 
     placeCards.push(
@@ -138,30 +153,50 @@ function renderPlaceCards(placesMap) {
   PLACE_CARDS_CONTAINER.innerHTML = placeCards.join('');
 }
 
+/**
+ * Adds place to array of places for trip as well as creates marker for this trip
+ * and adds it to a markers array
+ * @param {string} placeId place ID of place they want to add to trip
+ */
 function addPlaceToTrip(placeId) {
-  const placeDetails = placesMap.get(placeId);
-  locationData.push(placeDetails);
+  //add place details to array of trip locations
+  const placeDetails = placeDetailsMap.get(placeId);
+  locationPlaceObjects.push(placeDetails);
+
+  //add marker for each trip location to array
+  const { geometry, name } = placeDetails;
+  const { location } = geometry;
+  const marker = {
+    title: name,
+    position: location,
+  }
+  markers.push(marker);
+
+  numLocations++;
 }
 
+/**
+ * Opens current trip modal that user saves locations they want to visit to
+ */
 function openCurrentTrip() {
-  const currTripUpdates = document.getElementById('current-trip-updates');
+  const currTripStatus = document.getElementById('current-trip-status');
   const currTripPlacesCollection = document.getElementById('current-trip-places');
   const currTripModalElem = document.getElementById('current-trip-modal');
   const currTripModalInstance = M.Modal.getInstance(currTripModalElem);
 
-  if(locationData.length <= 0 || !locationData) {
-    currTripUpdates.innerHTML = "<p>It's lonely in here, add some places!</p>";
+  currTripStatus.innerHTML = '';
+  currTripPlacesCollection.innerHTML = '';
+  if(locationPlaceObjects.length <= 0 || !locationPlaceObjects) {
+    currTripStatus.innerHTML = "<p>It's lonely in here, add some places!</p>";
     currTripModalInstance.open();
     return;
   }
 
-  currTripUpdates.innerHTML = '';
-  currTripUpdates.innerHTML = LOADING_ANIMATION_HTML;
+  currTripStatus.innerHTML = LOADING_ANIMATION_HTML;
   currTripModalInstance.open();
 
-  currTripPlacesCollection.innerHTML = '';
   let currTripPlaceCards = []
-  for(let location of locationData) {
+  for(let location of locationPlaceObjects) {
     const { name } = location;
     currTripPlaceCards.push(
       `
@@ -174,18 +209,45 @@ function openCurrentTrip() {
         </li>
       `
     )
-    currTripUpdates.innerHTML = '';
+    currTripStatus.innerHTML = '';
     currTripPlacesCollection.innerHTML = currTripPlaceCards.join('');
   }
 }
 
+/**
+ * Opens modal with results for user to confirm and save trip.
+ */
 function findHotel() {
-  if(locationData.length <= 0 || !locationData) {
+  if(locationPlaceObjects.length <= 0 || !locationPlaceObjects) {
     M.Toast.dismissAll();
     M.toast({
       html: 'Select some places first!',
     });
     return;
+  }
+
+  //null input to account for no timestamp as this is a new trip
+  fetchHotelResults(null);
+}
+
+/**
+ * Resets page to default following saving trip
+ * @param {Object} response HTTP response after saving trip
+ * @param {string|null} timestamp timestamp string of trip to be updates. Null if new trip
+ * @param {string} tripTitle title of trip (null for Plan For Me page)
+ */
+function resetPage(response, timestamp, tripTitle) {
+  if (response.ok) {
+    M.toast({
+      html: 'Successfully saved trip',
+    });
+    locationPlaceObjects.length = 0;
+    openCurrentTrip();
+  } else {
+    M.toast({
+      html:
+        'There was an error while saving your trip. Please try again.',
+    });
   }
 }
 
@@ -199,41 +261,20 @@ async function getPlaceDetails(placeId) {
   )
   const { result } = await detailsResponse.json();
   const { geometry, international_phone_number, name, photos, price_level, rating, vicinity, website } = result;
-  const { location } = geometry;
-  const photoUrl = await imageURLFromPhotos(photos);
+  const { photoUrl } = await imageInfoFromPhotosArray(photos);
   
   const placeDetails = {
-    location: location,
+    geometry: geometry,
     phoneNumber: international_phone_number,
     name: name,
     photoUrl: photoUrl,
     priceLevel: price_level,
     rating: rating,
     address: vicinity,
-    website: website
+    website: website,
+    weight: DEFAULT_WEIGHT,
   }
 
   return placeDetails;
 }
 
-/**
- * Gets URL for photo of place or assigns it a default one if there are no photos available
- * @param {Array} photos array of photos from PlaceResult object
- */
-async function imageURLFromPhotos(photos) {
-  const photoRef = 
-    photos && Array.isArray(photos)
-      ? photos[0].photo_reference
-      : undefined;
-  
-  if(photoRef) {
-    const photoResponse = await fetch(
-      `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/photo?maxheight=300&photoreference=${photoRef}&key=${GOOGLE_API_KEY}`
-    );
-    const blob = await photoResponse.blob();
-    const photoUrl = await URL.createObjectURL(blob);
-    return photoUrl;
-  } else {
-    return DEFAULT_PLACE_IMAGE;
-  }
-}
