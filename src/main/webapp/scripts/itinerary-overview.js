@@ -234,35 +234,6 @@ function isReadyRoutes(){
 }
 
 /**
- * Takes the locations and hotel addresses that were given by the geoCodingPlaceID() function
- * and organizes it into a start, waypoints which are placed into a Array in travel order and an end point
- * which are used for the displayRoute() function
- * @param hotel - The address of the hotel received from geocodePlaceID()
- * @param waypointsArray - The addresses of the waypoints/locations of the users trip received from geocodePlaceID()
- */
-function calculateRoute(hotel, waypointsArray, destination) {
-    start = hotel;
-    waypoints = [];
-    end = destination;
-
-    let length = waypointsArray.length;
-
-    while(waypointsArray.length > 1){
-        for(let i = 0; i < waypointsArray.length; i++){
-            if(waypoints.length !== (length - 1)){
-                waypoints.push(waypointsArray[0]);
-                waypointsArray.splice(0, 1);
-            }
-        }
-    }
-
-    end += waypointsArray.pop(0);
-
-
-    displayRoute(start,waypoints,end);
-}
-
-/**
  * Takes the calculation done from the calculateRoutes function and display's the route onto the map
  * @param waypoints - the points that are in between the start(hotel) and the end of the route in an Array (Strings)
  * @param start - the origin of the trip which should be the hotel that the user is staying in.
