@@ -16,6 +16,10 @@ let waypointNames = [];
 let waypointIDs = [];
 let waypointAddresses = [];
 
+let destinationName = "";
+let destinationID = "";
+let destinationAddress = "";
+
 let placeDetailsArray = [];
 
 let waypointsLength = 0;
@@ -30,12 +34,6 @@ const TRANSIT = "TRANSIT";
 
 const PLACE_CARDS_CONTAINER = document.getElementById('place-cards-container');
 const DEFAULT_PLACE_IMAGE = '../assets/img/Building.jpg';
-
-function init() {
-    document.getElementById('itinerary-link').classList.add('active');
-
-    document.getElementById('itinerary-link-m').classList.add('active');
-}
 
 async function displayInfo() {
     await getTripData();
@@ -84,8 +82,38 @@ async function getTripData(){
     }
 
     await getPlaceDetails(waypointIDs)
+    await getTravelTimes(hotel_ID,waypointIDs)
     geocodePlaceId(hotel_ID, waypointIDs);
 }
+
+async function getTravelTimes(hotelID, waypointIDArray){
+    let longestDuration = 0;
+    let longestDurationWaypoint = "";
+
+    for(let waypointID of waypointIDArray){
+
+        const directionsResponse = await fetch(
+            `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/directions/json?origin=place_id:${hotelID}&destination=place_id:${waypointID}&key=${GOOGLE_API_KEY}`
+        )
+
+        const { routes } = await directionsResponse.json();
+
+        for (const key in routes) {
+            if (routes.hasOwnProperty(key)) {
+                 let tripDuration = (routes[key]["legs"][0]["duration"]["value"]) //In Seconds
+                 console.log("Trip Duration: " +  tripDuration)
+                    if(tripDuration > longestDuration){
+                        longestDuration = tripDuration;
+                        longestDurationWaypoint = waypointID;
+                    }
+            }
+        }
+    }
+
+    console.log("Longest Duration: " + longestDuration);
+    console.log("Longest Waypoint: " + longestDurationWaypoint);
+}
+
 
 /**
  * Takes the hotel PlaceID and the waypoints PlaceID Array from getTripData and works to convert them from placeID's to
