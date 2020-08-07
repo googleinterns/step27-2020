@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', function() {
 let hotel_ID = "";
 let hotelAddress = "";
 
-
 let waypointIDs = [];
 let waypointAddresses = [];
 
@@ -31,6 +30,9 @@ const TRANSIT = "TRANSIT";
 const PLACE_CARDS_CONTAINER = document.getElementById('place-cards-container');
 const DEFAULT_PLACE_IMAGE = '../assets/img/Building.jpg';
 
+/**
+ * Shows all the information for the itinerary page
+ */
 async function displayInfo() {
     await getTripData();
 }
@@ -77,6 +79,11 @@ async function getTripData(){
 }
 
 //<------ Map Section ------>
+/**
+ * This function takes the waypointID's from getTripData and runs them through a directions API fetch to see which one
+ * of the waypoints is this furthest away from the hotel. This waypoint is then set is the destination(end) of the route
+ * Then the function calls the geocoding and place details functions.
+ */
 async function getTravelTimes(){
     let longestDuration = 0;
     let longestDurationWaypointID = "";
@@ -312,6 +319,10 @@ async function imageURLFromPhotos(photos) {
     }
 }
 
+/**
+ * Fetches more details about the hotel such as phone number and website and puts it all into an object
+ * @param {String} hotelID place ID of place to get details about
+ */
 async function getHotelDetails(hotelID){
     const detailsResponse = await fetch(
         `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/details/json?place_id=${hotelID}&key=${GOOGLE_API_KEY}`
@@ -355,6 +366,10 @@ async function getWaypointDetails(placeIDArray) {
     }
 }
 
+/**
+ * Fetches more details about the destination such as phone number and website and puts it all into an object
+ * @param {String} destinationID place ID of place to get details about
+ */
 async function getDestinationDetails(destinationID){
     const detailsResponse = await fetch(
         `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/details/json?place_id=${destinationID}&key=${GOOGLE_API_KEY}`
@@ -373,11 +388,17 @@ async function getDestinationDetails(destinationID){
     storePlaceCardDetails(placeDetails);
 }
 
+/**
+ * Stores the locations place card info into an array.
+ */
 function storePlaceCardDetails(placeDetails){
     placeDetailsArray.push(placeDetails);
     isReadyPlaces();
 }
 
+/**
+ * Checks if the place cards are ready to be displayed
+ */
 function isReadyPlaces(){
     if(placeDetailsArray.length === (waypointIDs.length + 2)){ //+2 For Hotel and Destination
         renderPlaceCards(placeDetailsArray);
@@ -448,6 +469,9 @@ function dropMarker(lat,lng) {
     });
 }
 
+/**
+ * Centers and makers the users location on a map.
+ */
 function markUserLocation() {
     navigator.geolocation.getCurrentPosition(function(position) {
         const lat = position.coords.latitude;
@@ -465,6 +489,12 @@ function markUserLocation() {
     });
 }
 
+/**
+ * The error handler for markUserLocation() if the users geolocation is not available.
+ * @param browserHasGeolocation
+ * @param infoWindow
+ * @param pos
+ */
 function handleLocationError(browserHasGeolocation, infoWindow, pos) {
     infoWindow.setPosition(pos);
     infoWindow.setContent(browserHasGeolocation ?
