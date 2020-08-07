@@ -7,16 +7,13 @@ let start;
 let waypoints;
 let end;
 
-let hotel_name = "";
 let hotel_ID = "";
 let hotelAddress = "";
 
 
-let waypointNames = [];
 let waypointIDs = [];
 let waypointAddresses = [];
 
-let destinationName = "";
 let destinationID = "";
 let destinationAddress = "";
 
@@ -58,12 +55,10 @@ async function getTripData(){
         // Deserialize using parseSerializedJson.
         const {
             hotelID,
-            hotelName,
         } = parseSerializedJson(key);
         const locations = tripsData[key];
 
         hotel_ID = hotelID;
-        hotel_name = hotelName;
         waypointArray = locations;
     }
 
@@ -71,8 +66,6 @@ async function getTripData(){
         for (let key of Object.keys(object)){
             if(key === "placeID"){
                 waypointIDs.push(object[key]);
-            }else if(key === "placeName"){
-                waypointNames.push(object[key]);
             }
         }
     }
@@ -81,19 +74,19 @@ async function getTripData(){
         waypointsLength++;
     }
 
-    await getPlaceDetails(waypointIDs)
     await getTravelTimes(hotel_ID,waypointIDs)
-    geocodePlaceId(hotel_ID, waypointIDs);
 }
 
-async function getTravelTimes(hotelID, waypointIDArray){
+async function getTravelTimes(){
     let longestDuration = 0;
-    let longestDurationWaypoint = "";
+    let longestDurationWaypointID = "";
 
-    for(let waypointID of waypointIDArray){
+    console.log("Waypoint ID Array: " + waypointIDs)
+
+    for(let waypointID of waypointIDs){
 
         const directionsResponse = await fetch(
-            `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/directions/json?origin=place_id:${hotelID}&destination=place_id:${waypointID}&key=${GOOGLE_API_KEY}`
+            `https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/directions/json?origin=place_id:${hotel_ID}&destination=place_id:${waypointID}&key=${GOOGLE_API_KEY}`
         )
 
         const { routes } = await directionsResponse.json();
@@ -104,24 +97,61 @@ async function getTravelTimes(hotelID, waypointIDArray){
                  console.log("Trip Duration: " +  tripDuration)
                     if(tripDuration > longestDuration){
                         longestDuration = tripDuration;
-                        longestDurationWaypoint = waypointID;
+                        longestDurationWaypointID = waypointID;
                     }
             }
         }
     }
 
+    const index = waypointIDs.indexOf(longestDurationWaypointID)
+    if (index > -1){
+        destinationID += waypointIDs.splice(index, 1);
+        waypointsLength--;
+        console.log("Removed Longest")
+    }
+
+    console.log(("New Waypoint ID Array: " + waypointIDs))
+
+
     console.log("Longest Duration: " + longestDuration);
-    console.log("Longest Waypoint: " + longestDurationWaypoint);
+    console.log("Longest Waypoint: " + longestDurationWaypointID);
+    console.log("DestinationID: " + destinationID);
+
+    await getPlaceDetails(waypointIDs)
+    geocodeHotelID(hotel_ID)
+    geocodeWaypointIDs(waypointIDs);
+    geocodeDestinationID(destinationID)
+
 }
 
 
 /**
- * Takes the hotel PlaceID and the waypoints PlaceID Array from getTripData and works to convert them from placeID's to
+ * Takes the Hotel PlaceID Array from getTripData and works to convert it from placeID's to
  * addresses that will be used in calculateRoute()
  * @param hotelID - The hotel placeID that was obtained from getTripData()
+ */
+function geocodeHotelID(hotelID){
+    const geocoder = new google.maps.Geocoder();
+
+    geocoder.geocode({ placeId: hotelID }, (results, status) => {
+        if (status === "OK") {
+            if (results[0]) {
+                storeHotelAddress(results[0].formatted_address)
+            } else {
+                M.toast({html:"No results found"});
+            }
+        } else {
+            M.toast({html:"Geocoder failed due to: " + status});
+        }
+    });
+}
+
+/**
+ * Takes the waypoints PlaceID Array from getTripData and works to convert them from placeID's to
+ * addresses that will be used in calculateRoute()
  * @param waypointIDs - The waypoint placeID's that are obtained from getTripData()
  */
-function geocodePlaceId(hotelID, waypointIDs) {
+function geocodeWaypointIDs(waypointIDs) {
 
     const geocoder = new google.maps.Geocoder();
 
@@ -138,11 +168,20 @@ function geocodePlaceId(hotelID, waypointIDs) {
             }
         });
     }
+}
 
-    geocoder.geocode({ placeId: hotelID }, (results, status) => {
+/**
+ * Takes the Destination PlaceID Array from getTripData and works to convert it from placeID's to
+ * addresses that will be used in calculateRoute()
+ * @param destinationID - The end location for the users trip obtained from getTravelTimes()
+ */
+function geocodeDestinationID(destinationID){
+    const geocoder = new google.maps.Geocoder();
+
+    geocoder.geocode({ placeId: destinationID }, (results, status) => {
         if (status === "OK") {
             if (results[0]) {
-                storeHotelAddress(results[0].formatted_address)
+                storeDestinationAddress(results[0].formatted_address)
             } else {
                 M.toast({html:"No results found"});
             }
@@ -150,6 +189,16 @@ function geocodePlaceId(hotelID, waypointIDs) {
             M.toast({html:"Geocoder failed due to: " + status});
         }
     });
+}
+
+/**
+ * Used to store the hotel address given from geocodePlaceID() in the global string to avoid from unordered execution
+ * within the geocode function. Calls isReadyRoutes() to test if the string is set up to be used in calculateRoute().
+ * @param address - The hotel address from geocodePlaceID()
+ */
+function storeHotelAddress(address) {
+    hotelAddress = address;
+    isReadyRoutes();
 }
 
 /**
@@ -164,13 +213,14 @@ function storeWaypointsAddress(waypointAddress){
 }
 
 /**
- * Used to store the hotel address given from geocodePlaceID() in the global string to avoid from unordered execution
+ * Used to store the destination address given from geocodePlaceID() in the global string to avoid from unordered execution
  * within the geocode function. Calls isReadyRoutes() to test if the string is set up to be used in calculateRoute().
  * @param address - The hotel address from geocodePlaceID()
  */
-function storeHotelAddress(address) {
-    hotelAddress = address;
-    isReadyRoutes();
+function storeDestinationAddress(address){
+    destinationAddress = address;
+    console.log("Store Address: " +  destinationAddress)
+    isReadyRoutes()
 }
 
 /**
@@ -178,8 +228,8 @@ function storeHotelAddress(address) {
  * values in them to be used in route calculation to prevent from unexpected actions.
  */
 function isReadyRoutes(){
-    if(waypointsLength === addressLength && hotelAddress !== ""){
-        calculateRoute(hotelAddress, waypointAddresses);
+    if(waypointsLength === addressLength && hotelAddress !== "" && destinationAddress !== ""){
+        displayRoute(hotelAddress, waypointAddresses, destinationAddress);
     }
 }
 
@@ -190,10 +240,10 @@ function isReadyRoutes(){
  * @param hotel - The address of the hotel received from geocodePlaceID()
  * @param waypointsArray - The addresses of the waypoints/locations of the users trip received from geocodePlaceID()
  */
-function calculateRoute(hotel, waypointsArray) {
+function calculateRoute(hotel, waypointsArray, destination) {
     start = hotel;
     waypoints = [];
-    end = "";
+    end = destination;
 
     let length = waypointsArray.length;
 
@@ -311,6 +361,7 @@ async function getPlaceDetails(placeIDArray) {
         website: website
     }
     storePlaceCardDetails(placeDetails);
+
 
     for(let placeID of placeIDArray){
         const detailsResponse = await fetch(
